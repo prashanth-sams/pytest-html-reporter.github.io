@@ -167,29 +167,101 @@ document.documentElement.classList.add('js');})();
   </div>
 </section>
 
-<!-- ==================================================== INSTALL STRIP -->
-<section class="section section--alt" style="padding-block: clamp(36px,4vw,52px)">
+<!-- ======================================================== QUICKSTART -->
+<section class="section section--alt">
   <div class="wrap">
-    <div class="split" style="align-items:center;gap:28px">
+    <div class="split" style="gap:clamp(32px,4vw,60px);align-items:start">
       <div>
-        <h2 style="margin-bottom:.35rem;font-size:1.3rem">Install it, run your tests, open the file</h2>
-        <p class="text-muted" style="margin:0;font-size:.94rem">
-          There is no configuration step. The plugin registers itself with pytest and writes
-          <code>pytest_html_report.html</code> into the working directory when the run finishes.
+        <span class="eyebrow">Quickstart</span>
+        <h2>Three minutes to your first report</h2>
+        <p class="lede" style="margin-bottom:1.6rem">
+          Nothing to register, nothing to import. Add the package, run pytest, and the report is
+          waiting in <code>report/</code> — and on a local run it opens by itself.
         </p>
+
+        <ol class="steps">
+          <li>
+            <h3>Install</h3>
+            <p class="text-muted" style="font-size:.92rem">One package. It registers itself with pytest through an entry point.</p>
+          </li>
+          <li>
+            <h3>Run your suite</h3>
+            <p class="text-muted" style="font-size:.92rem">No flags needed. Add <code>--html-report</code> only if you want a different path, filename or title.</p>
+          </li>
+          <li>
+            <h3>Open the page</h3>
+            <p class="text-muted" style="font-size:.92rem">A single HTML file you can email, attach to a ticket, or publish to Pages as-is.</p>
+          </li>
+        </ol>
+
+        <div class="btnrow">
+          <a class="btn btn--primary" href="docs/getting-started.html">Full getting-started guide</a>
+        </div>
       </div>
+
       <div>
-        <div class="codeblock">
-          <div class="codeblock__head">
-            <span class="codeblock__lang">shell</span>
-            <button class="copybtn" type="button">
-              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
-              <span class="copybtn__label">Copy</span>
-            </button>
+        <div class="codetabs">
+          <div class="codetabs__bar" role="tablist" aria-label="Quickstart examples">
+            <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">Default</button>
+            <button class="codetabs__tab" type="button" role="tab" aria-selected="false">Custom path</button>
+            <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pytest.ini</button>
           </div>
-          <pre><code data-lang="shell">$ pip3 install pytest-html-reporter
-$ pytest tests/</code></pre>
+
+          <div class="codetabs__panel" role="tabpanel">
+            <div class="codeblock">
+              <div class="codeblock__head">
+                <span class="codeblock__lang">shell</span>
+                <button class="copybtn" type="button">
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+                  <span class="copybtn__label">Copy</span>
+                </button>
+              </div>
+              <pre><code data-lang="shell">$ pip3 install pytest-html-reporter
+$ pytest tests/
+
+# -> ./pytest_html_report.html</code></pre>
+            </div>
+          </div>
+
+          <div class="codetabs__panel" role="tabpanel" hidden>
+            <div class="codeblock">
+              <div class="codeblock__head">
+                <span class="codeblock__lang">shell</span>
+                <button class="copybtn" type="button">
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+                  <span class="copybtn__label">Copy</span>
+                </button>
+              </div>
+              <pre><code data-lang="shell">$ pytest tests/ --html-report=./report/report.html --title='PYTEST REPORT'
+
+# strftime placeholders give each run a folder of its own
+$ pytest tests/ --html-report=./reports/%Y%m%d/report_%H%M.html</code></pre>
+            </div>
+          </div>
+
+          <div class="codetabs__panel" role="tabpanel" hidden>
+            <div class="codeblock">
+              <div class="codeblock__head">
+                <span class="codeblock__lang">ini</span>
+                <button class="copybtn" type="button">
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+                  <span class="copybtn__label">Copy</span>
+                </button>
+              </div>
+              <pre><code data-lang="ini">[pytest]
+addopts = --html-report=./report --title='Nightly'
+report_screenshots = failed</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="note note--tip">
+          <span class="note__title">It opens itself</span>
+          On a local run the finished report is opened in your browser. On a build agent it stays
+          quiet — CI is detected, not guessed at.
         </div>
       </div>
     </div>
@@ -336,107 +408,6 @@ $ pytest tests/</code></pre>
           </div>
         </div>
       </article>
-    </div>
-  </div>
-</section>
-
-<!-- ======================================================== QUICKSTART -->
-<section class="section section--alt">
-  <div class="wrap">
-    <div class="split" style="gap:clamp(32px,4vw,60px);align-items:start">
-      <div>
-        <span class="eyebrow">Quickstart</span>
-        <h2>Three minutes to your first report</h2>
-        <p class="lede" style="margin-bottom:1.6rem">
-          Nothing to register, nothing to import. Add the package, run pytest, and the report is
-          waiting in <code>report/</code> — and on a local run it opens by itself.
-        </p>
-
-        <ol class="steps">
-          <li>
-            <h3>Install</h3>
-            <p class="text-muted" style="font-size:.92rem">One package. It registers itself with pytest through an entry point.</p>
-          </li>
-          <li>
-            <h3>Run your suite</h3>
-            <p class="text-muted" style="font-size:.92rem">No flags needed. Add <code>--html-report</code> only if you want a different path, filename or title.</p>
-          </li>
-          <li>
-            <h3>Open the page</h3>
-            <p class="text-muted" style="font-size:.92rem">A single HTML file you can email, attach to a ticket, or publish to Pages as-is.</p>
-          </li>
-        </ol>
-
-        <div class="btnrow">
-          <a class="btn btn--primary" href="docs/getting-started.html">Full getting-started guide</a>
-        </div>
-      </div>
-
-      <div>
-        <div class="codetabs">
-          <div class="codetabs__bar" role="tablist" aria-label="Quickstart examples">
-            <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">Default</button>
-            <button class="codetabs__tab" type="button" role="tab" aria-selected="false">Custom path</button>
-            <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pytest.ini</button>
-          </div>
-
-          <div class="codetabs__panel" role="tabpanel">
-            <div class="codeblock">
-              <div class="codeblock__head">
-                <span class="codeblock__lang">shell</span>
-                <button class="copybtn" type="button">
-                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                  <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
-                  <span class="copybtn__label">Copy</span>
-                </button>
-              </div>
-              <pre><code data-lang="shell">$ pip3 install pytest-html-reporter
-$ pytest tests/
-
-# -> ./pytest_html_report.html</code></pre>
-            </div>
-          </div>
-
-          <div class="codetabs__panel" role="tabpanel" hidden>
-            <div class="codeblock">
-              <div class="codeblock__head">
-                <span class="codeblock__lang">shell</span>
-                <button class="copybtn" type="button">
-                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                  <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
-                  <span class="copybtn__label">Copy</span>
-                </button>
-              </div>
-              <pre><code data-lang="shell">$ pytest tests/ --html-report=./report/report.html --title='PYTEST REPORT'
-
-# strftime placeholders give each run a folder of its own
-$ pytest tests/ --html-report=./reports/%Y%m%d/report_%H%M.html</code></pre>
-            </div>
-          </div>
-
-          <div class="codetabs__panel" role="tabpanel" hidden>
-            <div class="codeblock">
-              <div class="codeblock__head">
-                <span class="codeblock__lang">ini</span>
-                <button class="copybtn" type="button">
-                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                  <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
-                  <span class="copybtn__label">Copy</span>
-                </button>
-              </div>
-              <pre><code data-lang="ini">[pytest]
-addopts = --html-report=./report --title='Nightly'
-report_screenshots = failed</code></pre>
-            </div>
-          </div>
-        </div>
-
-        <div class="note note--tip">
-          <span class="note__title">It opens itself</span>
-          On a local run the finished report is opened in your browser. On a build agent it stays
-          quiet — CI is detected, not guessed at.
-        </div>
-      </div>
     </div>
   </div>
 </section>
