@@ -1,0 +1,984 @@
+<!--META {"title": "GitHub Action", "eyebrow": "Integrations", "description": "Run pytest in GitHub Actions and publish its HTML report to the job summary, a sticky pull request comment, an artifact and GitHub Pages.", "lede": "One step installs the plugin, runs pytest, and delivers the result to four places at once — the workflow job summary, a pull request comment that edits itself on every push, a downloadable artifact, and a set of step outputs a later step can act on. This is the reference for every input, every output, and every workflow shipped in the repository."} -->
+<h2 id="what-it-does">What the action does</h2>
+<p><code>pytest-html-reporter-action</code> is a composite GitHub Action that wraps the <a href="getting-started.html">pytest-html-reporter plugin</a>. One step optionally installs Python and your dependencies, runs pytest with the plugin’s <code>--html-report</code> flag, and then publishes the result.</p>
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>In the job summary</b>The headline, the counts, every failure with its message, the suites ranked by damage, the slowest tests, and coverage when the run measured any. No clicking through to an artifact to find out what broke.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>On the pull request</b>The same summary as one comment that is <em>updated</em> on every run rather than a new comment each time.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>As an artifact</b>The full interactive HTML report — Dashboard with its Trends chart, Analytics, Test Suites, Test Metrics, Test Steps, Archives, Screenshots, API Logs and Test Coverage. See <a href="report-tour.html">the report tour</a>.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>As step outputs</b><code>passed</code>, <code>failed</code>, <code>pass-rate</code>, <code>coverage</code>, <code>status</code> and a dozen more, so a later step can post to Slack, open an issue, or gate a deploy.</span>
+  </li>
+</ul>
+<p>On top of the plugin it adds the machinery a CI run needs: it resolves the report path up front so <code>strftime</code> placeholders cannot be expanded twice, probes <code>pytest --help</code> so pinning an older plugin degrades rather than aborting the run, carries the build archive between runs with <code>actions/cache</code> so Trends and Archives have history to read, gates the job on pass rate and coverage, and escapes every test name on the way into the summary — because on a fork’s pull request that text belongs to somebody else.</p>
+<div class="note"><span class="note__title">Names</span>The Marketplace listing is <strong>pytest-html-reporter</strong>; the repository is <code>prashanth-sams/pytest-html-reporter-action</code>. The <code>-action</code> suffix exists only because the plugin already owns the shorter name, and it appears in the <code>uses:</code> line and nowhere else.</div>
+<h2 id="quick-start">Quick start</h2>
+<p>This is the whole of a first setup: install, run, report, upload, fail if anything failed. Everything else on this page is an addition to this shape.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">examples/basic.yml — reach for this first; most projects never grow out of it</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml"># The whole thing: install, run, report, upload, fail if anything failed.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prashanth-sams/pytest-html-reporter-action@v1
+        with:
+          python-version: &#039;3.12&#039;
+          requirements: requirements.txt
+          tests: tests/
+          title: CI</code></pre>
+</div>
+<p>Nothing else is required. Every input is a string and every input has a default, so you set as few or as many as you like — and booleans are the <em>strings</em> <code>&#039;true&#039;</code> and <code>&#039;false&#039;</code>, because a workflow input is always a string.</p>
+<h3 id="the-uses-line">The uses line, and which ref to pin</h3>
+<p>The project follows semantic versioning. The <code>v1</code> tag <em>moves</em> to the newest <code>v1.x.y</code> release, so <code>@v1</code> picks up fixes; pin an exact release to hold still.</p>
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Which ref to pin">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">Follow v1</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">Pin exactly</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">The moving major tag — fixes arrive on their own</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">- uses: prashanth-sams/pytest-html-reporter-action@v1
+  with:
+    tests: tests/</code></pre>
+</div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">An exact release — nothing changes until you change it</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">- uses: prashanth-sams/pytest-html-reporter-action@v1.0.0
+  with:
+    tests: tests/</code></pre>
+</div>
+  </div>
+</div>
+<h2 id="the-summary">What the summary says</h2>
+<p>The same markdown is used for the job summary, the pull request comment and the <code>summary</code> output. It is built from the run’s <code>output.json</code>, in this order.</p>
+<ul>
+  <li><strong>Heading</strong> — <code>## &lt;icon&gt; &lt;summary-title&gt;</code>, where the icon is a tick for <code>PASS</code>, a cross for <code>FAIL</code> and a question mark for <code>UNKNOWN</code>.</li>
+  <li><strong>Headline</strong> — one middot-separated line: the status, then <em>N tests across M suites</em> (with <em>in 1m 14s</em> when a wall clock was measured), then the pass rate when one could be computed, then the rerun count when there were any.</li>
+  <li><strong>Counts table</strong> — Passed and Failed always; Error, Skipped, xPassed, xFailed and Rerun only when non-zero.</li>
+  <li><strong>Coverage line</strong> — when the run measured coverage: the percentage, whether it is branch or line, and how many statements of how many were covered.</li>
+  <li><strong>Failures</strong> — one collapsed block per failed or errored test, in report order, up to <code>failure-limit</code>. Each is <code>suite › test</code>, with the captured message in a fence trimmed to 1,200 characters. Anything beyond the limit is counted in a trailing line.</li>
+  <li><strong>Suites</strong> — a table sorted by failures plus errors, capped at <code>suite-limit</code>. Rendered only when the run had more than one suite.</li>
+  <li><strong>Slowest tests</strong> — a collapsed table, up to <code>slowest-limit</code>. Skipped tests are excluded, because a skipped test’s duration is the cost of deciding to skip it, and so are zero-duration tests.</li>
+  <li><strong>Links</strong> — <em>Open the report</em> (from <code>report-url</code>), <em>Download the artifact</em>, and the workflow run.</li>
+</ul>
+<p>When no report was written at all, the heading is followed by a single paragraph naming <code>output.json</code> and the directory it was expected in, and nothing else.</p>
+<figure class="imgslot" data-shot="action-job-summary.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/action-job-summary.png</b>
+  <span>The GitHub Actions run page, light theme, 1440px wide, scrolled to the rendered job summary: the red cross heading, the counts table, the Coverage line, and one Failures block expanded to show its message fence.</span>
+</figure>
+<div class="note"><span class="note__title">Size</span>GitHub caps a job summary at 1MiB; the action trims to 900KB, and a pull request comment to 60,000 characters. Both trims close an odd code fence and any unclosed <code>&lt;details&gt;</code> first, so nothing after the cut is silently folded away.</div>
+<h2 id="inputs">Inputs</h2>
+<p>Every input is a string, every input has a default, and <strong>no input is required</strong>. Nothing is interpolated into a shell: every input reaches bash as a <code>PHR_*</code> environment variable, never as <code>${{ ... }}</code> spliced into a <code>run:</code> body — that would make <code>pytest-args</code> shell source.</p>
+<h3 id="inputs-what-to-run">What to run</h3>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Input</th><th>Type</th><th>Required</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>tests</code></td><td>string (multiline)</td><td>no</td><td><code>&#039;&#039;</code></td><td>Test paths to hand to pytest, one per line. Blank lines are dropped. Leave empty to let pytest pick its own targets from your rootdir configuration.</td></tr>
+      <tr><td class="t-nowrap"><code>pytest-args</code></td><td>string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Extra arguments appended to the pytest command, parsed the way a shell would parse them — quotes respected, via <code>shlex.split</code>. Unbalanced quoting fails the run rather than being guessed at.</td></tr>
+      <tr><td class="t-nowrap"><code>working-directory</code></td><td>string</td><td>no</td><td><code>.</code></td><td>Directory to run pytest in. Every path is resolved against it. The action fails up front if it does not exist.</td></tr>
+    </tbody>
+  </table>
+</div>
+<h3 id="inputs-environment">The environment</h3>
+<p>The install step is skipped entirely only when <code>install</code> is <code>false</code> <em>and</em> both <code>requirements</code> and <code>extra-packages</code> are empty.</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Input</th><th>Type</th><th>Required</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>python-version</code></td><td>string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Python to set up with <code>actions/setup-python@v5</code> before running. Leave empty to use whatever Python is already on the runner.</td></tr>
+      <tr><td class="t-nowrap"><code>install</code></td><td>boolean string</td><td>no</td><td><code>&#039;true&#039;</code></td><td>Install pytest-html-reporter before running. Set to <code>&#039;false&#039;</code> when your own requirements file already pins it.</td></tr>
+      <tr><td class="t-nowrap"><code>plugin-version</code></td><td>string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Version specifier for the plugin. A value starting with a digit becomes <code>==&lt;value&gt;</code>; anything else is appended raw, so <code>&gt;=0.3.8</code> works. Empty installs the latest release. Ignored when <code>install</code> is false.</td></tr>
+      <tr><td class="t-nowrap"><code>requirements</code></td><td>string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Requirements file to install before running. Resolved against <code>working-directory</code>, and installed before the plugin.</td></tr>
+      <tr><td class="t-nowrap"><code>extra-packages</code></td><td>string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Further pip packages to install, whitespace separated. Globbing is disabled while installing, so a name containing <code>*</code> is not expanded against the working directory.</td></tr>
+    </tbody>
+  </table>
+</div>
+<h3 id="inputs-report">The report</h3>
+<p>Each of these maps onto a plugin flag, and each is <strong>left out of the command entirely when empty</strong> — so the plugin’s own defaults, and any <code>report_*</code> key in your <a href="configuration.html">pytest.ini</a>, still apply. Setting one here overrides the ini key. Every flag is also checked against <code>pytest --help</code> before it is passed; see <a href="#flag-probing">flag probing</a>.</p>
+<div class="note note--warn"><span class="note__title">Two names to memorise</span>Nearly every input shares its name with its flag. Two do not, and pytest’s error messages name the <em>flag</em>: <code>--html-report</code> is the <code>report-path</code> input, and <code>--report-link</code> is the <code>report-links</code> input.</div>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Input</th><th>Type</th><th>Required</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>report-path</code></td><td>string</td><td>no</td><td><code>report</code></td><td>Where the report goes, passed as <code>--html-report</code>. A value containing <code>.html</code> <em>anywhere</em> names the file; anything else names a directory. <code>strftime</code> placeholders are expanded once, before the run starts. Defaults to <code>report</code> rather than the plugin’s own default of the working directory, because a CI job wants the report, its <code>output.json</code> and its <code>archive/</code> in one uploadable folder.</td></tr>
+      <tr><td class="t-nowrap"><code>title</code></td><td>string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Report title, passed as <code>--title</code>. Shown cut to 20 characters, with the full text as the heading’s tooltip.</td></tr>
+      <tr><td class="t-nowrap"><code>environment</code></td><td>string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Name of the environment under test, passed as <code>--environment</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>build-info</code></td><td>string (multiline)</td><td>no</td><td><code>&#039;&#039;</code></td><td>Extra <code>KEY=VALUE</code> details shown in the report, one per line, each passed as its own <code>--build-info</code>. Blank lines and lines starting with <code>#</code> are ignored.</td></tr>
+      <tr><td class="t-nowrap"><code>report-links</code></td><td>string (multiline)</td><td>no</td><td><code>&#039;&#039;</code></td><td>Extra side-nav links, one <code>LABEL=URL</code> per line, each passed as its own <code>--report-link</code>. A relative path works; a link with a scheme the plugin does not know is dropped silently.</td></tr>
+      <tr><td class="t-nowrap"><code>archive-count</code></td><td>integer string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Maximum builds kept in the Archives section (<code>--archive-count</code>). Empty keeps every one. <code>&#039;0&#039;</code> <strong>deletes</strong> the whole archive and hides the Archives section; <code>&#039;1&#039;</code> is read as “this build and no others”.</td></tr>
+      <tr><td class="t-nowrap"><code>archive-days</code></td><td>number string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Keep only builds from the last N days (<code>--archive-days</code>). Accepts fractions, e.g. <code>&#039;0.5&#039;</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>archive-since</code></td><td>string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Delete archived builds older than this date (<code>--archive-since</code>), given as <code>YYYY-MM-DD</code> or <code>&#039;YYYY-MM-DD HH:MM&#039;</code>. Read in the runner’s timezone, which is UTC.</td></tr>
+      <tr><td class="t-nowrap"><code>report-logs</code></td><td>enum: all, failed, none</td><td>no</td><td><code>&#039;&#039;</code></td><td>Whose captured stdout, stderr and logging to keep. Validated up front.</td></tr>
+      <tr><td class="t-nowrap"><code>report-log-limit</code></td><td>integer string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Maximum characters of captured output kept per test; <code>&#039;0&#039;</code> keeps everything. Must be a non-negative whole number.</td></tr>
+      <tr><td class="t-nowrap"><code>report-attachments</code></td><td>enum: all, failed, none</td><td>no</td><td><code>&#039;&#039;</code></td><td>Whose attachments to keep.</td></tr>
+      <tr><td class="t-nowrap"><code>report-attachment-limit</code></td><td>integer string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Maximum characters kept per attached payload; <code>&#039;0&#039;</code> keeps everything.</td></tr>
+      <tr><td class="t-nowrap"><code>report-steps</code></td><td>enum: all, failed, none</td><td>no</td><td><code>&#039;&#039;</code></td><td>Whose <a href="steps-and-bdd.html">test steps</a> to keep.</td></tr>
+      <tr><td class="t-nowrap"><code>report-step-limit</code></td><td>integer string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Maximum steps kept per test; <code>&#039;0&#039;</code> keeps every one.</td></tr>
+      <tr><td class="t-nowrap"><code>report-coverage</code></td><td>enum: auto, none</td><td>no</td><td><code>&#039;&#039;</code></td><td>Whether to build the Test Coverage tab.</td></tr>
+      <tr><td class="t-nowrap"><code>report-coverage-file</code></td><td>string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Read coverage from this file — a <code>coverage.json</code>, a Cobertura <code>coverage.xml</code> or a <code>.coverage</code> data file — instead of looking for one. Naming a file here is <strong>final</strong>: if it cannot be read the Coverage tab is blank and the coverage this run measured is not used instead. The action warns when that happens.</td></tr>
+      <tr><td class="t-nowrap"><code>report-coverage-limit</code></td><td>integer string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Maximum files listed on the Coverage tab; <code>&#039;0&#039;</code> lists every one.</td></tr>
+      <tr><td class="t-nowrap"><code>report-open</code></td><td>enum: auto, always, none</td><td>no</td><td><code>&#039;&#039;</code> (see below)</td><td>Whether to open the finished report in a browser. Set it only on a self-hosted runner with a desktop.</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="note"><span class="note__title">Why report-open is different</span>The action passes <code>--report-open</code> whether or not you set it, and <code>none</code> when you have not. The plugin’s default is to open the finished report and it declines on a runner — unless a <code>pytest.ini</code> says <code>report_open = always</code>, which skips every check and hands the report to a console browser with no TTY, CI or DISPLAY test at all. <code>auto</code> is not a defence the action controls, because the CLI beats the ini.</div>
+<div class="note note--warn"><span class="note__title">Negative limits are refused</span>The plugin clamps a negative limit to <code>0</code>, and <code>0</code> means “no limit” for every one of the <code>*-limit</code> inputs — so <code>&#039;-1&#039;</code> would silently mean the exact opposite of what it looks like. The action fails up front and says so.</div>
+<h3 id="inputs-publishing">Publishing</h3>
+<p>These decide where the result goes: the job summary page, a pull request comment, a workflow artifact, a Pages artifact, and the cached build history.</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Input</th><th>Type</th><th>Required</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>job-summary</code></td><td>boolean string</td><td>no</td><td><code>&#039;true&#039;</code></td><td>Write the run’s summary to the workflow’s job summary page. When there is no <code>$GITHUB_STEP_SUMMARY</code> to write to, the markdown is printed to stdout instead.</td></tr>
+      <tr><td class="t-nowrap"><code>summary-title</code></td><td>string</td><td>no</td><td><code>pytest-html-reporter</code></td><td>Heading used for the job summary and the pull request comment.</td></tr>
+      <tr><td class="t-nowrap"><code>failure-limit</code></td><td>integer string</td><td>no</td><td><code>&#039;10&#039;</code></td><td>Maximum failures listed in the summary and the comment; the rest are counted in a trailing line. <code>&#039;0&#039;</code> lists none. A non-numeric value falls back to the default rather than abandoning the run.</td></tr>
+      <tr><td class="t-nowrap"><code>suite-limit</code></td><td>integer string</td><td>no</td><td><code>&#039;20&#039;</code></td><td>Maximum suites listed. The Suites table is only rendered at all when the run has more than one suite.</td></tr>
+      <tr><td class="t-nowrap"><code>slowest-limit</code></td><td>integer string</td><td>no</td><td><code>&#039;5&#039;</code></td><td>How many of the slowest tests to list; <code>&#039;0&#039;</code> lists none.</td></tr>
+      <tr><td class="t-nowrap"><code>report-url</code></td><td>string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Link to the published report, shown in the summary and the comment as <em>Open the report</em> — for instance your GitHub Pages URL.</td></tr>
+      <tr><td class="t-nowrap"><code>comment</code></td><td>boolean string</td><td>no</td><td><code>&#039;false&#039;</code></td><td>Post the summary as a sticky comment on the pull request, updating the same comment on every run instead of piling new ones up.</td></tr>
+      <tr><td class="t-nowrap"><code>comment-mode</code></td><td>enum: always, on-failure</td><td>no</td><td><code>always</code></td><td>When to comment. <code>on-failure</code> compares the report’s <code>status</code> against <code>PASS</code>, so a run that produced no report (<code>UNKNOWN</code>) also comments.</td></tr>
+      <tr><td class="t-nowrap"><code>pr-number</code></td><td>integer string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Pull request to comment on. Only needed when the event does not carry one — a <code>workflow_run</code> job, say. Empty uses the event’s own number. Must be digits.</td></tr>
+      <tr><td class="t-nowrap"><code>github-token</code></td><td>string</td><td>no</td><td><code>${{ github.token }}</code></td><td>Token used to post the comment. Needs <code>pull-requests: write</code>. A <code>pull_request</code> run from a fork gets a read-only token and cannot comment. An empty value makes the comment step warn and return rather than error.</td></tr>
+      <tr><td class="t-nowrap"><code>upload-artifact</code></td><td>boolean string</td><td>no</td><td><code>&#039;true&#039;</code></td><td>Upload the report directory as a workflow artifact with <code>actions/upload-artifact@v4</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>artifact-name</code></td><td>string</td><td>no</td><td><code>pytest-html-report</code></td><td>Name of the uploaded artifact. Must be unique within a run — <code>upload-artifact@v4</code> refuses two artifacts of the same name.</td></tr>
+      <tr><td class="t-nowrap"><code>artifact-retention-days</code></td><td>integer string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Days to keep the artifact. Empty uses the repository default.</td></tr>
+      <tr><td class="t-nowrap"><code>artifact-include-history</code></td><td>boolean string</td><td>no</td><td><code>&#039;true&#039;</code></td><td>Include the <code>archive/</code> folder of past builds in the artifact. Set to <code>&#039;false&#039;</code> to upload only the current report; the action then adds an exclusion pattern for <code>&lt;report-dir&gt;/archive</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>artifact-if-no-files-found</code></td><td>enum: warn, error, ignore</td><td>no</td><td><code>warn</code></td><td>What <code>upload-artifact</code> does when nothing matched.</td></tr>
+      <tr><td class="t-nowrap"><code>artifact-overwrite</code></td><td>boolean string</td><td>no</td><td><code>&#039;false&#039;</code></td><td>Replace an artifact of the same name instead of failing. A matrix is better served by giving each job its own <code>artifact-name</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>pages-artifact</code></td><td>boolean string</td><td>no</td><td><code>&#039;false&#039;</code></td><td>Also upload the report as a GitHub Pages artifact with <code>actions/upload-pages-artifact@v3</code>, ready for a following job to deploy with <code>actions/deploy-pages</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>history</code></td><td>boolean string</td><td>no</td><td><code>&#039;false&#039;</code></td><td>Carry the <code>archive/</code> folder and <code>output.json</code> between runs with <code>actions/cache</code>, so the Trends, Archives and Analytics tabs have more than one build to show.</td></tr>
+      <tr><td class="t-nowrap"><code>history-key</code></td><td>string</td><td>no</td><td><code>pytest-html-reporter-history</code></td><td>Cache key prefix used for the build history. The full key appends <code>runner.os</code>, <code>github.ref_name</code>, <code>github.run_id</code> and <code>github.run_attempt</code>.</td></tr>
+    </tbody>
+  </table>
+</div>
+<h3 id="inputs-gates">Gates</h3>
+<p>Four inputs decide whether the job goes red. They are evaluated together, and every reason that applies is collected — a failing run tells you everything that was wrong, not just the first thing. See <a href="#thresholds-and-gates">thresholds and gates</a>.</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Input</th><th>Type</th><th>Required</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>fail-on-error</code></td><td>boolean string</td><td>no</td><td><code>&#039;true&#039;</code></td><td>Fail the job when pytest fails — any non-zero exit code other than 5, which <code>fail-on-empty</code> owns. It also covers the case where pytest exits 0 but wrote no <code>output.json</code>. Set to <code>&#039;false&#039;</code> to always go green and decide with the outputs yourself.</td></tr>
+      <tr><td class="t-nowrap"><code>fail-on-empty</code></td><td>boolean string</td><td>no</td><td><code>&#039;true&#039;</code></td><td>Fail the job when pytest collects no tests at all (exit code 5). Left on, because a mistyped <code>-k</code> that quietly produces a green run is worse than a red one. When exit code 5 occurs this input alone decides; <code>fail-on-error</code> is not consulted.</td></tr>
+      <tr><td class="t-nowrap"><code>min-pass-rate</code></td><td>number string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Fail the job when the pass rate falls below this percentage. Empty applies no threshold. A run where nothing decisive happened fails rather than passing by default. A non-numeric value is warned about and ignored.</td></tr>
+      <tr><td class="t-nowrap"><code>min-coverage</code></td><td>number string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Fail the job when coverage falls below this percentage. Empty applies no threshold. A run that produced no coverage data fails rather than passing by default.</td></tr>
+    </tbody>
+  </table>
+</div>
+<h2 id="outputs">Outputs</h2>
+<p>Every output is declared in <code>action.yml</code> and wired to one of the action’s internal steps. Read them from a later step by giving the action an <code>id</code>.</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Output</th><th>Type</th><th>What it holds</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>status</code></td><td>string</td><td><code>PASS</code>, <code>FAIL</code>, or <code>UNKNOWN</code> when no report was produced. Taken from the report’s own status field when it is PASS or FAIL, otherwise derived: FAIL if there were failures or errors, PASS otherwise.</td></tr>
+      <tr><td class="t-nowrap"><code>total</code></td><td>integer</td><td>Tests executed — passes, failures, errors, skips, xpasses and xfails summed. Reruns are attempts, not tests, and are not counted here.</td></tr>
+      <tr><td class="t-nowrap"><code>passed</code></td><td>integer</td><td>Tests that passed.</td></tr>
+      <tr><td class="t-nowrap"><code>failed</code></td><td>integer</td><td>Tests that failed.</td></tr>
+      <tr><td class="t-nowrap"><code>errors</code></td><td>integer</td><td>Tests that errored.</td></tr>
+      <tr><td class="t-nowrap"><code>skipped</code></td><td>integer</td><td>Tests that were skipped.</td></tr>
+      <tr><td class="t-nowrap"><code>xpassed</code></td><td>integer</td><td>Tests that passed while expected to fail.</td></tr>
+      <tr><td class="t-nowrap"><code>xfailed</code></td><td>integer</td><td>Tests that failed as expected.</td></tr>
+      <tr><td class="t-nowrap"><code>rerun</code></td><td>integer</td><td>Rerun attempts recorded across the run.</td></tr>
+      <tr><td class="t-nowrap"><code>suites</code></td><td>integer</td><td>Test suites in the run.</td></tr>
+      <tr><td class="t-nowrap"><code>pass-rate</code></td><td>number string</td><td><code>passed / (passed + failed + errors)</code> as a percentage, trimmed of trailing zeros. Empty when nothing decisive ran.</td></tr>
+      <tr><td class="t-nowrap"><code>coverage</code></td><td>number string</td><td>Coverage percentage, or empty when the run produced none.</td></tr>
+      <tr><td class="t-nowrap"><code>tests-duration</code></td><td>number</td><td>Summed test durations in seconds, to 2 places. This is what the report records — the run’s own wall clock is not written to <code>output.json</code> — so it leaves out collection, session fixtures and the gaps between tests.</td></tr>
+      <tr><td class="t-nowrap"><code>wall-clock</code></td><td>number string</td><td>Seconds the pytest step took, measured by this action with <code>date +%s</code> either side of the run.</td></tr>
+      <tr><td class="t-nowrap"><code>exit-code</code></td><td>integer</td><td>The exit code pytest returned. See the table below.</td></tr>
+      <tr><td class="t-nowrap"><code>report-file</code></td><td>path</td><td>Absolute path of the generated HTML report.</td></tr>
+      <tr><td class="t-nowrap"><code>report-dir</code></td><td>path</td><td>Absolute path of the directory holding the report.</td></tr>
+      <tr><td class="t-nowrap"><code>json-path</code></td><td>path</td><td>Absolute path of the run’s <code>output.json</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>summary</code></td><td>markdown</td><td>The markdown summary, for reuse in a later step. Multi-line, so pass it through <code>env:</code> rather than splicing it into a command.</td></tr>
+      <tr><td class="t-nowrap"><code>artifact-id</code></td><td>string</td><td>Id of the uploaded artifact, when one was uploaded.</td></tr>
+      <tr><td class="t-nowrap"><code>artifact-url</code></td><td>url</td><td>URL of the uploaded artifact, when one was uploaded. Rendered in the summary as <em>Download the artifact</em>.</td></tr>
+    </tbody>
+  </table>
+</div>
+<h3 id="reading-the-outputs">Reading the outputs</h3>
+<p>Pass multi-line values such as <code>summary</code> through <code>env:</code> rather than splicing them into a command — the summary is markdown built partly out of test names, and a test name is not something to hand to a shell.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">Open an issue when a nightly run goes red, without failing the job</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">- uses: prashanth-sams/pytest-html-reporter-action@v1
+  id: report
+  with:
+    tests: tests/
+    fail-on-error: &#039;false&#039;      # decide for yourself, below
+
+- name: Tell the team
+  if: steps.report.outputs.status != &#039;PASS&#039;
+  run: gh issue create --title &quot;Nightly run: $FAILED failing&quot; --body &quot;$SUMMARY&quot;
+  env:
+    GH_TOKEN: ${{ github.token }}
+    FAILED: ${{ steps.report.outputs.failed }}
+    # Through env, never spliced into the command: the summary is multi-line
+    # markdown built partly out of test names, and a test name is not
+    # something to hand to a shell.
+    SUMMARY: ${{ steps.report.outputs.summary }}</code></pre>
+</div>
+<div class="note"><span class="note__title">Note</span>When the action fails the job, the step that used it has failed, and a later step needs <code>if: always()</code> to run at all. The tidier way round is <code>fail-on-error: &#039;false&#039;</code> plus your own decision — then nothing has failed and the outputs are simply there.</div>
+<h2 id="pull-request-comments">Pull request comments</h2>
+<p><strong>Reach for this when</strong> you want reviewers to see the result without opening the run. This is the <em>same-repository</em> case: the job needs <code>pull-requests: write</code>, which a pull request from a fork will not have. For those, see <a href="#fork-pull-requests">fork pull requests</a>.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">examples/pr-comment.yml — use when reviewers should see the result in the pull request itself</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml"># A sticky summary on every pull request, edited in place on each push.
+#
+# This is the same-repository case. A pull request from a fork gets a
+# read-only token and cannot comment - see fork-pr.yml for that.
+name: tests
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prashanth-sams/pytest-html-reporter-action@v1
+        with:
+          tests: tests/
+          comment: &#039;true&#039;
+          comment-mode: always
+          environment: ci
+          build-info: |
+            branch=${{ github.head_ref }}
+            commit=${{ github.sha }}</code></pre>
+</div>
+<p><code>comment: &#039;true&#039;</code> posts the summary as a <strong>sticky</strong> comment: the body carries the hidden marker <code>&lt;!-- pytest-html-reporter-action --&gt;</code>, and the action paginates the pull request’s existing comments looking for it. If it finds one it updates that comment; otherwise it creates one. So the next push edits the comment rather than adding another.</p>
+<figure class="imgslot" data-shot="action-pr-comment.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/action-pr-comment.png</b>
+  <span>A pull request conversation, light theme, showing the single sticky comment from the action with its “edited” badge visible — the counts table and one expanded failure — and the comment count on the pull request still at one after two pushes.</span>
+</figure>
+<h3 id="when-the-comment-step-runs">When the comment step runs</h3>
+<p>All three conditions must hold:</p>
+<ol>
+  <li><code>comment</code> is <code>&#039;true&#039;</code>, and</li>
+  <li>the event is <code>pull_request</code> or <code>pull_request_target</code>, <em>or</em> <code>pr-number</code> is set explicitly, and</li>
+  <li><code>comment-mode</code> is <code>always</code>, or the run’s <code>status</code> is not <code>PASS</code>.</li>
+</ol>
+<p>That second clause is why <code>pr-number</code> exists: a <code>workflow_run</code> job carries no pull request of its own.</p>
+<h3 id="the-comment-warns-it-does-not-fail">It warns, it does not fail</h3>
+<p>Every failure mode here produces a warning annotation and lets the run continue, because a report is not worth turning a run red over: an empty <code>github-token</code>, no comment body produced, no pull request in the event, or an API call that threw. Look for a warning annotation rather than a red step.</p>
+<h2 id="fork-pull-requests">Fork pull requests</h2>
+<p>A <code>pull_request</code> run triggered from a fork is handed a <strong>read-only</strong> <code>GITHUB_TOKEN</code> by GitHub, on purpose: the code being tested is not yours. The action does not fight this — it catches the API error, warns, and carries on. Commenting on a fork’s pull request takes two workflows.</p>
+<p><strong>Reach for this when</strong> you accept pull requests from forks and want them commented on. The first workflow runs the tests with a read-only token and writes the summary and the claimed pull request number out as a small artifact. The second, triggered by <code>workflow_run</code>, runs from your default branch with a writable token and none of the fork’s code, and posts the comment.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">examples/fork-pr.yml — the untrusted half: run the tests, write the summary out as an artifact</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml"># Commenting on a pull request that came from a fork.
+#
+# A `pull_request` run from a fork is handed a read-only token on purpose:
+# the code being tested is not yours. So the run that executes the tests
+# writes the report and the PR number as artifacts, and a second workflow -
+# triggered by `workflow_run`, running from your default branch, with a
+# writable token and none of the fork&#039;s code - posts the comment.
+name: tests
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prashanth-sams/pytest-html-reporter-action@v1
+        id: report
+        with:
+          tests: tests/
+          comment: &#039;false&#039;          # nothing to comment with, here
+          artifact-name: pytest-html-report
+
+      # Written after the tests, so the fork&#039;s code has had its turn - and
+      # checked again by the second workflow against the commit this run
+      # actually tested, because an artifact out of a job that ran somebody
+      # else&#039;s tests is a claim, not a fact.
+      - name: Keep the summary and the PR number for the next workflow
+        if: always()
+        run: |
+          set -euo pipefail
+
+          rm -rf comment
+          mkdir -p comment
+          printf &#039;%s&#039; &quot;$PR_NUMBER&quot; &gt; comment/pr-number
+          printf &#039;%s&#039; &quot;$SUMMARY&quot; &gt; comment/body.md
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+          SUMMARY: ${{ steps.report.outputs.summary }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pytest-html-report-comment
+          path: comment/</code></pre>
+</div>
+<p>Note the ordering: the two text files are written <em>after</em> the tests, so the fork’s code has already had its turn, and <code>if: always()</code> on both trailing steps means a red run still gets its comment.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">examples/fork-pr-comment.yml — the privileged half; save it as its own workflow file</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml"># The second half of fork-pr.yml. Save this as its own workflow file.
+#
+# `workflow_run` runs from your default branch with your permissions, and
+# never checks out the fork&#039;s code. It reads two small text files, and it
+# checks that the pull request they name is really the one that produced
+# them - an artifact comes out of a job that ran the fork&#039;s tests, so it is
+# not on its own evidence of anything.
+name: tests comment
+
+on:
+  workflow_run:
+    workflows: [tests]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: write
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pytest-html-report-comment
+          path: comment
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require(&#039;fs&#039;);
+
+            const marker = &#039;&lt;!-- pytest-html-reporter-action --&gt;&#039;;
+            const run = context.payload.workflow_run;
+
+            const claimed = Number(fs.readFileSync(&#039;comment/pr-number&#039;, &#039;utf8&#039;).trim());
+
+            if (!Number.isInteger(claimed) || claimed &lt;= 0) {
+              core.setFailed(&#039;the artifact did not carry a usable pull request number&#039;);
+              return;
+            }
+
+            // The artifact was produced by a job running the fork&#039;s code, so
+            // the number in it is a claim rather than a fact. A pull request
+            // whose head is the commit this run tested is the one thing that
+            // cannot be forged from inside that job.
+            const { data: pull } = await github.rest.pulls.get({
+              ...context.repo, pull_number: claimed,
+            });
+
+            if (pull.head.sha !== run.head_sha) {
+              core.setFailed(
+                `pull request #${claimed} is at ${pull.head.sha}, but this run ` +
+                `tested ${run.head_sha}. Refusing to comment on a pull request ` +
+                `the artifact only claims to belong to.`);
+              return;
+            }
+
+            const body = marker + &#039;\n&#039;
+              + fs.readFileSync(&#039;comment/body.md&#039;, &#039;utf8&#039;).slice(0, 60000);
+
+            const existing = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo, issue_number: claimed, per_page: 100,
+            });
+            const mine = existing.find((comment) =&gt; comment.body?.includes(marker));
+
+            if (mine) {
+              await github.rest.issues.updateComment({
+                ...context.repo, comment_id: mine.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                ...context.repo, issue_number: claimed, body,
+              });
+            }</code></pre>
+</div>
+<div class="note note--warn"><span class="note__title">Why the SHA check is the point</span>An artifact comes out of a job that ran the fork’s tests, so the pull request number inside it is a claim, not a fact. Before commenting, the second workflow fetches the pull request that number names and refuses unless <code>pull.head.sha</code> equals <code>workflow_run.head_sha</code> — the commit this run actually tested. That equality is the one thing that cannot be forged from inside the untrusted job.</div>
+<h3 id="untrusted-text">Everything the tests print is untrusted text</h3>
+<p>On a fork’s pull request, test names and assertion messages belong to the fork author, and they end up in a job summary and in a comment posted under the repository’s own identity. The action hardens every path they travel.</p>
+<ul>
+  <li><strong>The pytest output is wrapped in <code>::stop-commands::</code></strong> with a token of 16 random bytes from <code>/dev/urandom</code>, so nothing pytest prints is read as a workflow command — not <code>::add-mask::</code>, and not a <code>::stop-commands::</code> of its own.</li>
+  <li><strong>Names are escaped three ways</strong>: HTML, because a failure sits inside a <code>&lt;details&gt;</code> block and a name of <code>&lt;/details&gt;</code> would close it and take the rest of the summary with it; markdown brackets, so a name cannot become a link; and, inside a table, the pipe, because GFM ends a cell at an unescaped one however deeply nested.</li>
+  <li><strong>Lines that open with <code>::</code> are defanged</strong> with a zero-width space.</li>
+  <li><strong>Captured messages are fence-safe</strong> and trimmed to 1,200 characters.</li>
+  <li><strong><code>$GITHUB_OUTPUT</code> heredoc delimiters are random</strong>, so a test name carrying the word <code>EOF</code> cannot close the block early.</li>
+</ul>
+<h2 id="build-history">Build history</h2>
+<p><strong>Reach for this when</strong> you have a scheduled or repeated run and want to see change over time. The report’s <a href="analytics.html">Trends, Archives and Analytics</a> tabs are built from <em>previous</em> builds, which a fresh runner does not have. <code>history: &#039;true&#039;</code> carries them between runs with the Actions cache.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">examples/history.yml — use on a nightly or scheduled run, where trends are the point</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml"># Trends, Archives and Analytics need more than one build to say anything.
+# The cache carries the archived builds from run to run; the retention
+# limits stop the report growing without end.
+name: nightly
+
+on:
+  schedule:
+    - cron: &#039;0 2 * * *&#039;
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prashanth-sams/pytest-html-reporter-action@v1
+        with:
+          tests: tests/
+          title: Nightly
+          history: &#039;true&#039;
+          archive-days: &#039;30&#039;
+          environment: staging</code></pre>
+</div>
+<h3 id="what-is-cached">What is cached</h3>
+<p>Both <code>&lt;report-dir&gt;/archive</code> <strong>and</strong> <code>&lt;report-dir&gt;/output.json</code>. Carrying only <code>archive/</code> accumulates nothing at all — a build joins the archive only when the <em>next</em> run rotates its <code>output.json</code> in, so the cache has to carry that json too.</p>
+<p>The cache key is <code>&lt;history-key&gt;-&lt;runner.os&gt;-&lt;github.ref_name&gt;-&lt;github.run_id&gt;-&lt;github.run_attempt&gt;</code>, with restore-keys falling back first to the branch prefix and then to the OS prefix. So history follows a branch where it can and falls back to the same OS otherwise, and every run writes a new immutable cache entry rather than trying to overwrite one.</p>
+<h3 id="what-prime-fixes">What the prime step fixes before pytest runs</h3>
+<p>A cache restore on its own is not enough, because two things have to be true for a build to join the archive.</p>
+<ol>
+  <li><strong>A placeholder report file.</strong> The plugin archives a build by rotating the <em>previous</em> <code>output.json</code> into <code>archive/</code>, and it only does that when the previous run’s report <em>file</em> is on disk. On a fresh runner it never is, so every run would quietly replace its predecessor and the archive would stay empty for ever. The action stands in an empty file and says so; the run then overwrites it.</li>
+  <li><strong>Quarantining unreadable builds.</strong> The plugin reads every <code>archive/*.json</code> without guarding the read, so a single truncated or foreign file raises inside <code>pytest_terminal_summary</code> and <em>no report is written at all</em> — and a restored cache is exactly where such a file comes from. Each one is validated, and a file that fails is renamed to <code>&lt;name&gt;.json.unreadable</code>, with a warning giving the count and the reason.</li>
+</ol>
+<p>Because the restore puts the previous build’s <code>output.json</code> on disk <em>before</em> pytest runs, a run that then writes none of its own — it crashed, it collected nothing — would leave the previous build there to be summarised. The action compares the file’s <code>start_time</code> against the restored one and, if they match, reads it as no report at all rather than reporting somebody else’s passes as this run’s.</p>
+<h3 id="keeping-the-report-small">Keeping the report from growing without end</h3>
+<p>Every retained build costs roughly <strong>5KB of the page</strong>, so an hourly run with no limit reaches a multi-megabyte report within a couple of months and the page gets slow to open. Three inputs prune it, and they <strong>intersect</strong> — a build has to satisfy every limit you set to be kept: <code>archive-count</code>, <code>archive-days</code> and <code>archive-since</code>.</p>
+<div class="note note--warn"><span class="note__title">Two things that quietly defeat history</span>A <code>report-path</code> containing <code>strftime</code> placeholders makes a new folder every run, so every run starts from nothing — put the date in <code>artifact-name</code> instead. And a matrix needs a <code>history-key</code> per cell, or two Python versions interleave builds that are not comparable.</div>
+<p>The first run with history on still shows one build. It takes two.</p>
+<h2 id="github-pages">GitHub Pages</h2>
+<p><strong>Reach for this when</strong> you want a URL anyone can open, with no artifact to download and unzip. <code>pages-artifact: &#039;true&#039;</code> runs <code>actions/upload-pages-artifact@v3</code> against the report directory. That is as far as an action can take you: <em>deploying</em> to Pages needs its own job with the <code>github-pages</code> environment and <code>pages: write</code> plus <code>id-token: write</code>, and an action cannot grant itself either.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">examples/pages.yml — use when the report should live at a URL rather than inside a zip</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml"># Publishing the report to GitHub Pages.
+#
+# The deploy has to be its own job: it needs the github-pages environment
+# and its own permissions, neither of which an action can grant itself.
+name: tests
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prashanth-sams/pytest-html-reporter-action@v1
+        with:
+          tests: tests/
+          pages-artifact: &#039;true&#039;
+          history: &#039;true&#039;
+          # The report is one page, so name it index.html and Pages serves
+          # it at the root of the site.
+          report-path: report/index.html
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deploy</code></pre>
+</div>
+<p>Two things in that workflow are load-bearing. <code>report-path: report/index.html</code>, because the report is one page and naming it <code>index.html</code> makes Pages serve it at the root of the site; and <code>history: &#039;true&#039;</code>, because a published report is exactly where Trends and Archives earn their keep. Once the site is up, feed its URL back in with <code>report-url</code> and the job summary and pull request comment carry an <em>Open the report</em> link straight to it.</p>
+<figure class="imgslot" data-shot="action-pages-report.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/action-pages-report.png</b>
+  <span>The deployed report open at a github.io URL with the browser address bar visible, light theme, 1440px wide, on the Dashboard tab — beside it the workflow’s Actions graph showing the two jobs, test then deploy, with the github-pages environment badge.</span>
+</figure>
+<h2 id="thresholds-and-gates">Thresholds and gates</h2>
+<p><strong>Reach for a hard floor when</strong> the rule is simple enough to state as a number. Both gates are enforced by the action itself.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">Two hard floors, enforced by the action itself</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">- uses: prashanth-sams/pytest-html-reporter-action@v1
+  with:
+    tests: tests/
+    min-pass-rate: &#039;95&#039;
+    min-coverage: &#039;80&#039;</code></pre>
+</div>
+<h3 id="the-gate-rules">The rules, in order</h3>
+<ol>
+  <li><strong>Exit code 5</strong> — no tests collected — is handled first and on its own, by <code>fail-on-empty</code>. <code>fail-on-error</code> is not consulted for code 5.</li>
+  <li><strong>Any other non-zero exit code</strong> fails when <code>fail-on-error</code> is true, with the code spelled out in the annotation.</li>
+  <li><strong>A clean exit with no report</strong> also fails when <code>fail-on-error</code> is true.</li>
+  <li><strong><code>min-pass-rate</code></strong>, when set and numeric. If the pass rate cannot be measured at all the run fails rather than passing by default.</li>
+  <li><strong><code>min-coverage</code></strong>, when set and numeric. A run that produced no coverage data fails.</li>
+</ol>
+<p>Every reason that applies is collected. Each is emitted as an <code>::error title=pytest-html-reporter::</code> annotation, and a <code>&gt; [!CAUTION]</code> blockquote listing all of them is appended to the job summary.</p>
+<figure class="imgslot" data-shot="action-gate-failure.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/action-gate-failure.png</b>
+  <span>A failed run page, light theme, showing the red ::error annotation at the top (“pass rate 82% is below the required 95%”) and, scrolled together into the same shot, the [!CAUTION] blockquote appended to the job summary below it.</span>
+</figure>
+<div class="note note--warn"><span class="note__title">A threshold that cannot be measured fails loudly</span><code>min-coverage</code> on a run that produced no coverage is an error, not a free pass. The same rule governs <code>min-pass-rate</code> on a run where nothing decisive happened.</div>
+<h3 id="pass-rate-is-narrow">Pass rate is deliberately narrow</h3>
+<p><code>pass-rate = passed / (passed + failed + errors)</code>, as a percentage. Skipped, xfailed and xpassed tests are in <strong>neither half</strong> — none of them is a pass-or-fail signal, and counting them would quietly move the threshold you set. When the denominator is zero, <code>pass-rate</code> is empty and any <code>min-pass-rate</code> fails.</p>
+<h3 id="exit-codes">Exit code against report status</h3>
+<p>The plugin calls a run <code>FAIL</code> only when a suite holds a failure or an error. pytest has more ways to exit non-zero than that: a strict xfail, <code>pytest.exit()</code>, an interrupted run. <strong>The exit code is what the job is decided on</strong>, and <code>status</code> is the report’s headline. When the two disagree the action says so rather than picking one quietly.</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Exit code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>1</code></td><td>Tests failed.</td></tr>
+      <tr><td class="t-nowrap"><code>2</code></td><td>The run was interrupted.</td></tr>
+      <tr><td class="t-nowrap"><code>3</code></td><td>An internal error.</td></tr>
+      <tr><td class="t-nowrap"><code>4</code></td><td>A usage error: pytest refused an argument. Nothing ran.</td></tr>
+      <tr><td class="t-nowrap"><code>5</code></td><td>No tests were collected. Governed by <code>fail-on-empty</code>, not <code>fail-on-error</code>.</td></tr>
+    </tbody>
+  </table>
+</div>
+<h3 id="deciding-for-yourself">Deciding for yourself</h3>
+<p><strong>Reach for this when</strong> “any red test fails the build” is too blunt — a few flakes are survivable, a collapse is not. <code>fail-on-error: &#039;false&#039;</code> lets the red run through, and a following step reads the outputs and makes the call.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">examples/thresholds.yml — use when a handful of flakes should not stop the build</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml"># Deciding for yourself what a failing run means.
+name: tests
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prashanth-sams/pytest-html-reporter-action@v1
+        id: report
+        with:
+          tests: tests/
+          # Let a red run through, and judge it below.
+          fail-on-error: &#039;false&#039;
+
+      # != &#039;PASS&#039; rather than == &#039;FAIL&#039;: a run that produced no report at all
+      # reports UNKNOWN, and that is the one outcome nobody should wave through.
+      - name: A few flakes are survivable; a collapse is not
+        if: steps.report.outputs.status != &#039;PASS&#039;
+        run: |
+          set -euo pipefail
+
+          if [ &quot;$STATUS&quot; != &quot;FAIL&quot; ]; then
+            echo &quot;::error::the run produced no report to judge (status $STATUS)&quot;
+            exit 1
+          fi
+
+          echo &quot;pass rate: $PASS_RATE%  ($FAILED failed of $TOTAL)&quot;
+
+          if [ -z &quot;$PASS_RATE&quot; ] || [ &quot;${PASS_RATE%%.*}&quot; -lt 90 ]; then
+            echo &quot;::error::pass rate $PASS_RATE% - this is not flakiness&quot;
+            exit 1
+          fi
+
+          echo &quot;::warning::$FAILED failing, pass rate still $PASS_RATE% - letting it through&quot;
+        env:
+          STATUS: ${{ steps.report.outputs.status }}
+          PASS_RATE: ${{ steps.report.outputs.pass-rate }}
+          FAILED: ${{ steps.report.outputs.failed }}
+          TOTAL: ${{ steps.report.outputs.total }}</code></pre>
+</div>
+<p>Two details there are deliberate and worth copying. The condition is <code>!= &#039;PASS&#039;</code> rather than <code>== &#039;FAIL&#039;</code>, because a run that produced no report at all reports <code>UNKNOWN</code> and that is the one outcome nobody should wave through. And every value reaches the script through <code>env:</code> rather than being spliced into the command.</p>
+<h2 id="coverage">Coverage</h2>
+<p><strong>Reach for this when</strong> you already measure coverage with <code>pytest-cov</code> and want it in the report and enforced. Nothing here is special to the action: install <code>pytest-cov</code>, pass <code>--cov</code>, and the plugin reads the coverage the run just measured.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">examples/coverage.yml — use when the Test Coverage tab should be populated and floored</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml"># The Test Coverage tab, and a floor under it.
+#
+# Nothing here is special: install pytest-cov, pass --cov, and the plugin
+# reads the coverage the run just measured.
+name: tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prashanth-sams/pytest-html-reporter-action@v1
+        with:
+          python-version: &#039;3.12&#039;
+          extra-packages: pytest-cov
+          tests: tests/
+          pytest-args: --cov=src --cov-branch
+          min-coverage: &#039;80&#039;</code></pre>
+</div>
+<p>The plugin reads whatever measured coverage; it does not measure any itself. Auto-discovery looks for a <code>coverage.json</code> or <code>coverage.xml</code> in the report directory, the repository root and the working directory. A <code>.coverage</code> data file is <em>not</em> discovered — name it with <code>report-coverage-file</code>, and install <code>coverage</code> in that job so it can be read.</p>
+<div class="note note--warn"><span class="note__title">There is no freshness check</span>A <code>coverage.xml</code> restored from a cache before the tests ran is published as this build’s number, silently. Do not cache coverage files alongside the report.</div>
+<h2 id="matrix-and-sharding">Matrix and sharding</h2>
+<p><strong>Reach for this when</strong> you test across operating systems and Python versions. The action is designed to be run once per matrix cell, and produces one report per cell.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">examples/matrix.yml — use when one report per operating system and Python version is what you want</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml"># One report per cell. Artifact names must differ within a run.
+name: tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: [&#039;3.9&#039;, &#039;3.11&#039;, &#039;3.13&#039;]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prashanth-sams/pytest-html-reporter-action@v1
+        with:
+          python-version: ${{ matrix.python }}
+          tests: tests/
+          title: ${{ matrix.os }} py${{ matrix.python }}
+          artifact-name: pytest-html-report-${{ matrix.os }}-py${{ matrix.python }}
+          build-info: |
+            os=${{ matrix.os }}
+            python=${{ matrix.python }}</code></pre>
+</div>
+<ul>
+  <li><strong>Artifact names must be unique within a run.</strong> <code>actions/upload-artifact@v4</code> refuses two artifacts of the same name, so give each cell its own <code>artifact-name</code>. <code>artifact-overwrite: &#039;true&#039;</code> exists, but overwriting means eight of your nine reports are gone.</li>
+  <li><strong>Label the reports.</strong> <code>title</code> sets the heading inside the report and <code>build-info</code> adds <code>KEY=VALUE</code> rows to it, so a downloaded report says which cell produced it.</li>
+  <li><strong>History needs a key per cell.</strong> The default cache key already includes <code>runner.os</code>, but two Python versions writing into one history interleave builds that are not comparable.</li>
+  <li><strong><code>fail-fast: false</code></strong> is what you want here: a report for the cell that failed is more useful than a cancelled matrix.</li>
+</ul>
+<p>Sharding <em>within</em> a job is a <code>pytest-args</code> concern rather than an action concern. Splitting a suite across jobs produces one report per job, each with its own artifact; the action does not merge them.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">Parallel execution inside a single job, with one report</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">- uses: prashanth-sams/pytest-html-reporter-action@v1
+  with:
+    tests: tests/
+    extra-packages: pytest-xdist
+    pytest-args: -n auto -m &quot;not slow&quot;</code></pre>
+</div>
+<h2 id="permissions">Permissions</h2>
+<p>The action needs nothing beyond the default for the basic case. Add what the features you turn on need. Since 2023 the default <code>GITHUB_TOKEN</code> is read-only, so a missing <code>pull-requests: write</code> is the usual reason a comment does not appear.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">The two permissions most workflows need</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">permissions:
+  contents: read        # always
+  pull-requests: write  # for `comment: &#039;true&#039;`</code></pre>
+</div>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Permission</th><th>Where it goes</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>contents: read</code></td><td>The test job</td><td>Always. Checkout.</td></tr>
+      <tr><td class="t-nowrap"><code>pull-requests: write</code></td><td>The test job</td><td>Required for <code>comment: &#039;true&#039;</code>. Unavailable to a <code>pull_request</code> run from a fork.</td></tr>
+      <tr><td class="t-nowrap"><code>actions: read</code></td><td>The <code>workflow_run</code> comment job</td><td>To download the artifact produced by the test run.</td></tr>
+      <tr><td class="t-nowrap"><code>pages: write</code></td><td>The deploy job only</td><td>For <code>actions/deploy-pages</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>id-token: write</code></td><td>The deploy job only</td><td>For <code>actions/deploy-pages</code>.</td></tr>
+    </tbody>
+  </table>
+</div>
+<h2 id="how-it-works">How it works</h2>
+<p>The action is a composite: thirteen steps in <code>action.yml</code>, and one stdlib-only Python helper, <code>scripts/phr.py</code>, that does the thinking.</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Step</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap">Check the inputs</td><td>Validate before anything expensive happens.</td></tr>
+      <tr><td class="t-nowrap">Set up Python</td><td><code>actions/setup-python</code>, only when <code>python-version</code> is set.</td></tr>
+      <tr><td class="t-nowrap">Find the interpreter</td><td><code>python</code> or <code>python3</code> — settle on one name.</td></tr>
+      <tr><td class="t-nowrap">Install</td><td>The plugin, your requirements, extra packages.</td></tr>
+      <tr><td class="t-nowrap">Work out where</td><td>Resolve <code>report-path</code> exactly as the plugin will.</td></tr>
+      <tr><td class="t-nowrap">Restore build history</td><td><code>actions/cache/restore</code>, when <code>history</code> is true.</td></tr>
+      <tr><td class="t-nowrap">Run pytest</td><td>Prime, probe, run, capture the exit code.</td></tr>
+      <tr><td class="t-nowrap">Save build history</td><td><code>actions/cache/save</code>, when <code>history</code> is true.</td></tr>
+      <tr><td class="t-nowrap">Upload the report</td><td><code>actions/upload-artifact</code>.</td></tr>
+      <tr><td class="t-nowrap">Upload a Pages artifact</td><td><code>actions/upload-pages-artifact</code>, when <code>pages-artifact</code> is true.</td></tr>
+      <tr><td class="t-nowrap">Summarise the run</td><td><code>output.json</code> to outputs, job summary and comment body.</td></tr>
+      <tr><td class="t-nowrap">Comment</td><td><code>actions/github-script</code>, when <code>comment</code> is true.</td></tr>
+      <tr><td class="t-nowrap">Decide the job</td><td>Go red, or do not.</td></tr>
+    </tbody>
+  </table>
+</div>
+<p>The helper is invoked four times.</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Subcommand</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>resolve</code></td><td>Expands <code>strftime</code> placeholders once, normalises backslashes, applies the plugin’s file-or-folder rule, creates the directory, and emits the path outputs.</td></tr>
+      <tr><td class="t-nowrap"><code>prime</code></td><td>Readies a restored cache: records the restored build’s <code>start_time</code>, stands in an empty report file so the predecessor joins the archive, quarantines unreadable archived builds, and deletes stale <code>pytest_screenshots</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>args</code></td><td>Turns the <code>PHR_*</code> environment into a pytest argument list, filtered against <code>pytest --help</code>, written NUL-separated for bash to read back.</td></tr>
+      <tr><td class="t-nowrap"><code>summarize</code></td><td>Reads <code>output.json</code> and produces the step outputs, the job summary markdown, the comment body and the threshold verdict.</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="note"><span class="note__title">Only an explicit pass is a pass</span>The final step reads <code>gate-passed</code> back out of the summarize step. <code>true</code> passes and <code>false</code> fails — and anything else, including empty, also fails, because a run nobody checked is not a run that passed.</div>
+<h3 id="why-the-path-is-resolved-first">Why the path is resolved before pytest runs</h3>
+<p><code>--html-report</code> is run through <code>strftime</code>, so <code>reports/%H%M/</code> names a different folder each minute. If the action expanded it separately from the plugin, a run crossing a minute boundary would leave the action looking in a folder the report is not in. So the action expands it once, up front, and hands pytest an already-concrete path — with every remaining percent doubled, because the plugin expands whatever it is given and a surviving <code>%</code> would be read as a directive on the second pass.</p>
+<p>The file-or-folder rule is copied from the plugin rather than reinvented, including its sharp edge: the value names a file when it contains <code>.html</code> <em>anywhere</em>, not when it ends with it. When no <code>.html</code> is present, the report is named <code>pytest_html_report.html</code>. On Windows the action normalises backslashes to forward slashes first, because the plugin splits the value on <code>/</code> only.</p>
+<p>The resolve step emits <code>report-dir</code>, <code>report-name</code>, <code>report-file</code>, <code>json-path</code>, <code>archive-dir</code>, <code>screenshot-dir</code> and <code>html-report</code>, and warns when the resolved directory <em>is</em> the working directory — because then your whole checkout is what gets uploaded as the artifact.</p>
+<h3 id="flag-probing">Why pytest’s flags are probed first</h3>
+<p>Anyone can pin their own version of the plugin, and the older releases have fewer options. An unknown flag is not a missing feature — argparse aborts the entire run with exit code 4 before a single test is collected, naming a flag the user never typed.</p>
+<p>So the action runs <code>pytest --help</code> once and passes only the flags that appear in it. The check requires <code>--html-report</code> to be present as evidence that the probe is real: a probe that did not actually list the plugin’s options would otherwise read as “this plugin supports nothing” and drop every flag. If the probe itself fails, nothing is filtered — passing the flags and letting pytest object beats dropping all of them. Anything left out is announced as a warning naming the flag.</p>
+<p>The argument list is assembled in a fixed order: <code>--html-report</code> first and always; then the single-value flags, each included only when its input is non-empty; then the repeated flags (<code>--build-info</code>, <code>--report-link</code>), one per non-blank line; then <code>--report-open</code>; then each line of <code>tests</code>; then <code>pytest-args</code>. It is written NUL-separated to a temp file and read back into a bash array, so no argument can be re-split or globbed on the way, and the assembled command is printed shell-quoted so the log shows exactly what ran.</p>
+<h3 id="why-nothing-is-interpolated">Why nothing is interpolated into the shell</h3>
+<p>Every input reaches bash as an environment variable, never as <code>${{ ... }}</code> spliced into a <code>run:</code> body — that would make <code>pytest-args</code> shell source. <code>tests/test_action_yml.py</code> fails the build if anyone writes one. Test names and failure messages get the same treatment on the way out; see <a href="#untrusted-text">untrusted text</a>.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<p>Most of what goes wrong here is one of a handful of things. If the problem is in the report’s <em>contents</em> rather than in getting it built, it probably belongs on <a href="faq.html">the plugin’s side</a>.</p>
+<details class="acc">
+  <summary>No <code>output.json</code> was written</summary>
+  <div class="acc__body"><p>The run finished and the plugin never wrote anything. Three causes, in order of likelihood.</p><p><strong>The plugin is not installed in the environment that ran the tests.</strong> The action’s install step and your test run must use the same Python. If you set <code>install: &#039;false&#039;</code> because your <code>requirements.txt</code> pins it, check that the file really lists <code>pytest-html-reporter</code>. The action logs a warning at install time when the import fails — look for it above the pytest output.</p><p><strong>pytest failed before any test ran.</strong> A collection error, a missing dependency, a bad <code>-k</code>. The pytest log says which.</p><p><strong><code>report-path</code> points somewhere else.</strong> Check the <code>report-dir</code> output against where you are looking.</p></div>
+</details>
+<details class="acc">
+  <summary>Exit code 4: “a usage error”</summary>
+  <div class="acc__body"><p>pytest refused an argument. This is not a failing test — nothing ran.</p><p>The message pytest printed names a <strong>flag</strong>, and you set an <strong>input</strong>. Nearly all of them share a name — <code>--archive-since</code> is the <code>archive-since</code> input — with two that do not: <code>--html-report</code> is <code>report-path</code>, and <code>--report-link</code> is <code>report-links</code>. The same message also appears when the value came from your <code>pytest.ini</code>, because the ini keys share their names with the flags too. So check both.</p><p>The action quotes the offending line back as an annotation, so you should not have to go digging in the log for it.</p></div>
+</details>
+<details class="acc">
+  <summary>“the installed pytest-html-reporter has no --report-steps”</summary>
+  <div class="acc__body"><p>You are on a version of the plugin older than the input you set. The action leaves the flag out rather than failing the run — passing an unknown flag would abort pytest with a usage error before a single test was collected. Fix it by upgrading, or drop the input.</p><div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">with:
+  plugin-version: &#039;&gt;=0.3.8&#039;</code></pre>
+</div></div>
+</details>
+<details class="acc">
+  <summary>The Trends, Archives and Analytics tabs are empty</summary>
+  <div class="acc__body"><p>They read previous builds, and a fresh runner has none. Turn history on:</p><div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">with:
+  history: &#039;true&#039;</code></pre>
+</div><p>Then check three things.</p><ul><li><strong><code>report-path</code> must be fixed, not per-run.</strong> A path with <code>%Y%m%d</code> in it makes a new folder every run, so every run starts from nothing. Put the date in <code>artifact-name</code> instead. The action warns when it sees this combination.</li><li><strong>A matrix needs a <code>history-key</code> per cell.</strong> The default key already includes the runner OS, but two Python versions writing into one history interleave builds that are not comparable.</li><li><strong><code>archive-count: &#039;1&#039;</code> keeps nothing.</strong> The plugin reads it as “this build and no others”. <code>&#039;0&#039;</code> deletes the archive entirely. Leave it empty for no limit.</li></ul><p>Note that the first run with history on still shows one build. It takes two.</p></div>
+</details>
+<details class="acc">
+  <summary>The Test Coverage tab is empty</summary>
+  <div class="acc__body"><p>The plugin reads whatever measured coverage; it does not measure any itself.</p><ul><li>Install <code>pytest-cov</code> and pass <code>--cov=&lt;your package&gt;</code> in <code>pytest-args</code>, in the same run. That is the whole of it for a single job.</li><li>Auto-discovery looks for <code>coverage.json</code> or <code>coverage.xml</code> in the report directory, the repository root and the working directory. A <code>.coverage</code> data file is <em>not</em> discovered — name it with <code>report-coverage-file</code>, and install <code>coverage</code> in that job so it can be read.</li><li><code>report-coverage-file</code> is final. If the file named there cannot be read, the tab stays blank and the coverage the run measured is <strong>not</strong> used instead. The action warns when this happens.</li><li>There is no freshness check. A <code>coverage.xml</code> restored from a cache before the tests ran is published as this build’s number, silently. Do not cache coverage files alongside the report.</li></ul></div>
+</details>
+<details class="acc">
+  <summary>The pull request comment never appears</summary>
+  <div class="acc__body"><ul><li><strong>Permissions.</strong> <code>pull-requests: write</code> on the job. The default token has been read-only since 2023.</li><li><strong>A fork.</strong> A <code>pull_request</code> run from a fork gets a read-only token and cannot comment at all. This is deliberate on GitHub’s part. Use the <code>workflow_run</code> pattern in <a href="#fork-pull-requests">fork pull requests</a>.</li><li><strong>The event.</strong> <code>comment: &#039;true&#039;</code> only fires on a <code>pull_request</code> event, unless you pass <code>pr-number</code> explicitly.</li></ul><p>The action warns and carries on rather than failing the run, so look for a warning annotation rather than a red step.</p></div>
+</details>
+<details class="acc">
+  <summary>The report is enormous</summary>
+  <div class="acc__body"><p>Every archived build costs roughly 5KB of the page. An hourly run with no retention limit reaches several megabytes within a couple of months, and the page gets slow to open.</p><p>Set <code>archive-days: &#039;30&#039;</code>, or <code>archive-count: &#039;50&#039;</code>. They intersect with <code>archive-since</code> — a build has to satisfy every limit you set to be kept.</p><p><code>report-log-limit</code>, <code>report-attachment-limit</code> and <code>report-step-limit</code> cap what each test contributes. Note that <code>0</code> means <em>unlimited</em> for all three, and a negative value is read as <code>0</code> — the action rejects a negative rather than letting it silently mean the opposite of what it looks like.</p></div>
+</details>
+<details class="acc">
+  <summary>The job went green and no tests ran</summary>
+  <div class="acc__body"><p>That is what <code>fail-on-empty</code> is for, and it is on by default — a run that collects nothing fails. If a cell of your matrix legitimately has no tests, set <code>fail-on-empty: &#039;false&#039;</code> for it.</p></div>
+</details>
+<details class="acc">
+  <summary>The report landed in the wrong folder</summary>
+  <div class="acc__body"><p><code>report-path</code> is read as a <strong>file</strong> when it contains <code>.html</code> anywhere, not just at the end. So <code>out.html_v2/report.html</code> makes the plugin treat the whole thing as a bare filename and write into the working directory. Rename the folder. The action warns when it detects this.</p><p>Percent signs are <code>strftime</code> placeholders: <code>%p</code> is AM/PM, so <code>./100%pass/</code> becomes <code>./100PMass/</code>. Write <code>%%</code> for a literal percent.</p></div>
+</details>
+<details class="acc">
+  <summary>pip refuses to install anything</summary>
+  <div class="acc__body"><p><code>error: externally-managed-environment</code>. The runner’s Python belongs to its distribution, and pip will not touch it. This does not happen on GitHub-hosted runners; on a self-hosted one, set <code>python-version</code> so <code>actions/setup-python</code> provides an interpreter of its own.</p><div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">with:
+  python-version: &#039;3.12&#039;</code></pre>
+</div></div>
+</details>
+<details class="acc">
+  <summary>Something else</summary>
+  <div class="acc__body"><p>Open an issue with the workflow YAML, the job log, and the <code>report-dir</code> and <code>status</code> outputs. If the problem is in the report’s <em>contents</em> rather than in getting it built, it probably belongs on the plugin — start with <a href="faq.html">the FAQ</a> and <a href="cli-reference.html">the CLI reference</a>.</p></div>
+</details>
+<h2 id="next">Where to go next</h2>
+<div class="grid grid--3">
+  <a class="card" href="cli-reference.html">
+    <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg></div>
+    <h3>CLI reference</h3>
+    <p>Every flag behind these inputs, with the behaviour the action inherits.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="analytics.html">
+    <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg></div>
+    <h3>Trends and analytics</h3>
+    <p>What the archived builds that <code>history</code> carries actually buy you.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="ci-integrations.html">
+    <div class="card__icon is-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 9v6a3 3 0 0 0 3 3h6"/></svg></div>
+    <h3>Other CI systems</h3>
+    <p>Jenkins, GitLab, CircleCI and the rest, without an action to lean on.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+</div>

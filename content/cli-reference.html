@@ -1,0 +1,1655 @@
+<!--META {"title": "CLI reference", "eyebrow": "Reference", "description": "Every pytest-html-reporter command-line flag with its type and its real default, plus the standalone merge command.", "lede": "Twenty-five pytest options and one standalone command with three subcommands. Every default below is the one the source actually uses, not the one the help text rounds off."} -->
+
+<h2 id="ordinary-pytest-options">The flags are ordinary pytest options</h2>
+
+<p>The plugin registers its options through <code>pytest_addoption</code>, in an option group named <em>report generator</em>. They are pytest options like any other, so <code>pytest --help</code> lists them under that heading and everywhere pytest reads a command line will take them: the shell, <code>addopts</code> in an ini file, a <code>tox</code> command, a <code>Makefile</code> target, the <code>args</code> of a CI step.</p>
+
+<p>The plugin loads through the <code>pytest11</code> entry point, so nothing needs importing and no <code>conftest.py</code> has to mention it. That also means it is always on. <code>--html-report</code> defaults to <code>.</code>, so a plain <code>pytest</code> run in an environment where the package is installed writes <code>./pytest_html_report.html</code> whether anybody asked for a report or not.</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Three places the same flags go">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">Command line</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">addopts</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">tox.ini</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/ --html-report=./report --title=&quot;Payments Regression&quot;</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <span class="codeblock__cap">pytest.ini</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="ini">[pytest]
+addopts = --html-report=./report --title=&quot;Payments Regression&quot;</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <span class="codeblock__cap">tox.ini</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="ini">[testenv]
+commands = pytest tests/ --html-report=./report --title=&quot;Payments Regression&quot;</code></pre>
+    </div>
+  </div>
+</div>
+
+<p>Twenty-four of the twenty-five options also have an ini key, so most of this page has a second, quieter form in <a href="configuration.html">the configuration reference</a>. <code>--title</code> is the one exception: it is command-line only.</p>
+
+<h2 id="quick-reference">Quick reference</h2>
+
+<p>Every option the plugin adds to pytest, in the order the groups below take them. Defaults are what the run uses when neither the flag nor the ini key says anything.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Flag</th><th>Value</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>--html-report</code></td><td>folder or <code>.html</code> path</td><td class="t-nowrap"><code>.</code> &rarr; <code>./pytest_html_report.html</code></td><td>Where the build is written. Date placeholders are expanded.</td></tr>
+      <tr><td class="t-nowrap"><code>--title</code></td><td>text</td><td class="t-nowrap"><code>PYTEST REPORT</code></td><td>The report title. The displayed copy is cut at 20 characters.</td></tr>
+      <tr><td class="t-nowrap"><code>--environment</code></td><td>text</td><td class="t-nowrap">unset</td><td>Names the environment under test; badge cut at 10 characters.</td></tr>
+      <tr><td class="t-nowrap"><code>--build-info</code></td><td><code>KEY=VALUE</code>, repeatable</td><td class="t-nowrap">none</td><td>Extra rows in the Environment panel.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-link</code></td><td><code>LABEL=URL</code>, repeatable</td><td class="t-nowrap">none</td><td>Extra entries in the report&#039;s side nav.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-open</code></td><td><code>auto</code> | <code>always</code> | <code>none</code></td><td class="t-nowrap"><code>auto</code></td><td>Whether the finished report is handed to a browser.</td></tr>
+      <tr><td class="t-nowrap"><code>--archive-count</code></td><td>integer, kept as text</td><td class="t-nowrap"><code>&quot;&quot;</code> (keep every build)</td><td>How many builds the Archives section shows and keeps.</td></tr>
+      <tr><td class="t-nowrap"><code>--archive-days</code></td><td>number of days</td><td class="t-nowrap">no age limit</td><td>Delete archived builds older than <code>DAYS</code> days.</td></tr>
+      <tr><td class="t-nowrap"><code>--archive-since</code></td><td><code>YYYY-MM-DD</code> or with a time</td><td class="t-nowrap">no date limit</td><td>Delete every archived build older than <code>DATE</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-logs</code></td><td><code>all</code> | <code>failed</code> | <code>none</code></td><td class="t-nowrap"><code>all</code></td><td>Whose captured stdout, stderr and logging is kept.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-log-limit</code></td><td>int</td><td class="t-nowrap"><code>10000</code></td><td>Characters of captured output kept per test; <code>0</code> is no limit.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-attachments</code></td><td><code>all</code> | <code>failed</code> | <code>none</code></td><td class="t-nowrap"><code>all</code></td><td>Whose attachments are kept.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-attachment-limit</code></td><td>int</td><td class="t-nowrap"><code>20000</code></td><td>Characters kept per attached payload; <code>0</code> is no limit.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-screenshots</code></td><td><code>failed</code> | <code>all</code> | <code>none</code></td><td class="t-nowrap"><code>failed</code></td><td>When a live browser is photographed without the suite asking.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-steps</code></td><td><code>all</code> | <code>failed</code> | <code>none</code></td><td class="t-nowrap"><code>all</code></td><td>Whose <code>step()</code> and Given/When/Then trees are kept.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-step-limit</code></td><td>int</td><td class="t-nowrap"><code>500</code></td><td>Steps kept per test; <code>0</code> keeps every one.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-coverage</code></td><td><code>auto</code> | <code>none</code></td><td class="t-nowrap"><code>auto</code></td><td>Whether the Coverage tab is built at all.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-coverage-file</code></td><td>path</td><td class="t-nowrap">go looking</td><td>Read coverage from this file instead of discovering one.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-coverage-limit</code></td><td>int</td><td class="t-nowrap"><code>500</code></td><td>Files listed on the Coverage tab; <code>0</code> lists every one.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-shard</code></td><td>text (<code>ID</code>)</td><td class="t-nowrap"><code>&quot;&quot;</code> (not a shard)</td><td>Names this process one leg of a sharded run; writes a bundle, no report.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-shard-merge</code></td><td>flag</td><td class="t-nowrap">off</td><td>After writing this leg&#039;s bundle, merge every bundle beside it.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-shard-run</code></td><td>text (<code>TOKEN</code>)</td><td class="t-nowrap">CI auto-detection, else <code>&quot;&quot;</code></td><td>Which CI run this leg belongs to, so a merge takes only this run&#039;s legs.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-shard-reset</code></td><td>flag</td><td class="t-nowrap">off</td><td>Delete <code>&lt;report&gt;/shards</code> before this leg writes into it.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-junit</code></td><td>path</td><td class="t-nowrap"><code>&quot;&quot;</code> (no XML)</td><td>Also write a JUnit XML of this run. Date placeholders are expanded.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-junit-xpass</code></td><td><code>pass</code> | <code>fail</code> | <code>skip</code></td><td class="t-nowrap"><code>pass</code></td><td>How an xpassed test is written to the JUnit XML.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2 id="how-a-flag-is-read">How a flag is read</h2>
+
+<h3 id="precedence">Precedence</h3>
+
+<p>For every setting the command-line flag wins, and the ini key is consulted only when the flag is unset or an empty or whitespace string. Two settings break that rule on purpose: <code>--build-info</code> and <code>--report-link</code> are <strong>additive</strong>. The command-line entries come first, then the ini lines, and both appear in the report. Every other setting is override-only.</p>
+
+<h3 id="when-it-happens">When it happens</h3>
+
+<p>All of it is resolved in <code>pytest_configure</code>, before a single test runs. The report path is expanded and written back onto <code>config.option.path</code>, and the three shard options are written back the same way, so that an xdist worker — a separate process handed a copy of these options — agrees with the controller about where things go even if the run crosses a minute boundary while a <code>%M</code> placeholder is in the path.</p>
+
+<p>Resolving early is also why a bad value fails before the tests rather than after them. <code>--report-open=off</code> and <code>--report-junit-xpass=fatal</code> both end the run at configure time, when the cost is nothing, instead of after forty minutes of tests.</p>
+
+<h3 id="validation-asymmetry">Validation is not symmetric between flags and ini keys</h3>
+
+<p>A command-line value for an option that declares choices is rejected by pytest&#039;s own argument parser. An ini value is read by the plugin&#039;s own helper, and those helpers do not all answer the same way:</p>
+
+<ul>
+  <li><strong>Silent fallback to the default</strong> — <code>report_logs</code>, <code>report_attachments</code>, <code>report_screenshots</code>, <code>report_steps</code>, <code>report_coverage</code>, and all four numeric limits.</li>
+  <li><strong>Raises a usage error</strong> — <code>report_open</code>, <code>report_junit_xpass</code>, <code>archive_count</code>, <code>archive_days</code>, <code>archive_since</code>.</li>
+</ul>
+
+<div class="note"><span class="note__title">Note</span>The split is deliberate. A misspelled <code>report_logs</code> costs you some detail in the report; a misspelled <code>report_open</code> or <code>report_junit_xpass</code> gives you exactly the behaviour you set the key to avoid, so those refuse to guess.</div>
+
+<h3 id="negative-limits">Every numeric limit clamps at zero, and zero means unlimited</h3>
+
+<p>All four limit helpers do <code>max(limit, 0)</code>, and every consumer treats <code>0</code> as <em>no limit</em>. A negative value therefore means unlimited, not &quot;keep nothing&quot;. There is no way to spell &quot;keep zero characters&quot; with a limit; that is what <code>--report-logs=none</code> and its siblings are for.</p>
+
+<h3 id="time-placeholders">Date and time placeholders</h3>
+
+<p>Two settings run through strftime: <code>--html-report</code> / <code>html_report</code> and <code>--report-junit</code> / <code>report_junit</code>. Only the directives strftime documents are substituted — <code>aAbBcdfGHIjmMpSuUVwWxXyYzZ</code> — <code>%%</code> passes through as a literal percent, and any other <code>%X</code> is left exactly as written. A folder called <code>100% pass</code> survives being expanded.</p>
+
+<p>On the pytest command line a literal percent has to be doubled, because pytest&#039;s own help and config machinery consumes one level of it. In an ini file a single percent is right.</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Placeholders on the command line and in an ini file">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">Command line</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pytest.ini</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Doubled % on the command line</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./reports/%%Y%%m%%d/report_%%H%%M.html</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <span class="codeblock__cap">Single % in an ini file</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="ini">[pytest]
+html_report = ./reports/%Y%m%d/report_%H%M.html</code></pre>
+    </div>
+  </div>
+</div>
+
+<h2 id="output-location-and-identity">Output location and identity</h2>
+
+<p>Four options that decide where the build is written and what the page says about itself.</p>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--html-report</span>
+    <div class="def__meta">
+      <span class="pill">path</span>
+      <span class="pill pill--brand">default: .</span>
+      <span class="pill">ini: html_report</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Where the build is written. The value is expanded through strftime once, at configure time, and then read as either a file or a folder: <strong>if the string contains <code>.html</code> anywhere it names a file</strong>, and the folder is the part before the last <code>/</code>; otherwise the string names a folder and the file inside it is <code>pytest_html_report.html</code>. <code>~</code> and <code>$VARS</code> are expanded and the folder is made absolute.</p>
+    <p>The resolved folder is the report <em>base</em>, and everything else the build produces lives beside the page: <code>archive/</code>, <code>output.json</code>, <code>pytest_screenshots/</code> and, on a sharded run, <code>shards/</code>.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Folder, file, and a file per run</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report                  # ./report/pytest_html_report.html
+$ pytest --html-report=./report/index.html       # ./report/index.html
+$ pytest --html-report=./reports/%%Y%%m%%d.html  # ./reports/20260903.html</code></pre>
+    </div>
+    <div class="note note--warn"><span class="note__title">Careful</span>A folder whose own name contains <code>.html</code> — <code>./my.html.d</code> — is read as a <em>file</em> name, and the report lands in the current directory. The shard machinery reproduces this quirk line for line on purpose, so the shard folder and the report folder can never disagree. The merge command refuses such a path instead of obeying it.</div>
+    <p>One consequence worth knowing: the previous run&#039;s screenshots are swept on every configure by building <code>&lt;raw path&gt;/pytest_screenshots</code>. With a folder path that folder exists and is cleaned. With a file path — <code>./report/report.html</code> — it looks for <code>./report/report.html/pytest_screenshots</code>, which does not exist, and nothing is removed.</p>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--title</span>
+    <div class="def__meta">
+      <span class="pill">text</span>
+      <span class="pill pill--brand">default: PYTEST REPORT</span>
+      <span class="pill pill--fail">no ini key</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>The report title. The full string is kept for the heading&#039;s tooltip; the displayed copy is hard-cut at 20 characters with no ellipsis, and a class on the element tells the page to fade the tail so the cut reads as a cut rather than as a typo.</p>
+    <p>This is the only option in the group with no ini key. If you want it fixed per project, put it in <code>addopts</code>.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --title=&quot;Payments Regression&quot;</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--environment</span>
+    <div class="def__meta">
+      <span class="pill">text</span>
+      <span class="pill pill--brand">default: unset</span>
+      <span class="pill">ini: environment</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Names the environment the suite ran against. It adds an Environment row to the Environment panel and a badge beside the title, cut at 10 characters with the full name in the tooltip.</p>
+    <p>The value is recorded into each shard&#039;s own bundle. A merging leg deliberately passes an empty environment through, so a merged report reports each leg&#039;s own value rather than whichever leg happened to run last.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --environment=staging</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--build-info</span>
+    <div class="def__meta">
+      <span class="pill">KEY=VALUE</span>
+      <span class="pill pill--teal">repeatable</span>
+      <span class="pill">ini: build_info (added to)</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Adds a row to the Environment panel. Repeat the flag for as many rows as you want. Each entry is split on the <em>first</em> <code>=</code>, so a value may contain more of them; key and value are stripped, a blank entry is skipped, and an entry with no <code>=</code> at all yields an empty value rather than being dropped.</p>
+    <p>This and <code>--report-link</code> are the two settings that combine with their ini key instead of overriding it. Command-line entries come first, then the <code>build_info</code> lines — so a project can pin <code>team=payments</code> in <code>pytest.ini</code> and let CI add the branch and the run id on top.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Two rows from CI, on top of whatever the ini file already says</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report \
+    --build-info branch=&quot;$GITHUB_REF_NAME&quot; \
+    --build-info run=&quot;$GITHUB_RUN_ID&quot;</code></pre>
+    </div>
+  </div>
+</div>
+
+<figure class="imgslot" data-shot="environment-panel-flags.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/environment-panel-flags.png</b>
+  <span>The Environment panel of a report at 1440px wide, light theme, run with <code>--environment=staging --build-info branch=main --build-info team=payments</code>. Show the rows in order — Environment, branch, team, Captured output, Host, Platform, Python, pytest, Plugins, Arguments, Root, Generated — with callouts naming which flag produced the first three.</span>
+</figure>
+
+<h2 id="navigation-and-opening">Navigation and opening the report</h2>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-link</span>
+    <div class="def__meta">
+      <span class="pill">LABEL=URL</span>
+      <span class="pill pill--teal">repeatable</span>
+      <span class="pill">ini: report_link (added to)</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Adds an entry to the report&#039;s side nav. The entry is split on the first <code>=</code>; both halves must be non-empty or the entry is discarded.</p>
+    <p>Relative paths are kept as they are, because linking <code>./htmlcov/index.html</code> that sits beside the report is the point of the option. An absolute URL has to carry a scheme of <code>http://</code>, <code>https://</code> or <code>mailto:</code>; anything else is silently dropped, so a <code>javascript:</code> or <code>data:</code> URL cannot reach a page that gets published and passed around. A one-letter scheme is not treated as a scheme at all, so <code>C:/reports</code> is read as the Windows path it is.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">The coverage HTML beside the report, and a runbook elsewhere</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --cov=src --cov-report=html --html-report=./report \
+    --report-link &#039;Coverage=htmlcov/index.html&#039; \
+    --report-link &#039;Runbook=https://wiki.example.com/runbook&#039;</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-open</span>
+    <div class="def__meta">
+      <span class="pill">auto | always | none</span>
+      <span class="pill pill--brand">default: auto</span>
+      <span class="pill">ini: report_open</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Whether the finished report is handed to a browser. <code>auto</code> opens it only when all three of these hold:</p>
+    <ul class="featlist">
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+        <span><b>Somebody is sitting there</b>The <em>original</em> stdout is a tty. pytest replaced <code>sys.stdout</code> with a capture long ago, so a run piped into a log file or started by cron is correctly read as unattended.</span>
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+        <span><b>It is not a build agent</b>Seventeen environment variables are consulted; see <a href="#environment-variables">Environment variables</a> below.</span>
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+        <span><b>There is a graphical session</b>Assumed on macOS and Windows; on anything else <code>DISPLAY</code> or <code>WAYLAND_DISPLAY</code> has to be set. Without this check, <code>webbrowser</code> on a headless Linux box falls through to a console browser and opens the report <em>in the terminal</em>, on top of the summary the run just printed.</span>
+      </li>
+    </ul>
+    <p>The report is opened as a <code>file://</code> URL with <code>new=2</code>, which asks for a tab rather than a window so a run in a loop does not bury the desktop. Every failure path is swallowed: the tests are over and the report is written by the time any of this runs, and a machine with no browser on it is not a failed build.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --report-open=none     # never
+$ pytest --html-report=./report --report-open=always   # even in a container</code></pre>
+    </div>
+    <div class="note"><span class="note__title">Note</span>A value outside the three is a usage error, raised at configure time before any test runs. Somebody who wrote <code>report_open = off</code> has said they do not want a browser, and silently opening one anyway is the one outcome they were trying to avoid.</div>
+  </div>
+</div>
+
+<h2 id="archives-and-retention">Archives and retention</h2>
+
+<p>The three retention limits <strong>intersect</strong>. A build has to satisfy every limit that is set to survive: the day-based and date-based cutoffs are reduced to the stricter of the two, so neither can widen the other, and a file then has to be both newer than that cutoff and among the newest <em>keep</em> to be kept.</p>
+
+<p>Archived builds are named <code>output_&lt;start timestamp&gt;.json</code>, and the age of a build is read out of the file <strong>name</strong>, not its mtime. A checkout into a fresh CI workspace gives every file the mtime of the clone; reading ages from mtimes there would keep everything for ever. The mtime is only the fallback for files named by an older version of the plugin.</p>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--archive-count</span>
+    <div class="def__meta">
+      <span class="pill">integer, kept as text</span>
+      <span class="pill pill--brand">default: &quot;&quot;</span>
+      <span class="pill">ini: archive_count</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>How many builds the Archives section shows and keeps on disk. This is handled as text rather than as a number, because empty and <code>0</code> are different answers and both get asked about later:</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Value</th><th>What happens</th></tr></thead>
+        <tbody>
+          <tr><td class="t-nowrap"><code>&quot;&quot;</code> (unset)</td><td>With no day or date limit either, nothing is ever deleted.</td></tr>
+          <tr><td class="t-nowrap"><code>0</code></td><td>The whole <code>archive/</code> directory is removed and the report has no Archives section at all.</td></tr>
+          <tr><td class="t-nowrap"><code>N</code></td><td>The build being written now is displayed alongside the archived ones and counts against the limit, so <code>N - 1</code> files stay on disk.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>A non-integer is a usage error — <code>--archive-count takes a number of builds to keep, not &#039;nine&#039;</code> — and so is a negative number.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --archive-count=20</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--archive-days</span>
+    <div class="def__meta">
+      <span class="pill">float (DAYS)</span>
+      <span class="pill pill--brand">default: no age limit</span>
+      <span class="pill">ini: archive_days</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Keep only the builds run in the last <code>DAYS</code> days; older archived builds are deleted. Fractions are allowed, so <code>0.5</code> is twelve hours — useful on a suite that runs on every commit rather than nightly.</p>
+    <p>A non-numeric value is a usage error, and so is a negative one.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">At most 50 builds, and none older than 14 days — both have to hold</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --archive-count=50 --archive-days=14</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--archive-since</span>
+    <div class="def__meta">
+      <span class="pill">date (DATE)</span>
+      <span class="pill pill--brand">default: no date limit</span>
+      <span class="pill">ini: archive_since</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Delete every archived build older than <code>DATE</code>. Three formats are tried in order: <code>%Y-%m-%d %H:%M:%S</code>, <code>%Y-%m-%d %H:%M</code>, then <code>%Y-%m-%d</code>. All are read in local time, so a bare date means midnight local. Anything else is a usage error naming the two shapes it accepts.</p>
+    <p>Use this for a hard line — the day a release branch was cut, the day a flaky suite was rewritten — where a rolling window of days would keep sliding past it.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --archive-since=&#039;2026-06-01 09:00&#039;</code></pre>
+    </div>
+  </div>
+</div>
+
+<h2 id="evidence-and-limits">What the report keeps: logs, attachments, screenshots and steps</h2>
+
+<p>Four <code>all | failed | none</code> modes, three of them with a numeric cap beside them. Every one of these flags defaults to unset on the command line so the ini key can be seen; the effective defaults live in the helpers and differ per feature, because photographing a passing test and recording the steps of a passing test are not the same kind of cost.</p>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-logs</span>
+    <div class="def__meta">
+      <span class="pill">all | failed | none</span>
+      <span class="pill pill--brand">default: all</span>
+      <span class="pill">ini: report_logs</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Whose captured stdout, stderr and logging output is kept. <code>none</code> is more than a display setting: it stops the reporter collecting sections in <code>pytest_runtest_makereport</code> at all, so nothing is buffered in the first place.</p>
+    <p>Sections are keyed by pytest&#039;s own section title and the last write wins, so a test retried by pytest-rerunfailures shows the attempt actually being reported rather than every attempt&#039;s output stacked up.</p>
+    <div class="note"><span class="note__title">Note</span>Under <code>-s</code> / <code>--capture=no</code> pytest does not capture stdout and stderr at all, so only logging output reaches the Logs column. The report renders a banner saying so rather than leaving you to guess. See <a href="#third-party-options">the third-party options</a> below.</div>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --report-logs=failed</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-log-limit</span>
+    <div class="def__meta">
+      <span class="pill">int</span>
+      <span class="pill pill--brand">default: 10000</span>
+      <span class="pill">ini: report_log_limit</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>The maximum number of characters of captured output kept per test, counted across all of that test&#039;s sections. <code>0</code> keeps everything, and so does any negative number.</p>
+    <p>The <strong>tail</strong> is what survives, because logs read chronologically and the interesting part of a log is the end. The cut is made at a line boundary rather than mid-line, and a synthetic <em>Trimmed</em> section is prepended reading <code>N earlier characters dropped - raise --report-log-limit to keep them.</code>, so the page never quietly pretends the output was that short.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Keep every character, for a suite whose logs are the evidence</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --report-logs=failed --report-log-limit=0</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-attachments</span>
+    <div class="def__meta">
+      <span class="pill">all | failed | none</span>
+      <span class="pill pill--brand">default: all</span>
+      <span class="pill">ini: report_attachments</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Whose attachments are kept — the payloads handed to <code>attach_text()</code>, <code>attach_json()</code>, <code>attach_file()</code> and <code>attach_api()</code>. These are things the suite asked for by name, which is why the default is <code>all</code>; drop to <code>failed</code> when an API-heavy suite is making the page large.</p>
+    <p>Images handed to <code>attach()</code> are not attachments in this sense and are governed by nothing — see <code>--report-screenshots</code>. The functions themselves are documented in <a href="python-api.html">the Python API</a>.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --report-attachments=failed</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-attachment-limit</span>
+    <div class="def__meta">
+      <span class="pill">int</span>
+      <span class="pill pill--brand">default: 20000</span>
+      <span class="pill">ini: report_attachment_limit</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Maximum characters kept per attached payload. <code>0</code> — and any negative value — keeps everything. The limit is per payload, not per test, so a test that attaches six responses can carry six times this much.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --report-attachment-limit=50000</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-screenshots</span>
+    <div class="def__meta">
+      <span class="pill">failed | all | none</span>
+      <span class="pill pill--brand">default: failed</span>
+      <span class="pill">ini: report_screenshots</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>When the reporter photographs a live Selenium driver or Playwright page <em>without the suite asking</em>. The picture is taken in <code>pytest_runtest_teardown</code>, before the fixture finalizers run and close the browser, which is the last moment the page still exists.</p>
+    <p>The default is <code>failed</code> because photographing a run that passed produces a great many pictures of pages that were fine, and every one of them costs a round trip to the browser.</p>
+    <div class="note note--tip"><span class="note__title">Tip</span>This governs only the automatic captures. An image handed to <code>attach()</code> was asked for and is always kept, whatever this says — including on a passing test under <code>--report-screenshots=none</code>.</div>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Photograph everything while chasing a visual regression</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/ui --html-report=./report --report-screenshots=all</code></pre>
+    </div>
+    <p>More about how the picture is taken, and about attaching your own, in <a href="screenshots.html">Screenshots</a>.</p>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-steps</span>
+    <div class="def__meta">
+      <span class="pill">all | failed | none</span>
+      <span class="pill pill--brand">default: all</span>
+      <span class="pill">ini: report_steps</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Whose test steps are kept — both the pieces named with <code>step()</code> and the Given/When/Then of a pytest-bdd scenario.</p>
+    <p>The default is <code>all</code> rather than <code>failed</code>, unlike a log, because the steps of a test that passed are what a later failure gets read against, and they cost a line each.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --report-steps=failed</code></pre>
+    </div>
+    <p><a href="steps-and-bdd.html">Steps and BDD</a> covers what a step tree looks like.</p>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-step-limit</span>
+    <div class="def__meta">
+      <span class="pill">int</span>
+      <span class="pill pill--brand">default: 500</span>
+      <span class="pill">ini: report_step_limit</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Maximum steps kept per test. <code>0</code> keeps every one, and so does any negative value, which is clamped to <code>0</code> — enforcement is <code>if limit() and len(steps) &gt;= limit()</code>, and a falsey limit never fires.</p>
+    <p>This one is stored on class-level config state rather than on the reporter, because <code>step()</code> is called by the test long before the reporter object is reachable from it. What it is for: a step called inside a ten-thousand-row loop would otherwise write ten thousand lines into the page, and the tree stops being readable long before it stops being generated.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --report-step-limit=0</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">A lean CI build: evidence only where something went wrong</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest --html-report=./report \
+    --report-logs=failed \
+    --report-attachments=failed \
+    --report-screenshots=none \
+    --report-steps=failed</code></pre>
+</div>
+
+<h2 id="coverage">Coverage</h2>
+
+<p>The Coverage tab is built from whatever coverage the run produced. Coverage is read <em>before</em> <code>output.json</code> is written, so the percentage is archived with the build and the next build can show a delta and a trend line.</p>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-coverage</span>
+    <div class="def__meta">
+      <span class="pill">auto | none</span>
+      <span class="pill pill--brand">default: auto</span>
+      <span class="pill">ini: report_coverage</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Whether the Coverage tab is built at all. <code>none</code> switches it off, including the coverage entry in <code>output.json</code> — so the number is not archived and does not appear on the trend either.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --cov=src --html-report=./report --report-coverage=none</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-coverage-file</span>
+    <div class="def__meta">
+      <span class="pill">path</span>
+      <span class="pill pill--brand">default: go looking</span>
+      <span class="pill">ini: report_coverage_file</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Read coverage from this file instead of discovering one. Three kinds are understood, detected from the contents rather than the extension: a coverage.py <code>coverage.json</code>, a Cobertura <code>coverage.xml</code>, and a <code>.coverage</code> data file.</p>
+    <p>With no file named, discovery looks for <code>coverage.json</code> and then <code>coverage.xml</code>. Name the file when the coverage was measured somewhere else — a previous job, a different container — and the file you want is not the one discovery would find first.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --report-coverage-file=./artifacts/coverage.xml</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-coverage-limit</span>
+    <div class="def__meta">
+      <span class="pill">int</span>
+      <span class="pill pill--brand">default: 500</span>
+      <span class="pill">ini: report_coverage_limit</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>How many files the Coverage tab lists, least-covered first. <code>0</code> — and any negative value — lists every one. The order is what makes a limit tolerable here: the files a limit cuts off are the ones already well covered.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">The ring is coloured against the project&#039;s own --cov-fail-under</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --cov=src --cov-report=json --cov-fail-under=85 \
+    --html-report=./report \
+    --report-coverage-file=./coverage.json \
+    --report-coverage-limit=0</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="note"><span class="note__title">How the ring is coloured</span>With no target the grade bands apply: 90 or more is <em>strong</em>, 75 or more is <em>fair</em>, below that is <em>low</em>. With a target — the live <code>fail_under</code> when pytest-cov is running, otherwise its <code>--cov-fail-under</code> option — it is <em>strong</em> at or above the target and <em>low</em> below it. A target of zero or less counts as no target.</div>
+
+<h2 id="sharded-runs">Sharded runs</h2>
+
+<p>A build is one set of totals, one archived <code>output.json</code>, one rotation of <code>archive/</code>, one point on the trend chart and one entry in every per-test history. So exactly one process may write into a report folder. Four matrix legs writing four reports into one folder do not add up to a build; they overwrite each other&#039;s <code>output.json</code> and manufacture four builds out of one.</p>
+
+<p>A leg named with <code>--report-shard</code> therefore writes a <strong>bundle</strong> and nothing else — no page, no <code>output.json</code>, no archive rotation:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">What one leg leaves behind under --html-report=./report</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">report/
+└── shards/
+    └── 1-4/
+        ├── records.json
+        └── pytest_screenshots/</code></pre>
+</div>
+
+<p>The bundle is lossless: the leg&#039;s records verbatim, plus a description of the run — session start and end, exit status, run token, collected count, hostname, platform, Python and pytest versions, plugin versions, invocation arguments, rootdir, environment, build info, the capture row, and the xdist worker ids — and the leg&#039;s coverage summary.</p>
+
+<figure class="imgslot" data-shot="shard-layout.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Diagram: assets/img/shots/shard-layout.png</b>
+  <span>A file-tree diagram of a merged report folder: <code>report/</code> holding <code>pytest_html_report.html</code>, <code>output.json</code>, <code>archive/</code>, <code>pytest_screenshots/</code> and <code>shards/1-4 … 4-4</code>, each with <code>records.json</code> and <code>pytest_screenshots/</code>. Draw four arrows from four CI jobs into the four shard folders, and one arrow from the merge command into the four top-level files. Both themes.</span>
+</figure>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-shard</span>
+    <div class="def__meta">
+      <span class="pill">text (ID)</span>
+      <span class="pill pill--brand">default: not a shard</span>
+      <span class="pill">ini: report_shard</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Names this process as one leg of a sharded run — <code>1/4</code>, <code>e2e</code>, <code>py311-linux</code>. The leg writes its records to <code>&lt;report&gt;/shards/&lt;id&gt;</code> and no report of its own.</p>
+    <p>The id has to be a directory name, so it is sanitised: anything outside <code>[A-Za-z0-9._-]</code> becomes <code>-</code>, runs of <code>-</code> collapse to one, <code>-</code> and <code>.</code> are stripped from both ends, and the result is truncated to 64 characters. The <strong>raw</strong> value is what travels into the bundle as the shard&#039;s label, because <code>1/4</code> reads better in the report than <code>1-4</code>.</p>
+    <p>An id that sanitises to nothing — <code>..</code>, <code>//</code> — is a usage error rather than a silent fallback. Both <code>.</code> and <code>..</code> are made entirely of characters the pattern considers safe, and a shard directory that resolved to the report base itself would empty the report&#039;s screenshots and drop its bundle in the wrong place.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/unit --html-report=./report --report-shard=1/4</code></pre>
+    </div>
+    <div class="note"><span class="note__title">Under xdist</span>A leg run with <code>-n 8</code> is still one leg. Workers return early from the terminal summary, so the bundle is written once by the controller — which by then holds every worker&#039;s records — rather than once per worker.</div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-shard-merge</span>
+    <div class="def__meta">
+      <span class="pill">flag</span>
+      <span class="pill pill--brand">default: off</span>
+      <span class="pill">ini: report_shard_merge</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>After writing this leg&#039;s bundle, merge every bundle beside it and render one report. This is for <strong>sequential legs on one machine</strong>: three runs need three commands rather than four.</p>
+    <p>It requires <code>--report-shard</code> — a merging leg still has to say which leg it is — and the run aborts at configure time if it is missing. A merge failure after the tests is written to stderr and the leg returns without a report rather than raising an internal error once every test has already passed; the bundles stay on disk for <code>pytest-html-reporter merge</code> to pick up. Every bundle that was merged is named on stderr with the time it finished.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Three sequential legs — the first resets, the last merges</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/unit        --html-report=./report --report-shard=unit --report-shard-reset
+$ pytest tests/integration --html-report=./report --report-shard=integration
+$ pytest tests/e2e         --html-report=./report --report-shard=e2e  --report-shard-merge</code></pre>
+    </div>
+    <p>The ini form takes <code>1</code>, <code>true</code>, <code>yes</code> or <code>on</code>, case-insensitively; anything else is false.</p>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-shard-run</span>
+    <div class="def__meta">
+      <span class="pill">text (TOKEN)</span>
+      <span class="pill pill--brand">default: CI auto-detection</span>
+      <span class="pill">ini: report_shard_run</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Names the CI run this leg belongs to. The token is stamped into every bundle, and a merging leg merges only the bundles carrying the same token — the ones it puts aside are named on stderr, along with advice to clear the folder or give the first leg <code>--report-shard-reset</code>.</p>
+    <p>When nothing is given, the token is derived from the CI system&#039;s own variables (see <a href="#run-token-variables">the table below</a>). A leg with no token at all merges everything, which is what the feature has always done.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Naming it explicitly, so a re-run cannot merge the first attempt&#039;s bundles</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --report-shard=1/4 \
+    --report-shard-run=&quot;$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT&quot;</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-shard-reset</span>
+    <div class="def__meta">
+      <span class="pill">flag</span>
+      <span class="pill pill--brand">default: off</span>
+      <span class="pill">ini: report_shard_reset</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Delete <code>&lt;report&gt;/shards</code> entirely before this leg writes into it. For the <strong>first</strong> leg of a sequential run, where the legs share one persistent <code>--html-report</code> and the folder accumulates: a leg renamed or dropped since the last run would otherwise leave a bundle behind that the next merge reports as part of this build — six tests when four ran.</p>
+    <div class="note note--warn"><span class="note__title">Careful</span>This is never implied. Not by <code>--report-shard</code>, not by <code>--report-shard-merge</code>. It deletes the other legs&#039; work, so it has to be the flag somebody typed. Never put it on a parallel matrix leg — the legs have no ordering between them, and any one of them could delete the rest.</div>
+    <p>It is applied before the leg&#039;s own directory is dealt with, since it takes that directory with it.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/unit --html-report=./report --report-shard=unit --report-shard-reset</code></pre>
+    </div>
+  </div>
+</div>
+
+<h3 id="shard-directory-hygiene">What a leg cleans, and what it leaves alone</h3>
+
+<p>A shard leg removes only its own <code>&lt;base&gt;/shards/&lt;id&gt;</code> directory, and removes the <em>whole</em> directory rather than just its screenshots. A <code>records.json</code> left by a previous, larger run of the same leg would otherwise survive and be what the merge reads.</p>
+
+<p>It never sweeps the report base, because the legs of one matrix are pointed at one <code>--html-report</code> and a second leg cleaning the shared folder would take the first leg&#039;s screenshots with it, leaving the merge holding records that name pictures which are no longer there.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">A parallel matrix: every leg writes a bundle, one later job merges them</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">jobs:
+  test:
+    strategy:
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - run: pytest --html-report=./report --report-shard=${{ matrix.shard }}/4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ matrix.shard }}
+          path: report/shards/
+
+  report:
+    needs: test
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: ./artifacts }
+      - run: |
+          pytest-html-reporter merge ./artifacts \
+            --html-report ./report \
+            --junit-xml ./report/junit.xml \
+            --strict</code></pre>
+</div>
+
+<p><a href="ci-integrations.html">CI integrations</a> has the same shape for GitLab, Jenkins and the rest.</p>
+
+<h2 id="junit-xml">JUnit XML from a pytest run</h2>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-junit</span>
+    <div class="def__meta">
+      <span class="pill">path</span>
+      <span class="pill pill--brand">default: no XML</span>
+      <span class="pill">ini: report_junit</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Also write a JUnit XML of this run to <code>PATH</code>, for a CI system that reads XML. Date and time placeholders are expanded exactly as they are for <code>--html-report</code>.</p>
+    <p>The XML is written before the guard that skips a run which collected nothing, deliberately: a run that collected nothing still owes its CI system a document saying so, because a missing file reads as &quot;the job never ran&quot;.</p>
+    <p>A write failure is reported on stderr as <code>pytest-html-reporter: --report-junit could not write &lt;path&gt;: &lt;error&gt;</code> and never raises. The run has already finished, and losing the HTML report, <code>output.json</code> and the archived build over a mistyped XML path would be the wrong trade.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --report-junit=./report/junit-%%Y%%m%%d.xml</code></pre>
+    </div>
+    <div class="note note--warn"><span class="note__title">Ignored on a shard</span>A shard that is not also the merge leg renders nothing, so it writes no XML. This is said out loud on stderr at configure time rather than silently, because a CI author expecting four shard XMLs plus a merged one would have a <code>**/*.xml</code> glob counting every test in the matrix twice. Pass <code>--junit-xml</code> to <code>pytest-html-reporter merge</code>, or run the leg with <code>--report-shard-merge</code>.</div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-junit-xpass</span>
+    <div class="def__meta">
+      <span class="pill">pass | fail | skip</span>
+      <span class="pill pill--brand">default: pass</span>
+      <span class="pill">ini: report_junit_xpass</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>How an unexpectedly passing test is written down. <code>pass</code> is what pytest&#039;s own <code>--junitxml</code> does.</p>
+    <p>This is the <strong>only</strong> shaping flag a pytest run has for the XML. The equivalents of <code>--junit-suite-name</code>, <code>--junit-hostname</code>, <code>--junit-logging</code> and <code>--junit-attachments</code> exist only on the standalone command below.</p>
+    <p>A value outside the three is a usage error rather than a fallback, and that is on purpose: the default is the one answer a team that reached for this flag was trying to avoid.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --report-junit=./junit.xml --report-junit-xpass=fail</code></pre>
+    </div>
+    <div class="note"><span class="note__title">Note</span>This plugin&#039;s xPASS is only ever the non-strict kind. A strict xfail that passes is reported by pytest as a plain failure with <code>[XPASS(strict)]</code> in the text, and never reaches this code as an xPASS at all.</div>
+  </div>
+</div>
+
+<h2 id="standalone-command">The standalone command</h2>
+
+<p>Installing the package also installs a console script, <code>pytest-html-reporter</code>. It exists because merging a sharded run is its own process, not another pytest run: a report folder has exactly one writer per build, and a fifth pytest started in it to do the merging would sweep away the very screenshots it was sent to collect.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">pytest-html-reporter [--version] COMMAND [PATH ...] [options]</code></pre>
+</div>
+
+<p>It is argparse and the standard library only — a merge command that needed a dependency of its own would be a command CI could not run. <code>--version</code> prints <code>pytest-html-reporter 0.4.0</code> and exits. There is no default subcommand: running it bare is an argparse usage error and exits 2.</p>
+
+<p>The three subcommands are three views of one merge.</p>
+
+<div class="grid grid--3">
+  <article class="card">
+    <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg></div>
+    <h3 id="card-merge">merge</h3>
+    <p>The whole of it — the report, and the JUnit XML when asked. Requires <code>--html-report</code>.</p>
+  </article>
+  <article class="card">
+    <div class="card__icon is-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-4"/></svg></div>
+    <h3 id="card-junit">junit</h3>
+    <p>Stops after the XML, for a pipeline that publishes results and keeps no HTML. Requires <code>-o</code>.</p>
+  </article>
+  <article class="card">
+    <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
+    <h3 id="card-inspect">inspect</h3>
+    <p>Stops before anything is written — the pre-flight check for &quot;four artifacts were downloaded and three are here&quot;.</p>
+  </article>
+</div>
+
+<h3 id="standalone-flag-table">Every flag the command takes</h3>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Flag</th><th>Value</th><th>Default</th><th>On</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>--version</code></td><td>—</td><td class="t-nowrap">—</td><td class="t-nowrap">top level</td><td>Print the version and exit.</td></tr>
+      <tr><td class="t-nowrap"><code>PATH ...</code></td><td>paths</td><td class="t-nowrap"><code>.</code></td><td class="t-nowrap">all three</td><td>Directories to walk for bundles, or <code>records.json</code> files named directly.</td></tr>
+      <tr><td class="t-nowrap"><code>--on-duplicate</code></td><td><code>merge</code> | <code>first</code> | <code>last</code> | <code>worst</code> | <code>error</code></td><td class="t-nowrap"><code>merge</code></td><td class="t-nowrap">all three</td><td>What to do when one nodeid ran in more than one shard.</td></tr>
+      <tr><td class="t-nowrap"><code>--order</code></td><td><code>shard</code> | <code>name</code></td><td class="t-nowrap"><code>shard</code></td><td class="t-nowrap">all three</td><td>Row order within each suite.</td></tr>
+      <tr><td class="t-nowrap"><code>--strip-path-prefix</code></td><td>text, repeatable</td><td class="t-nowrap">none</td><td class="t-nowrap">all three</td><td>Strip this prefix from every nodeid, so different checkout roots group into one suite.</td></tr>
+      <tr><td class="t-nowrap"><code>-q</code>, <code>--quiet</code></td><td>flag</td><td class="t-nowrap">off</td><td class="t-nowrap">all three</td><td>Suppress the per-decision notes on stderr.</td></tr>
+      <tr><td class="t-nowrap"><code>--strict</code></td><td>flag</td><td class="t-nowrap">off</td><td class="t-nowrap">merge, junit</td><td>Exit 1 when the merge was not complete.</td></tr>
+      <tr><td class="t-nowrap"><code>--exit-code</code></td><td>flag</td><td class="t-nowrap">off</td><td class="t-nowrap">merge, junit</td><td>Exit 1 when the merged build has any failure or error.</td></tr>
+      <tr><td class="t-nowrap"><code>--dry-run</code></td><td>flag</td><td class="t-nowrap">off</td><td class="t-nowrap">merge, junit</td><td>Merge and print the summary, writing nothing.</td></tr>
+      <tr><td class="t-nowrap"><code>--html-report</code></td><td>path — <strong>required</strong></td><td class="t-nowrap">—</td><td class="t-nowrap">merge</td><td>Where the merged report is written.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-xml</code></td><td>path</td><td class="t-nowrap">none</td><td class="t-nowrap">merge</td><td>Also write the merged JUnit XML here.</td></tr>
+      <tr><td class="t-nowrap"><code>--start-time</code></td><td><code>earliest</code> | <code>now</code> | unix timestamp</td><td class="t-nowrap"><code>earliest</code></td><td class="t-nowrap">merge</td><td>The moment this build is filed under.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-coverage-file</code></td><td>path</td><td class="t-nowrap">none</td><td class="t-nowrap">merge</td><td>One already-combined coverage report.</td></tr>
+      <tr><td class="t-nowrap"><code>--coverage-data</code></td><td>path, repeatable</td><td class="t-nowrap">none</td><td class="t-nowrap">merge</td><td><code>.coverage</code> data files to combine with the <code>coverage</code> package.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-coverage-limit</code></td><td>int</td><td class="t-nowrap"><code>500</code></td><td class="t-nowrap">merge</td><td>Files listed on the Coverage tab; <code>0</code> lists every one.</td></tr>
+      <tr><td class="t-nowrap"><code>--coverage-target</code></td><td>float</td><td class="t-nowrap">none</td><td class="t-nowrap">merge</td><td>The percentage that colours the coverage ring.</td></tr>
+      <tr><td class="t-nowrap"><code>--title</code></td><td>text</td><td class="t-nowrap"><code>PYTEST REPORT</code></td><td class="t-nowrap">merge</td><td>The merged report&#039;s title.</td></tr>
+      <tr><td class="t-nowrap"><code>--environment</code></td><td>text</td><td class="t-nowrap">the shards&#039; own value</td><td class="t-nowrap">merge</td><td>The environment under test.</td></tr>
+      <tr><td class="t-nowrap"><code>--build-info</code></td><td><code>K=V</code>, repeatable</td><td class="t-nowrap">none</td><td class="t-nowrap">merge</td><td>A row for the Environment panel.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-link</code></td><td><code>LABEL=URL</code>, repeatable</td><td class="t-nowrap">none</td><td class="t-nowrap">merge</td><td>A link in the merged report&#039;s nav.</td></tr>
+      <tr><td class="t-nowrap"><code>--archive-count</code></td><td>integer as text</td><td class="t-nowrap"><code>&quot;&quot;</code></td><td class="t-nowrap">merge</td><td>How many builds to keep.</td></tr>
+      <tr><td class="t-nowrap"><code>--archive-days</code></td><td>number</td><td class="t-nowrap">no limit</td><td class="t-nowrap">merge</td><td>How many days of build history to keep.</td></tr>
+      <tr><td class="t-nowrap"><code>--archive-since</code></td><td>date</td><td class="t-nowrap">no limit</td><td class="t-nowrap">merge</td><td>The oldest build to keep.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-open</code></td><td><code>auto</code> | <code>always</code> | <code>none</code></td><td class="t-nowrap"><code>none</code></td><td class="t-nowrap">merge</td><td>Whether the finished report is opened in a browser.</td></tr>
+      <tr><td class="t-nowrap"><code>--copy-assets</code></td><td>flag</td><td class="t-nowrap">on</td><td class="t-nowrap">merge</td><td>Copy the screenshots the merged records name into the report.</td></tr>
+      <tr><td class="t-nowrap"><code>--no-copy-assets</code></td><td>flag</td><td class="t-nowrap">—</td><td class="t-nowrap">merge</td><td>Leave the images in the shard folders.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-suite-name</code></td><td>text</td><td class="t-nowrap"><code>pytest</code></td><td class="t-nowrap">merge, junit</td><td>The <code>&lt;testsuite&gt;</code> name attribute.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-hostname</code></td><td>text</td><td class="t-nowrap">the shards&#039; host</td><td class="t-nowrap">merge, junit</td><td>The hostname attribute.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-xpass</code></td><td><code>pass</code> | <code>fail</code> | <code>skip</code></td><td class="t-nowrap"><code>pass</code></td><td class="t-nowrap">merge, junit</td><td>How an unexpectedly passing test is written down.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-logging</code></td><td><code>no</code> | <code>all</code> | <code>failed</code></td><td class="t-nowrap"><code>no</code></td><td class="t-nowrap">merge, junit</td><td>Which tests carry their captured output into the XML.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-attachments</code></td><td>flag</td><td class="t-nowrap">on</td><td class="t-nowrap">merge, junit</td><td>Write <code>[[ATTACHMENT|…]]</code> lines for screenshots.</td></tr>
+      <tr><td class="t-nowrap"><code>--no-junit-attachments</code></td><td>flag</td><td class="t-nowrap">—</td><td class="t-nowrap">merge, junit</td><td>Leave the screenshots out of the XML.</td></tr>
+      <tr><td class="t-nowrap"><code>-o</code>, <code>--output</code></td><td>path — <strong>required</strong></td><td class="t-nowrap">—</td><td class="t-nowrap">junit</td><td>Where the merged JUnit XML is written.</td></tr>
+      <tr><td class="t-nowrap"><code>--json</code></td><td>flag</td><td class="t-nowrap">off</td><td class="t-nowrap">inspect</td><td>Print the listing as a JSON document on stdout.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="finding-bundles">PATH, and how bundles are found</h3>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">PATH ...</span>
+    <div class="def__meta">
+      <span class="pill">positional, zero or more</span>
+      <span class="pill pill--brand">default: .</span>
+      <span class="pill">merge, junit, inspect</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Directories to search for shard bundles, or <code>records.json</code> files named directly. The everyday shape is one folder holding the artifacts four CI jobs uploaded, and the everyday command is run from inside it — which is why the default is the current directory.</p>
+    <p>Discovery expands <code>~</code> and <code>$VARS</code>, takes a named file as-is, and otherwise walks a directory collecting every <code>records.json</code>. Subdirectories and candidates are sorted at every level, so the same folder yields the same list twice running, and results are deduplicated by absolute path.</p>
+    <p>A file that is not a bundle — the wrong schema, or not JSON at all — is skipped with a note. A bundle written by a <em>newer</em> pytest-html-reporter is a different matter: it stops the merge and is named, rather than being read hopefully, because silently dropping a quarter of a matrix produces a report that is wrong in a way nobody looking at it can see.</p>
+    <p>Bundles are ordered by a natural sort of the shard id, then the id, then the file path — never load order — so two CI jobs downloading the same four artifacts in different orders produce the same report.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest-html-reporter merge ./artifacts --html-report ./report
+$ pytest-html-reporter merge ./artifacts/shard-1/records.json \
+    ./artifacts/shard-2/records.json --html-report ./report</code></pre>
+    </div>
+    <div class="note"><span class="note__title">Two bundles, one id</span>Not an error. The one that finished later wins, both are named in a note, and the count is reported as &quot;bundles superseded by a newer copy&quot; — which feeds <code>--strict</code>.</div>
+  </div>
+</div>
+
+<h3 id="shaping-flags">Shaping flags — what the merged record list is</h3>
+
+<p>These three are on all three subcommands, because they decide the answer rather than the output. <code>inspect</code> reporting a different set of tests from the <code>merge</code> that follows it would make it useless as a pre-flight check.</p>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--on-duplicate</span>
+    <div class="def__meta">
+      <span class="pill">merge | first | last | worst | error</span>
+      <span class="pill pill--brand">default: merge</span>
+      <span class="pill">merge, junit, inspect</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>What to do when one nodeid ran in more than one shard — a badly split matrix, or a leg re-run over the top of another.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Policy</th><th>What it keeps</th></tr></thead>
+        <tbody>
+          <tr><td class="t-nowrap"><code>merge</code></td><td>Folds the attempts together and counts them as reruns.</td></tr>
+          <tr><td class="t-nowrap"><code>first</code></td><td>The first attempt in bundle order.</td></tr>
+          <tr><td class="t-nowrap"><code>last</code></td><td>The last attempt in bundle order.</td></tr>
+          <tr><td class="t-nowrap"><code>worst</code></td><td>The most severe outcome: ERROR &gt; FAIL &gt; xPASS &gt; SKIP &gt; xFAIL &gt; PASS. A status this version has never heard of scores below all of them, so it can never outrank a genuine FAIL.</td></tr>
+          <tr><td class="t-nowrap"><code>error</code></td><td>Nothing — the merge stops and exits 2.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Every fold is reported on stderr whichever policy is chosen.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Refuse to publish a build whose shards overlapped</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest-html-reporter merge ./artifacts --html-report ./report --on-duplicate error</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--order</span>
+    <div class="def__meta">
+      <span class="pill">shard | name</span>
+      <span class="pill pill--brand">default: shard</span>
+      <span class="pill">merge, junit, inspect</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Row order. <code>shard</code> keeps each suite&#039;s rows in shard order, which is the order they ran in. <code>name</code> sorts by suite and test name, which is what you want when the report is being diffed against yesterday&#039;s by eye.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest-html-reporter merge ./artifacts --html-report ./report --order name</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--strip-path-prefix</span>
+    <div class="def__meta">
+      <span class="pill">text (PREFIX)</span>
+      <span class="pill pill--teal">repeatable</span>
+      <span class="pill">merge, junit, inspect</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Strip this prefix from the front of every nodeid, so shards that ran under different checkout roots group into one suite instead of four. Applied after separators are normalised — backslashes become slashes, repeated slashes collapse, a leading <code>./</code> is removed — so one prefix covers a Windows leg and a Linux leg.</p>
+    <p>A prefix that would swallow a whole nodeid is not applied to it: the original id is worth more than an empty one, which would be quarantined.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">A GitHub runner and a container that checked out somewhere else</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest-html-reporter merge ./artifacts --html-report ./report \
+    --strip-path-prefix /home/runner/work/repo/ \
+    --strip-path-prefix /src/</code></pre>
+    </div>
+  </div>
+</div>
+
+<h3 id="merge-subcommand"><code>merge</code> — one report out of many bundles</h3>
+
+<p>Reads every bundle under <code>PATH ...</code>, merges them, and drives the ordinary render pipeline exactly once. The merged build is assembled by the same code every other build in that report&#039;s history was assembled by; nothing here re-implements a page, a total or a template.</p>
+
+<p>Three things are validated before anything is written, in this order: <code>--html-report</code>, then <code>--start-time</code>, then the three retention values. The retention check asks the very helpers a pytest run asks, so <code>--archive-count nine</code> is refused by the merge in the same words and for the same reason — and it is asked first, because those three are read deep inside the render, where a usage error would abort a build that had already rotated the archive.</p>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">merge --html-report</span>
+    <div class="def__meta">
+      <span class="pill">path</span>
+      <span class="pill pill--fail">required</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Where the merged report is written: a folder, or the <code>.html</code> file itself. Two values are refused — an empty or whitespace one, and a path with <code>.html</code> in it that does not <em>end</em> in <code>.html</code>, which the render pipeline would read as a file name and drop into the current directory. The run has already happened by the time anybody goes looking for the report, so this one is refused rather than obeyed.</p>
+    <p>Pointing the merge at the same folder the shards wrote into is safe. The merge clears <code>&lt;base&gt;/pytest_screenshots</code> before staging images, while every shard&#039;s copies live on under <code>&lt;base&gt;/shards/&lt;id&gt;/pytest_screenshots</code>.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest-html-reporter merge ./report --html-report ./report   # safe
+$ pytest-html-reporter merge ./artifacts --html-report ./my.html.d
+pytest-html-reporter: --html-report &#039;./my.html.d&#039; has &#039;.html&#039; in it without ending in it, ...</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">merge --start-time</span>
+    <div class="def__meta">
+      <span class="pill">earliest | now | unix timestamp</span>
+      <span class="pill pill--brand">default: earliest</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>The moment this build is filed under. It names the archive file, stamps <code>output.json</code>, labels the trend point, orders builds in <a href="analytics.html">Analytics</a>, and dates the build — so a matrix that started before midnight and merged after it is dated the day it ran, not the day it finished being collected.</p>
+    <p>It is validated up front, before <code>--dry-run</code> too, so a typo is reported rather than a build promised that could not have been stamped.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest-html-reporter merge ./artifacts --html-report ./report --start-time now</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">merge --coverage-data</span>
+    <div class="def__meta">
+      <span class="pill">path</span>
+      <span class="pill pill--teal">repeatable</span>
+      <span class="pill">needs the coverage package</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p><code>.coverage</code> data files, or directories holding them, to combine into the merged build&#039;s Coverage tab. A directory contributes every entry whose name starts with <code>.coverage</code>, sorted.</p>
+    <p>The files are copied into a temporary directory before being combined, because <code>coverage.combine()</code> deletes what it reads — and those are somebody&#039;s CI artifacts, very often the only copy.</p>
+    <p>If the <code>coverage</code> package is not installed in the merging environment, or nothing matched, or the combine failed, the merge still succeeds and reports a notice instead. Losing the whole report over a coverage number would be the wrong trade.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Four legs&#039; data files into one number, coloured against the project&#039;s target</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pip install coverage
+$ pytest-html-reporter merge ./artifacts --html-report ./report \
+    --coverage-data ./artifacts --coverage-target 85</code></pre>
+    </div>
+    <div class="note"><span class="note__title">How the merge chooses a coverage number</span>Five branches, in order, and no sixth: coverage switched off gives nothing — <code>--report-coverage=none</code>, which only a <code>--report-shard-merge</code> leg can carry, since the standalone command has no such flag; a named <code>--report-coverage-file</code> is read; <code>--coverage-data</code> is combined; if exactly one shard measured coverage, its number is used with a notice saying whose share it is; if more than one did, the merge refuses to reconcile them and says how to combine them. There is deliberately no discovery step — discovery searches the working directory, and a stale <code>coverage.json</code> on the merging machine would become this build&#039;s archived number.</div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">merge --copy-assets / --no-copy-assets</span>
+    <div class="def__meta">
+      <span class="pill">flag pair</span>
+      <span class="pill pill--brand">default: copy</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Copy the screenshots the merged records name into the report, prefixing each with the shard that took it. The prefix is not cosmetic: screenshot names restart their counter in every process, so two machines&#039; first screenshots would otherwise collide.</p>
+    <p>Staging is also what discovers that an image a bundle named is not in the bundle. Those are reported as missing screenshots and feed <code>--strict</code>. <code>--no-copy-assets</code> leaves the images in the shard folders, which means the report&#039;s links only resolve where those folders are.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest-html-reporter merge ./artifacts --html-report ./report --no-copy-assets</code></pre>
+    </div>
+  </div>
+</div>
+
+<h4>A full CI merge, and what it prints</h4>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The command</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ ls ./artifacts
+shard-1/records.json  shard-2/records.json  shard-3/records.json  shard-4/records.json
+
+$ pytest-html-reporter merge ./artifacts \
+    --html-report ./report \
+    --junit-xml ./report/junit.xml \
+    --title &#039;Nightly Matrix&#039; \
+    --environment staging \
+    --build-info branch=main \
+    --report-link &#039;Coverage=htmlcov/index.html&#039; \
+    --archive-count 50 \
+    --on-duplicate merge \
+    --strict</code></pre>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The summary, on stdout — the per-decision notes go to stderr</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">merged 4 shards: 412 tests
+  shard 1-4: 103 tests, finished 2026-09-03 11:04:19
+  shard 2-4: 103 tests, finished 2026-09-03 11:05:02
+  shard 3-4: 103 tests, finished 2026-09-03 11:04:51
+  shard 4-4: 103 tests, finished 2026-09-03 11:05:44
+  PASS 401, FAIL 8, SKIP 3
+  ran on runner-1, runner-2 over 6 mins 12 secs
+  report: /home/runner/work/repo/report/pytest_html_report.html
+  junit:  /home/runner/work/repo/report/junit.xml</code></pre>
+</div>
+
+<p>The report path is named only once the file is on disk. A render writes no page for a build with no records, and a merge of shards that collected nothing between them lands exactly there — printing a path anyway would send the next pipeline step off to publish a file that was never written.</p>
+
+<h3 id="junit-subcommand"><code>junit</code> — the XML without the report</h3>
+
+<p>Merges exactly the way <code>merge</code> does — same discovery, same shaping flags, same duplicate policy — and writes only the XML. No report, so no screenshots are copied and no archive is rotated. It is a subcommand rather than a flag on <code>merge</code> because a pipeline publishing results into GitLab or Azure and keeping no HTML should not have to write a build it will throw away.</p>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">junit -o, --output</span>
+    <div class="def__meta">
+      <span class="pill">path (FILE)</span>
+      <span class="pill pill--fail">required</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Where the merged JUnit XML is written. Unlike <code>merge</code>, a write failure here means the one thing this subcommand exists to produce was not produced, so it exits 2 with no summary.</p>
+    <p>Screenshots are renamed exactly as a merge would rename them while copying — each prefixed with <em>its own</em> shard, not the row&#039;s, because the duplicate policy can back-fill one shard&#039;s screenshots onto another shard&#039;s record. Attachment lines therefore use the same relative paths the HTML page uses, which is correct whenever this XML sits beside a report merged from the same bundles.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Publishing test results without publishing a report</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest-html-reporter junit ./artifacts \
+    -o ./results/merged-junit.xml \
+    --junit-suite-name payments \
+    --junit-logging failed \
+    --junit-xpass fail \
+    --strict</code></pre>
+    </div>
+  </div>
+</div>
+
+<h4>The six JUnit shaping flags</h4>
+
+<p>Shared by <code>merge</code> and <code>junit</code>. An unset flag is <strong>dropped rather than imposed</strong>: <code>--junit-hostname</code> arrives as an empty string when nobody typed it, and passing that through would blank out the host the shards themselves reported.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Flag</th><th>Default</th><th>What it sets</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>--junit-suite-name</code></td><td class="t-nowrap"><code>pytest</code></td><td>The <code>&lt;testsuite&gt;</code> name attribute.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-hostname</code></td><td class="t-nowrap">the shards&#039; host, else <code>merged</code></td><td>The hostname attribute — never the machine doing the merging, which ran none of the tests and which Azure would otherwise name as the agent that did.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-xpass</code></td><td class="t-nowrap"><code>pass</code></td><td>How an unexpectedly passing test is written down. <code>pass</code> matches pytest&#039;s own <code>--junitxml</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-logging</code></td><td class="t-nowrap"><code>no</code></td><td>Which tests carry their captured output. The spelling and the default are pytest&#039;s own <code>junit_logging</code> ini key, so a team moving off <code>--junitxml</code> does not have to learn a second vocabulary. <code>failed</code> means FAIL or ERROR.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-attachments</code></td><td class="t-nowrap">on</td><td>Write <code>[[ATTACHMENT|…]]</code> lines for screenshots, for a CI system that ingests them.</td></tr>
+      <tr><td class="t-nowrap"><code>--no-junit-attachments</code></td><td class="t-nowrap">—</td><td>Leave the screenshots out.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>Four facts about a merged document are settled by the merge itself, whatever the flags say, so that this command and a <code>--report-shard-merge</code> leg cannot drift apart: the timestamp is the earliest shard&#039;s start; the time is the whole matrix&#039;s wall span; the shard list carries every leg&#039;s label and host; and the rerun and fold counts are the merged totals.</p>
+
+<div class="note"><span class="note__title">Why the span matters</span>Azure computes the end of a run as <code>timestamp + SUM(testcase@time)</code>. Left to the defaults it would read a forty-minute matrix as the few seconds the merge itself took.</div>
+
+<h3 id="inspect-subcommand"><code>inspect</code> — a pre-flight check that writes nothing</h3>
+
+<p>Prints one line per shard bundle and the summary of the merge they would produce. The question it answers is &quot;did all four artifacts arrive, and do they overlap&quot; — asked before a merge in CI, and asked by hand when the totals on a merged report were not the totals somebody expected.</p>
+
+<p>It takes <code>PATH ...</code>, the three shaping flags, <code>-q</code> and <code>--json</code>, and nothing else. <code>--strict</code>, <code>--exit-code</code> and <code>--dry-run</code> are not offered: it writes nothing, so a dry run would be a no-op, and it returns 0 whenever bundles were found — even when duplicates or quarantined records were reported.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">One fixed-width line per bundle, then the summary</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest-html-reporter inspect ./artifacts
+1-4                     103 records    0 collect  runner-1         ./artifacts/shard-1/records.json
+2-4                     103 records    1 collect  runner-2         ./artifacts/shard-2/records.json
+merged 2 shards: 206 tests
+  PASS 200, FAIL 6
+  1 collection record
+  ran on runner-1, runner-2 over 3 mins 04 secs</code></pre>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">inspect --json</span>
+    <div class="def__meta">
+      <span class="pill">flag</span>
+      <span class="pill pill--brand">default: off</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Print the same thing as a JSON document on stdout, indented and with sorted keys. It carries a <code>bundles</code> array — id, label, path, hostname, platform, python, pytest, exitstatus, session_start, session_end, records, collect, coverage — and a <code>summary</code> object with shards, tests, collects, statuses, reruns, duplicates_folded, quarantined, unreadable, superseded, unrecognised, session_start, session_end, wall, hosts, environment, coverage_notice and notes.</p>
+    <p>The reason to ask for JSON is that something downstream is going to check four shards arrived and none of them was empty. Notes stay on stderr precisely so this stays a document.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Fail the job before merging if an artifact went missing</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ count=$(pytest-html-reporter inspect ./artifacts --json \
+    | python -c &#039;import json,sys; print(json.load(sys.stdin)[&quot;summary&quot;][&quot;shards&quot;])&#039;)
+$ test &quot;$count&quot; -eq 4 || { echo &quot;only $count shards arrived&quot;; exit 1; }</code></pre>
+    </div>
+  </div>
+</div>
+
+<h3 id="exit-codes">Exit codes and output streams</h3>
+
+<p>The summary goes to <strong>stdout</strong> — it is the answer to the question that was asked. Every per-decision note goes to <strong>stderr</strong>, prefixed <code>pytest-html-reporter: </code>: a duplicate folded, a record quarantined, an image a bundle promised and did not carry, a file walked past because it was not a bundle. A pipeline that captures one very often wants to discard the other. The summary still prints under <code>-q</code>; only the notes are suppressed, and warnings are still collected so <code>--strict</code> keeps seeing them.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Code</th><th>Was anything written?</th><th>When</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><span class="pill pill--pass">0</span></td><td>Yes</td><td>The merge ran and nothing the caller asked to be told about happened.</td></tr>
+      <tr><td class="t-nowrap"><span class="pill pill--accent">1</span></td><td>Yes — always with a report</td><td><code>--strict</code> and the merge was not clean (quarantined records, unreadable files, duplicate folds, missing screenshots, superseded bundles, JUnit warnings); or <code>--exit-code</code> and the build has a failure or error; or, on <code>merge</code>, <code>--junit-xml</code> could not be written after the report was already on disk.</td></tr>
+      <tr><td class="t-nowrap"><span class="pill pill--fail">2</span></td><td>No</td><td>An argparse usage error (unknown flag, missing subcommand, missing <code>--html-report</code> or <code>-o</code>); an unusable <code>--html-report</code>, <code>--start-time</code> or retention value; no bundles under the given paths; a bundle written by a newer version; <code>--on-duplicate error</code> finding a duplicate; or, on <code>junit</code>, the XML could not be written.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--strict vs --exit-code</span>
+    <div class="def__meta">
+      <span class="pill">flags</span>
+      <span class="pill pill--brand">both default off</span>
+      <span class="pill">merge, junit</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>They answer two different questions and are deliberately separate. <code>--strict</code> is a verdict about the <em>merge</em> being complete; <code>--exit-code</code> is a verdict about the <em>tests</em>. Either way the report is written: a merge that exits 1 has still produced the page that explains why.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Publish the report either way, but fail the job on either count</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest-html-reporter merge ./artifacts --html-report ./report --strict --exit-code
+$ echo $?</code></pre>
+    </div>
+  </div>
+</div>
+
+<h3 id="python-m-form"><code>python -m pytest_html_reporter</code></h3>
+
+<p>An exact alias for the console script, flag for flag and exit code for exit code. It exists because the console script is only on <code>PATH</code> once the package has been installed with its entry points, and the everyday merge runs in a CI container that pip-installed a wheel, a tox environment, or a checkout somebody is trying the feature out in. <code>python -m</code> works in all three, so a pipeline never has to find out which one it is in.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ python -m pytest_html_reporter merge ./artifacts --html-report ./report
+$ python -m pytest_html_reporter inspect ./artifacts --json
+$ python -m pytest_html_reporter --version</code></pre>
+</div>
+
+<h3 id="entry-points">Entry points and dependencies</h3>
+
+<p>Two entry-point groups, from <code>setup.py</code>. The <code>pytest11</code> one is what makes the plugin load automatically wherever the package is installed. The <code>console_scripts</code> one is the standalone command above.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">setup.py</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">entry_points={
+    &quot;pytest11&quot;: [
+        &quot;reporter = pytest_html_reporter.plugin&quot;,
+    ],
+    &quot;console_scripts&quot;: [
+        &quot;pytest-html-reporter = pytest_html_reporter.cli:main&quot;,
+    ],
+}</code></pre>
+</div>
+
+<p><code>install_requires</code> is <code>pytest</code> and <code>Pillow</code>, neither pinned, and <code>python_requires</code> is <code>&gt;=3.5</code>. <code>coverage</code> is the one optional dependency, imported lazily and only by <code>--coverage-data</code>. Everything else the plugin integrates with — pytest-xdist, pytest-rerunfailures, pytest-bdd, pytest-cov — is detected at runtime and never declared.</p>
+
+<h2 id="environment-variables">Environment variables</h2>
+
+<p>The plugin reads no configuration of its own from the environment. It reads three sets of variables that other things set, plus whatever the shell puts into a path.</p>
+
+<h3 id="ci-detection-variables">Is this a build agent? (<code>--report-open=auto</code>)</h3>
+
+<p>Seventeen variables, and <em>any</em> of them being set to something other than a no-value makes the run count as CI, which stops <code>auto</code> from opening a browser:</p>
+
+<p><code>CI</code>, <code>CONTINUOUS_INTEGRATION</code>, <code>BUILD_ID</code>, <code>BUILD_NUMBER</code>, <code>GITHUB_ACTIONS</code>, <code>GITLAB_CI</code>, <code>JENKINS_URL</code>, <code>HUDSON_URL</code>, <code>TEAMCITY_VERSION</code>, <code>TF_BUILD</code>, <code>CIRCLECI</code>, <code>TRAVIS</code>, <code>BUILDKITE</code>, <code>APPVEYOR</code>, <code>DRONE</code>, <code>BITBUCKET_BUILD_NUMBER</code>, <code>CODEBUILD_BUILD_ID</code>.</p>
+
+<p>A variable set to <code>&quot;&quot;</code>, <code>0</code>, <code>false</code>, <code>no</code> or <code>off</code> counts as <em>not</em> CI. <code>CI=false</code> is a real thing to write, and reading it as &quot;this is CI&quot; gets it exactly backwards.</p>
+
+<h3 id="display-variables">Is there a screen? (<code>--report-open=auto</code>)</h3>
+
+<p>On macOS and Windows a graphical session is assumed. Everywhere else <code>DISPLAY</code> or <code>WAYLAND_DISPLAY</code> has to be set.</p>
+
+<h3 id="run-token-variables">Which CI run is this? (<code>--report-shard-run</code>)</h3>
+
+<p>Consulted in this order when no token is given. Each entry&#039;s <strong>first</strong> variable has to be set for that entry to answer; the rest are appended when present. The token is written as <code>&lt;system&gt;:&lt;values joined by -&gt;</code>, so Jenkins build 41 and Drone build 41 cannot collide.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>System</th><th>Variables</th><th>Why that one</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap">github</td><td class="t-nowrap"><code>GITHUB_RUN_ID</code> + <code>GITHUB_RUN_ATTEMPT</code></td><td>The run id does not change when a workflow is re-run, so the attempt number is carried beside it — a re-run must not answer the token its first attempt&#039;s bundles are stamped with.</td></tr>
+      <tr><td class="t-nowrap">gitlab</td><td class="t-nowrap"><code>CI_PIPELINE_ID</code></td><td>Unique across the whole instance.</td></tr>
+      <tr><td class="t-nowrap">jenkins</td><td class="t-nowrap"><code>BUILD_TAG</code></td><td><code>jenkins-${JOB_NAME}-${BUILD_NUMBER}</code>, preferred to the bare number.</td></tr>
+      <tr><td class="t-nowrap">jenkins</td><td class="t-nowrap"><code>BUILD_NUMBER</code></td><td>The fallback; it only counts within one job.</td></tr>
+      <tr><td class="t-nowrap">circleci</td><td class="t-nowrap"><code>CIRCLE_WORKFLOW_ID</code></td><td>The same for every job in a workflow instance — which is precisely the matrix.</td></tr>
+      <tr><td class="t-nowrap">buildkite</td><td class="t-nowrap"><code>BUILDKITE_BUILD_ID</code></td><td>The build&#039;s uuid.</td></tr>
+      <tr><td class="t-nowrap">azure</td><td class="t-nowrap"><code>BUILD_BUILDID</code></td><td>How <code>Build.BuildId</code> reaches a script.</td></tr>
+      <tr><td class="t-nowrap">travis</td><td class="t-nowrap"><code>TRAVIS_BUILD_ID</code></td><td>The build, not the job.</td></tr>
+      <tr><td class="t-nowrap">appveyor</td><td class="t-nowrap"><code>APPVEYOR_BUILD_ID</code></td><td>The build, not the job.</td></tr>
+      <tr><td class="t-nowrap">drone</td><td class="t-nowrap"><code>DRONE_BUILD_NUMBER</code></td><td>The build number within the repository.</td></tr>
+      <tr><td class="t-nowrap">teamcity</td><td class="t-nowrap"><code>BUILD_VCS_NUMBER</code></td><td>A last resort — it is a revision, not a run id, so two runs of the same commit share it.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="path-expansion">Variables inside a path</h3>
+
+<p><code>--html-report</code> expands <code>~</code> and <code>$VARS</code> when it resolves the report folder, so <code>--html-report=&quot;$RUNNER_TEMP/report&quot;</code> works even where the shell would not have expanded it. <code>PATH ...</code> on the merge command does the same.</p>
+
+<h2 id="third-party-options">Third-party options that change what the report can show</h2>
+
+<p>These are pytest&#039;s, pytest-cov&#039;s and pytest-xdist&#039;s own flags, not this plugin&#039;s. They are here because each one changes what the report is able to display, and every one of them is a common cause of &quot;the report is missing something&quot;.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Option</th><th>From</th><th>Why it matters to the report</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>--capture</code> / <code>-s</code></td><td class="t-nowrap">pytest</td><td><code>fd</code> (the default) keeps everything, including subprocess and C-extension output; <code>sys</code> keeps everything Python writes; <code>tee-sys</code> keeps it and prints it live. <code>no</code> — which is what <code>-s</code> means — keeps logging only, so stdout and stderr are gone from the Logs column and the report says so in a banner.</td></tr>
+      <tr><td class="t-nowrap"><code>--log-level</code></td><td class="t-nowrap">pytest</td><td>Unset means WARNING and above. Lower it to <code>INFO</code> or <code>DEBUG</code> to get <code>log.info()</code> and <code>log.debug()</code> into the Logs column at all.</td></tr>
+      <tr><td class="t-nowrap"><code>--cov</code></td><td class="t-nowrap">pytest-cov</td><td>The import name or path of the code under test — your package, not your tests. A wrong value here is the usual cause of an empty Coverage tab.</td></tr>
+      <tr><td class="t-nowrap"><code>--cov-branch</code></td><td class="t-nowrap">pytest-cov</td><td>Folds branch coverage into the percentage exactly as pytest-cov folds it in, and adds a Branches column to the coverage table.</td></tr>
+      <tr><td class="t-nowrap"><code>--cov-fail-under</code></td><td class="t-nowrap">pytest-cov</td><td>When set, it becomes the line the coverage ring&#039;s colour is drawn at, replacing the 90/75 grade bands — and the tab says that is what happened.</td></tr>
+      <tr><td class="t-nowrap"><code>--cov-report=html</code></td><td class="t-nowrap">pytest-cov</td><td>Writes <code>htmlcov/</code>. The Coverage tab then links to it — never embeds it — and only when the folder was written by this run.</td></tr>
+      <tr><td class="t-nowrap"><code>-n</code> / <code>--dist</code></td><td class="t-nowrap">pytest-xdist</td><td>Workers are merged into one report, one build in Archives, one row per test, listed in collection order. The controller writes the report; the workers never do.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2 id="the-ini-form">The same settings in an ini file</h2>
+
+<p>Twenty-four of these twenty-five options have an ini key, so a project can settle them once instead of typing them on every run. The keys are read wherever pytest reads ini options: <code>[pytest]</code> in <code>pytest.ini</code> or <code>tox.ini</code>, <code>[tool:pytest]</code> in <code>setup.cfg</code>, and <code>[tool.pytest.ini_options]</code> in <code>pyproject.toml</code>.</p>
+
+<p><a href="configuration.html">Configuration</a> lists every key with its type and its effective default, including the two — <code>build_info</code> and <code>report_link</code> — that are line lists and combine with the flag rather than being overridden by it.</p>
+
+<div class="grid grid--3">
+  <a class="card" href="configuration.html">
+    <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div>
+    <h3 id="card-configuration">Configuration</h3>
+    <p>All 24 ini keys, in ini, cfg and TOML form.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="ci-integrations.html">
+    <div class="card__icon is-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v6M5.6 5.6l4.2 4.2M3 12h6M5.6 18.4l4.2-4.2M12 21v-6M18.4 18.4l-4.2-4.2M21 12h-6M18.4 5.6l-4.2 4.2"/></svg></div>
+    <h3 id="card-ci">CI integrations</h3>
+    <p>Sharded matrices and merges for GitHub, GitLab, Jenkins and the rest.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="python-api.html">
+    <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg></div>
+    <h3 id="card-python-api">Python API</h3>
+    <p><code>attach</code>, <code>attach_api</code>, <code>step</code> — the functions these flags govern.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+</div>

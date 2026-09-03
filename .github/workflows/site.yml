@@ -1,0 +1,65 @@
+name: site
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: The built pages match their fragments
+        # tools/build.py --check exits non-zero if docs/ is behind content/,
+        # which is the one failure a reader would actually see.
+        run: python3 tools/build.py --check
+
+      - name: Structure
+        # Broken links, duplicate ids, unescaped markup inside a code block.
+        run: python3 tools/check.py
+
+      - name: Screenshot checklist is current
+        run: |
+          python3 tools/shots.py
+          git diff --exit-code SCREENSHOTS.md
+
+  # tools/facts.py cross-checks the docs against the three source repos, so it
+  # needs them checked out beside this one. It is the check worth running before
+  # a release: it catches a flag, an Action input or a setting that the docs
+  # still name after the source dropped it.
+  facts:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: pytest-html-reporter.github.io
+
+      - uses: actions/checkout@v4
+        with:
+          repository: prashanth-sams/pytest-html-reporter
+          path: pytest-html-reporter
+
+      - uses: actions/checkout@v4
+        with:
+          repository: prashanth-sams/pytest-html-reporter-action
+          path: pytest-html-reporter-actions
+
+      - uses: actions/checkout@v4
+        with:
+          repository: prashanth-sams/pytest-html-reporter-vscode
+          path: pytest-html-reporter-vscode
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: The docs and the source agree
+        working-directory: pytest-html-reporter.github.io
+        run: python3 tools/facts.py --repos ..

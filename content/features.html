@@ -1,0 +1,972 @@
+<!--META {"title": "Features", "eyebrow": "Overview", "description": "The whole catalogue: the dashboard, failures, analytics, test steps, screenshots, attachments, coverage, history, parallel runs and the tools around the plugin.", "lede": "One command writes one HTML file. Inside it are a dashboard, a searchable metrics table, pictures of what broke, the payloads a test attached, the steps it ran, its coverage, and an analytics tab read across every build you have kept. This page is the full list — what each part shows, what it costs, and where the detail lives."} -->
+
+<h2 id="the-report-itself">The report itself</h2>
+
+<p>The output is one static HTML file. There is no server to run, no asset folder that has to
+travel with it, and no build step: you can mail it, publish it as a CI artifact, or open it off a
+stick. Everything below lives inside that one file.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">No flags at all — writes ./pytest_html_report.html</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pip3 install pytest-html-reporter
+$ pytest tests/</code></pre>
+</div>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Self-contained</b>The default is <code>.</code>, so a plain run writes <code>./pytest_html_report.html</code>. Pass <code>--html-report</code> to move it, with <code>strftime</code> placeholders if you want a folder or a filename per run.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Named and badged</b><code>--title</code> sets the heading, capped at 20 characters with the cut tail faded out and the full title kept as the heading's tooltip. <code>--environment</code> puts a badge beside it, capped at 10 characters the same way.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Predictable in size</b>Each build kept in <code>Archives</code> costs roughly 5KB of the page. Retention is what keeps a long-running job's report quick to open.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Mirrored in <code>pytest.ini</code></b>Every flag but <code>--title</code> has an ini key, so a setting that belongs to the job rather than to one command can be written down once. See <a href="configuration.html">Configuration</a>.</span>
+  </li>
+</ul>
+
+<figure class="imgslot" data-shot="dashboard-overview.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/dashboard-overview.png</b>
+  <span>The whole Dashboard at 1440px wide, light theme, with the side nav visible: the summary card and its status pills, the donut, the Trends chart and the Highlights card. Use a run with a handful of failures so the pills are not all zero.</span>
+</figure>
+
+<h3 id="themes">Light and dark themes</h3>
+
+<p>A switch at the foot of the side nav. It is remembered per reader, and follows the operating
+system until somebody touches it. There is no flag and no ini key for it — the theme belongs to
+whoever opens the report, not to the run that produced it.</p>
+
+<h3 id="opening-the-report">It opens itself on a local run</h3>
+
+<p>When the run finishes, the report opens in your browser. Nothing has to be added to get this.
+It only happens on a run somebody is sat in front of, and a build agent fails every one of the
+three checks: the output has to be a terminal, no CI variable may be set (<code>CI</code>,
+<code>GITHUB_ACTIONS</code>, <code>JENKINS_URL</code> and the rest of the usual set), and on
+anything that is not macOS or Windows there has to be a <code>DISPLAY</code> or
+<code>WAYLAND_DISPLAY</code> to open into.</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Setting the open behaviour">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">CLI</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pytest.ini</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">The three modes</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/ --report-open=none      # never open it
+$ pytest tests/ --report-open=always    # open it whatever the run looks like
+$ pytest tests/ --report-open=auto      # the default, as described above</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <span class="codeblock__cap">Turning it off once, for everybody</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="ini">[pytest]
+report_open = none</code></pre>
+    </div>
+  </div>
+</div>
+
+<p>The browser is asked for a tab rather than a window, so a suite run over and over does not bury
+the desktop. A machine with no browser on it is not an error: the report is written either way,
+and a run that could not open it still passes or fails on its tests alone.</p>
+
+<h3 id="side-nav-links">Links of your own in the side nav</h3>
+
+<p><code>--report-link</code> adds an entry to the report's side nav pointing at any page you like
+— the annotated coverage source, a CI job, a Grafana board, an internal wiki page. Repeat it as
+often as you need. Relative paths are resolved from wherever the report is written, so linking a
+folder that ships beside it works, and links open in a new tab.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Two custom nav entries</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ --report-link &quot;Coverage=htmlcov/index.html&quot; \
+                --report-link &quot;CI job=https://ci.example.com/job/42&quot;</code></pre>
+</div>
+
+<div class="note"><span class="note__title">Note</span>Anything carrying a scheme other than
+<code>http</code>, <code>https</code> or <code>mailto</code> is dropped rather than rendered. A
+report is a build artifact that gets published and passed round, and a nav entry has no business
+being able to run something in whoever opens it.</div>
+
+<h2 id="reading-a-run">Reading a run</h2>
+
+<p>The <code>Dashboard</code> answers <em>how did this run go?</em> — the counts, the shape of the
+failures, and whether the suite is moving in the right direction.</p>
+
+<div class="grid grid--3">
+  <article class="card">
+    <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.6A9 9 0 0 1 20.4 9H15z"/></svg></div>
+    <h3 id="overview">Overview</h3>
+    <p>The donut and the PASS / FAIL / SKIP / XPASS / XFAIL / ERROR counts, with the time the run
+    took beside them.</p>
+  </article>
+  <article class="card">
+    <div class="card__icon is-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 4 5-7 4 5"/></svg></div>
+    <h3 id="trends">Trends</h3>
+    <p>Passed, failed and skipped plotted across this run and the five builds before it.
+    <code>Failed</code> here counts failures and errors together.</p>
+  </article>
+  <article class="card">
+    <div class="card__icon is-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>
+    <h3 id="highlights">Highlights</h3>
+    <p>The suite that failed most, and — once a second build exists — which way the failure count
+    has moved since the last one.</p>
+  </article>
+  <article class="card">
+    <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div>
+    <h3 id="test-suite-details">Test suite details</h3>
+    <p>Every suite in the run with its own counts, so a failure concentrated in one file is
+    visible without opening the table.</p>
+  </article>
+  <article class="card">
+    <div class="card__icon is-pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg></div>
+    <h3 id="the-environment-panel">Environment panel</h3>
+    <p>What the run was, what it was told about the build, and what it kept of the output —
+    opened from a chip on the summary card.</p>
+  </article>
+</div>
+
+<h3 id="the-test-metrics-table">The Test Metrics table</h3>
+
+<p>The table is a DataTable: search, sort, and export buttons for copy, CSV, Excel, print and
+column visibility. It already carries ten columns, which is why markers ended up as badges on
+the <code>Test Steps</code> tab rather than as an eleventh.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Column</th><th>What it holds</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>Logs</code></td><td>How many lines of captured output the test produced. Clicking it opens the output section by section, with a <code>Copy</code> button. A test that produced nothing shows a dash.</td></tr>
+      <tr><td class="t-nowrap"><code>Data</code></td><td>How many payloads the test attached. Clicking it crosses to the <code>API Logs</code> tab with the list already narrowed to that one test.</td></tr>
+      <tr><td class="t-nowrap"><code>Screens</code></td><td>A thumbnail of the screenshot taken for that test, next to the error it explains, opening full size when clicked.</td></tr>
+      <tr><td class="t-nowrap"><code>Steps</code></td><td>Crosses to the test's step tree on the <code>Test Steps</code> tab.</td></tr>
+      <tr><td class="t-nowrap"><code>Error Message</code></td><td>The failure, truncated in the cell and expandable in place, with the copy buttons beside it.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="note"><span class="note__title">Why they are not in the table</span>Captured logs,
+attachments and step trees are all held outside the metrics table, so they are never swept into
+its search box or into the CSV, Excel and print exports. That is the reason all three live in
+overlays and tabs of their own.</div>
+
+<h3 id="environment-and-build-details">Environment and build details</h3>
+
+<p><code>--environment</code> names what was under test and shows it as a badge beside the report
+title. <code>--build-info</code> takes any <code>key=value</code> you like and adds it to the
+<code>Environment</code> panel; repeat it as often as you want. Unlike most of the flags,
+<code>--build-info</code> entries are <em>added to</em> the ones set in the ini file rather than
+replacing them.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Environment plus arbitrary key=value build details</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ --environment=prod --build-info branch=main --build-info sha=$GITHUB_SHA</code></pre>
+</div>
+
+<p>The same panel states what the run kept of the output and from which log level — for example
+<code>all tests: stdout, stderr and logging, logging from WARNING</code> — so there is always
+somewhere to check which mode you are in.</p>
+
+<h3 id="the-failure-delta">The failure delta</h3>
+
+<p>Once there is a build to compare against, the <code>Highlights</code> card gains a second entry
+saying which way the suite is moving: <code>▲ +3 failures</code> over <code>SINCE LAST BUILD</code>,
+red when there are more failures than last time and green with a <code>▼</code> when there are
+fewer. Nothing to configure — it appears as soon as a second build has been archived.</p>
+
+<p>The absolute count tells you how bad this build is; the delta tells you whether it is getting
+better, which is the one you act on. Hovering it gives the two counts behind it —
+<code>12 failures this build, 9 in the build before it</code> — because <code>+3</code> reads very
+differently against 3 than against 300. No change is written <code>±0 failures</code> rather than
+<code>0 failures</code>, which beside <code>SINCE LAST BUILD</code> would say the opposite of what
+it means, and a first build leaves the entry out entirely rather than comparing against a build
+that does not exist.</p>
+
+<h2 id="reading-a-failure">Reading a failure</h2>
+
+<p>A status column tells you a test failed. Everything in this section exists to shorten the
+distance between seeing that and doing something about it.</p>
+
+<h3 id="copy-buttons">Copy the error, the rerun command, or the link</h3>
+
+<p>Four buttons sit beside a failure message, folded behind a <code>...</code> until pressed:</p>
+
+<ol>
+  <li><b>Expand</b> the error in place.</li>
+  <li><b>Copy the full error</b> — it opens in the same overlay the <code>Logs</code> column uses,
+  which gives the dialog a <code>Copy</code> button and a readable body.</li>
+  <li><b>Copy the rerun command</b> — <code>pytest path/to/test.py::test_name</code>, built from
+  the test's node id rather than by joining the suite and test names in the row, because a test
+  inside a class is listed under its own name where pytest wants the class in front of it.</li>
+  <li><b>Copy the link</b> to that row (see <a href="#deep-links">Deep links</a> below).</li>
+</ol>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">What the rerun button puts on the clipboard</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest &quot;tests/test_cart.py::TestCart::test_add[sku-A-12]&quot;</code></pre>
+</div>
+
+<p>A node id a shell would not read as one word is quoted, since a parametrised test's brackets
+are a glob pattern to zsh.</p>
+
+<p>A click also puts a word in the middle of the page — <code>Error copied</code>,
+<code>Command copied</code>, <code>Link copied</code> — faded in and gone 2.2 seconds later,
+because 22 pixels of button at the end of a long row is not legible from wherever the pointer is,
+and because it says <em>which</em> of the three landed. It takes no clicks, so the row underneath
+stays live while it is up, and it shows four lines of what went onto the clipboard with anything
+past that faded out. Only one row is open at a time; a click anywhere else, or Escape, shuts it.</p>
+
+<div class="note note--tip"><span class="note__title">Opened off the file system</span>Some
+browsers refuse the clipboard on a <code>file://</code> page. When that happens the panel says
+<code>Press Ctrl+C to copy</code> rather than leaving a button that did nothing and no reason
+why.</div>
+
+<figure class="imgslot" data-shot="failure-copy-buttons.gif">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/failure-copy-buttons.gif</b>
+  <span>A short loop on the Test Metrics table, light theme: hovering a failure row, pressing the <code>...</code> to unfold the four buttons, clicking Copy link, and the words "Link copied" fading in mid-page with the four-line clipboard preview underneath, then fading out.</span>
+</figure>
+
+<h3 id="status-filter-chips">Status filter chips</h3>
+
+<p>The Dashboard's PASS / FAIL / SKIP / XPASS / XFAIL / ERROR count pills are clickable, and drive
+a column search on the Test Metrics table. One click gets you "show me only the failures", which
+is the most common thing anybody does with a report like this.</p>
+
+<h3 id="truncation-that-says-so">Truncation that says so</h3>
+
+<p>A cut error message ends by fading its last eight characters out rather than in an ellipsis —
+the same answer the report title gives to the same question. The ellipsis is still in the cell,
+hidden: the CSV, Excel and print exports are built from cell text, they cannot carry a gradient,
+and a message cut short with nothing to say so is a trap in a file read a week later.</p>
+
+<h3 id="deep-links">Deep links to a single row</h3>
+
+<p>Every test row has an address of its own, copied from a button beside the failure, opening the
+report on that row whatever page of the table it has ended up on. Three decisions make the link
+worth sending:</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The anchor is built from the node id, not the row's position</b>A positional anchor
+    still resolves — it opens whichever test has since taken that place, with nothing on the page
+    to say it is not the one that was sent. Built from the node id, the link survives three tests
+    being added in front of it, and a link into a CI job's latest report keeps pointing at the same
+    test build after build.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Readable, not a bare hash</b>The node id flattened to letters, digits and dashes and
+    cut back to a whole word, with six hex digits of the whole node id after it. The slug says
+    which test a link opens while it is still sitting in the chat window; the digits keep
+    <code>test_one[a-b]</code> and <code>test_one[a_b]</code> apart when the slug cuts to the same
+    string.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>It survives a re-sort, a search and a page</b>Only the current page of the table is in
+    the document, so a row on page four is not there to be found at all. Its position in the
+    filtered, sorted set is what its page is computed from, and every filter hiding it — the search
+    box, the column searches and the status chips — is cleared before the table is paged to it and
+    the row is flashed.</span>
+  </li>
+</ul>
+
+<p>A node id that appears twice — <code>pytest-repeat</code>, or a rerun collected rather than
+merged — has its repeats numbered, so the two rows keep separate addresses.</p>
+
+<h2 id="analytics">Analytics: how a test behaves, not how a run went</h2>
+
+<p>One run cannot tell you whether a failure is new, whether a test has been flipping for a
+fortnight, or whether the suite is quietly getting slower. The <code>Analytics</code> tab reads
+every build you have kept and lines them up per test. Nothing to install, nothing to configure,
+and nothing extra is collected: the archives already hold a status per test per build.</p>
+
+<div class="grid grid--3">
+  <article class="card">
+    <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.3.9-4.5 4.3 1 6.2-5.5-2.9-5.5 2.9 1-6.2L3 9.5l6.3-.9z"/></svg></div>
+    <h3 id="stability-score">Stability score</h3>
+    <p>One number, 0–100. It starts at the mean per-test pass rate and is charged half the mean
+    flip rate, because a test that alternates pass, fail, pass is the more expensive of the two to
+    live with.</p>
+  </article>
+  <article class="card">
+    <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l4-4 3 3 5-6 4 4"/><path d="M4 21h16"/></svg></div>
+    <h3 id="flaky-tests">Flaky tests</h3>
+    <p>Tests that have flipped between passing and failing, or that needed a retry to pass — kept
+    apart from the ones that have never passed.</p>
+  </article>
+  <article class="card">
+    <div class="card__icon is-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg></div>
+    <h3 id="always-failing">Always failing</h3>
+    <p>Tests that have failed every build they were in, two builds running or more. A test that
+    only ever fails is a bug with an owner, not a race worth hunting.</p>
+  </article>
+  <article class="card">
+    <div class="card__icon is-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 7 4-14 3 7h4"/></svg></div>
+    <h3 id="why-this-run-failed">Why this run failed</h3>
+    <p>This run's failures grouped by the exception each came out of — <em>12 failures, 9 are
+    TimeoutException</em> — with the tests in each group named rather than only counted.</p>
+  </article>
+  <article class="card">
+    <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18l5-5 4 3 4-7 5 5"/></svg></div>
+    <h3 id="pass-rate-across-builds">Pass rate across builds</h3>
+    <p>The drift, on an axis that is deliberately not pinned to 0–100: a suite that lives between
+    96% and 99% is exactly the one whose two-point drops matter.</p>
+  </article>
+  <article class="card">
+    <div class="card__icon is-pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+    <h3 id="where-the-time-goes">Where the time goes</h3>
+    <p>This run's tests bucketed by duration, which a slowest-tests list cannot tell you: two
+    thousand tests at 300ms each is a different problem from ten tests at a minute.</p>
+  </article>
+</div>
+
+<p>Under the figures, four cards name what changed since the previous build — newly failing, newly
+fixed, new tests and no longer run — each opening its full list in a searchable dialog. Then a
+sortable row per test: its verdict, its recent outcomes as a strip of one block per build, its pass
+rate, how many times it has flipped, its retries, how long its current streak has run and its
+duration. It opens worst-behaved first, so the list to work through is already the list on
+screen.</p>
+
+<figure class="imgslot" data-shot="analytics-overview.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/analytics-overview.png</b>
+  <span>The top of the Analytics tab at 1440px, light theme: the six figures across the top (stability score, pass rate, flaky, always failing, builds analysed, time in tests) and the "Why this run failed" card below them with two or three exception groups and an "and N more" link. Run the suite at least five times first so the figures are not all placeholders.</span>
+</figure>
+
+<div class="note"><span class="note__title">Note</span>Skips are excluded from the arithmetic
+rather than counted against a test, and <code>xfail</code> / <code>xpass</code> count as passes —
+they are outcomes the suite declared in advance. How far back the tab reads is whatever
+<code>--archive-count</code>, <code>--archive-days</code> and <code>--archive-since</code> have
+kept; the charts draw the most recent twenty builds so the axis stays readable, while the tables
+count every build on disk.</div>
+
+<p><a href="analytics.html">Analytics in full</a> — every figure, every panel, and what the tab
+shows on a first run.</p>
+
+<h2 id="steps-gherkin-and-markers">Test steps, Gherkin and markers</h2>
+
+<p>A status column tells you a test failed. Steps tell you <em>where</em>, and how long it had been
+running when it got there. Name the pieces a test is made of and they are timed, nested, and shown
+on a <code>Test Steps</code> tab of its own, with the suite drilling down to the test and the test
+to what it did.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">step() as a context manager, with arbitrary keyword data kept beside it</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">from pytest_html_reporter import step
+
+def test_checkout():
+    with step(&quot;Add to cart&quot;, sku=&quot;A-12&quot;):
+        cart.add(&quot;A-12&quot;)
+
+    with step(&quot;Charge the card&quot;):
+        assert gateway.charge(cart).ok</code></pre>
+</div>
+
+<p>The same function works as a decorator, which is how the methods of a page object or an API
+client — already the steps of every test that calls them — get named once for all of those tests.
+The arguments of the call fill in the <code>{placeholders}</code> of the title.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">step() as a decorator</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">@step(&quot;Log in as {user}&quot;)
+def login(user):
+    page.fill(&quot;#user&quot;, user)
+    page.click(&quot;#submit&quot;)
+
+login(&quot;amy&quot;)        # the tab shows: Log in as amy, with user=amy kept beside it</code></pre>
+</div>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The tab is never empty</b>Every test has a set up, a body and a tear down, each timed,
+    and every test carries its markers, its parameters, the fixtures it named and its docstring —
+    so a suite that has never heard of <code>step()</code> still gets a tree saying where its time
+    went. Naming steps makes that tree deeper; it does not bring it into existence.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Steps nest by being called from inside one another</b>Nothing is passed between them,
+    and a step opened in a fixture is filed under <code>Set up</code> or <code>Tear down</code>
+    rather than swallowing the test that used it.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A step that raises is recorded as failed, with the message, and the exception carries
+    on out</b>The message is kept on the step that actually raised; the steps it was raised inside
+    are marked failed without repeating it, so one failure is printed once rather than once per
+    level.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Anything attached lands on the open step</b><code>attach_api</code>,
+    <code>attach_json</code>, <code>attach_text</code> and <code>attach_file</code> need no extra
+    argument to say which step they belong to, and the step shows a paperclip. A failing test's
+    screenshot is shown on the step that threw.</span>
+  </li>
+</ul>
+
+<figure class="imgslot" data-shot="test-steps-tree.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/test-steps-tree.png</b>
+  <span>The Test Steps tab drilled down suite → test → steps, light theme, showing the per-step duration bars, one nested step, a failed step carrying its message, and a paperclip on a step that has an attachment. Generate it with <code>pytest tests/functional/test_steps.py --html-report=./report</code>.</span>
+</figure>
+
+<h3 id="gherkin-scenarios">Gherkin scenarios, with nothing to do</h3>
+
+<p>A <code>pytest-bdd</code> scenario is already a list of named steps, so its Given / When / Then
+arrive on their own — each timed, each carrying what its parser pulled out of the line, and badged
+as Gherkin so a specification never reads as somebody's plumbing. The feature, the scenario and the
+feature file are named above the tree, an Outline's <code>&lt;placeholders&gt;</code> are shown
+filled in with the row that actually ran, and the scenario's tags arrive as markers.
+<code>pytest-bdd</code> does not have to be installed: the hooks are declared optional, so a run
+without it is untouched.</p>
+
+<h3 id="markers-in-full">Markers, and where they were written</h3>
+
+<p>Markers are shown in full, including the ones a test never mentions: a module-level
+<code>pytestmark</code>, a marker on the class, one added by <code>request.node.add_marker</code>
+while the test ran. Each says which scope it came from, which is the answer when nobody remembers
+applying it. pytest's own markers are coloured apart from yours, because <code>skipif</code>
+changes how a test runs and <code>@smoke</code> only names it. Two are cut down deliberately:
+<code>parametrize</code> shows its argument names rather than every row the test will ever run
+with, and a <code>skipif</code> condition — evaluated at import, so it reaches any reporter as a
+bare <code>False</code> — is shown as its reason instead.</p>
+
+<p><a href="steps-and-bdd.html">Test steps, Gherkin and markers in full</a> — including
+<code>--report-steps</code>, <code>--report-step-limit</code>, and what a retry reports.</p>
+
+<h2 id="evidence">Evidence: screenshots, attachments and captured output</h2>
+
+<p>Three different kinds of "what actually happened", each kept against the test that produced
+it.</p>
+
+<h3 id="screenshots">Screenshots, taken for you</h3>
+
+<p>A test that fails while holding a Selenium driver or a Playwright page is photographed. No hook
+to write, no fixture to add, nothing to import. The picture is taken at the very end of the test,
+before the fixture that quits the browser has run. What makes something a browser is that it can
+hand over a PNG, so Selenium, Playwright, appium, splinter and a driver wrapper of your own are all
+covered, whatever the fixture is called — <code>page</code>, <code>driver</code>,
+<code>browser</code>, <code>selenium</code> or anything else. A test driving two browsers at once
+gets a picture of each.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">An ordinary browser test — nothing about screenshots in it at all</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">def test_checkout(page):
+    page.goto(&quot;/cart&quot;)
+    assert page.locator(&quot;h1&quot;).inner_text() == &quot;Cart&quot;     # fails, and is photographed</code></pre>
+</div>
+
+<p>Every screenshot lands in two places: the <code>Screenshots</code> gallery, and the
+<code>Screens</code> column of the row it belongs to. <code>--report-screenshots</code> decides
+which tests are photographed — <code>failed</code> by default, <code>all</code> if a screenshot of
+a pass is a baseline worth having, <code>none</code> to switch it off. When the moment matters,
+<code>attach</code> takes the PNG bytes yourself, from anything that can produce one; an image you
+attached is always kept whatever that flag says, and a test that attaches its own is not
+photographed again on the way out.</p>
+
+<h3 id="attachments-and-api-logs">Attachments and API logs</h3>
+
+<p>A picture is no use when the thing under test is an API. <code>attach_text</code>,
+<code>attach_json</code>, <code>attach_api</code> and <code>attach_file</code> take the payloads
+instead, and everything a test hands over is opened from the <code>API Logs</code> tab.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">The four helpers at a glance</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">from pytest_html_reporter import attach_api, attach_file, attach_json, attach_text
+
+attach_api(requests.get(url))                         # the whole call
+attach_json({&quot;expected&quot;: order, &quot;got&quot;: response})     # pretty-printed, secrets blanked
+attach_text(query, name=&quot;Query&quot;, format=&quot;sql&quot;)        # any text at all
+attach_file(&quot;payloads/order.json&quot;)                    # a small file from disk</code></pre>
+</div>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The curl command comes with it</b>An attached call holds the response body, the
+    request body, both sets of headers, and the curl command that repeats it — the first thing
+    anyone does with a failed request, and the tedious thing to rebuild by hand from a
+    report.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Credentials are blanked out</b><code>Authorization</code>, <code>Cookie</code>,
+    <code>Set-Cookie</code> and any name containing <code>token</code>, <code>secret</code>,
+    <code>password</code>, <code>api-key</code> or <code>x-auth</code> become
+    <code>&lt;redacted&gt;</code> — in the headers, in the curl command, in a JSON body at any
+    depth, and in a query string. A report is a build artifact; it gets published.
+    <code>redact=False</code> opts out.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>No client library is imported</b>It is the returned response that is passed, not the
+    client, so <code>requests</code> and <code>httpx</code> both work out of the box — and so does
+    the async one. Every field can also be given directly, and an explicit one always wins over the
+    response object.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Evidence survives a green retry</b>A test retried by
+    <code>pytest-rerunfailures</code> that attaches nothing on the attempt which finally passed
+    keeps what the failing attempt attached, rather than losing the evidence by succeeding.</span>
+  </li>
+</ul>
+
+<div class="note note--tip"><span class="note__title">Tip</span>Attach on failure, not on every
+call. Keeping every response buries the one that matters and grows the report for no reason.
+Attach from a fixture's teardown and let the outcome decide — the reporter builds a test's record
+after the finalizers have run, which is what makes that work.</div>
+
+<h3 id="captured-output">Captured stdout, stderr and logging</h3>
+
+<p>Everything pytest captures while a test runs — from setup, call and teardown alike — is kept
+against that test, and this is on by default. The <code>Logs</code> column shows how many lines a
+test produced; clicking it opens the output section by section with a <code>Copy</code>
+button.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>What the test does</th><th>Where it shows up</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>print(...)</code></td><td><code>Captured stdout</code> section</td></tr>
+      <tr><td class="t-nowrap"><code>sys.stderr.write(...)</code></td><td><code>Captured stderr</code> section</td></tr>
+      <tr><td class="t-nowrap"><code>log.info(...)</code>, <code>log.warning(...)</code></td><td><code>Captured log</code> section, subject to <code>--log-level</code></td></tr>
+      <tr><td class="t-nowrap">an assertion failure or traceback</td><td><b>not here</b> — the <code>Error Message</code> column already has it</td></tr>
+      <tr><td class="t-nowrap"><code>warnings.warn(...)</code></td><td><b>not here</b> — pytest keeps its own warnings summary</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>So a test that only asserts has nothing to show and correctly gets a dash, even when it fails.
+Two of pytest's own options decide what reaches the column at all: <code>-s</code> (that is,
+<code>--capture=no</code>) sends stdout and stderr straight to the terminal so nothing is captured,
+and <code>logging</code> is captured from <code>WARNING</code> up unless <code>--log-level</code>
+lowers it.</p>
+
+<div class="note"><span class="note__title">Note</span>If you are on <code>-s</code> for the live
+output, <code>--capture=tee-sys</code> gives you both: it streams to the terminal and still keeps
+the output for the report.</div>
+
+<p><a href="screenshots.html">Screenshots in full</a> covers the automatic capture, the async and
+<code>unittest</code> cases, and taking the picture yourself.
+<a href="python-api.html">The Python API</a> documents all six functions —
+<code>attach</code>, <code>attach_text</code>, <code>attach_json</code>, <code>attach_api</code>,
+<code>attach_file</code> and <code>step</code> — with every argument each one takes.</p>
+
+<h2 id="coverage">Coverage</h2>
+
+<p>Run with <code>pytest-cov</code> and the report grows a <code>Test Coverage</code> tab: the
+overall percentage as a ring, the counts beside it, a row per file with its missing lines, and the
+percentage plotted across this run and the five builds before it. A chip on the
+<code>Dashboard</code> shows the figure and crosses to the tab. Nothing needs configuring — if coverage was measured, it is
+there.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Line coverage, and line + branch coverage</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ --cov=my_package --html-report=./report
+$ pytest tests/ --cov=my_package --cov-branch --html-report=./report</code></pre>
+</div>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The number is coverage.py's own</b>Taken through its public API, so the tab and your
+    terminal always agree. With <code>--cov-branch</code> on, branch coverage is folded in exactly
+    as <code>pytest-cov</code> folds it in and the table gains a <code>Branches</code> column;
+    without it, that column is dropped rather than filled with zeroes.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The ring takes the project's own bar</b>Green at 90% and above, amber at 75%, red
+    below — unless <code>--cov-fail-under</code> has stated a line, in which case that is where the
+    colour is drawn and the tab says so. A report should not disagree with the build that just
+    passed or failed beside it.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Least covered first</b>The order worth reading, and the only defensible way to shorten
+    the list on a large project. <code>--report-coverage-limit</code> sets how many files are
+    listed.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>It travels with the archives</b>The percentage is written into <code>output.json</code>
+    beside the test counts, which is what gives the tab its <code>+0.8 since the last build</code>
+    and its trend line. A build that ran without coverage leaves a gap in that line rather than a
+    drop to zero.</span>
+  </li>
+</ul>
+
+<h3 id="coverage-measured-elsewhere">Coverage that was measured somewhere else</h3>
+
+<p>The tab does not need <code>pytest-cov</code> to have run in this session — useful in CI, where
+coverage is often produced by an earlier step. The kind of file is worked out from its contents,
+not its name, and a <code>coverage.json</code> or Cobertura <code>coverage.xml</code> sitting
+beside the report or at the project root is found without being named at all.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Three file formats, detected by content</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ --report-coverage-file=coverage.xml     # Cobertura, from `coverage xml`
+$ pytest tests/ --report-coverage-file=coverage.json    # from `coverage json`
+$ pytest tests/ --report-coverage-file=.coverage        # coverage.py&#039;s own data file</code></pre>
+</div>
+
+<div class="note"><span class="note__title">Note</span>A <code>.coverage</code> data file is not
+picked up automatically — one is usually left over from an earlier run, and quietly publishing a
+number from last Tuesday is worse than publishing none. Name it if you want it. Reading a Cobertura
+<code>coverage.xml</code> needs no <code>coverage</code> package installed at all, which makes it
+the useful one when the reporting job is not the job that ran the tests.</div>
+
+<p>The annotated source is linked, never embedded: generate <code>htmlcov/</code> with
+<code>--cov-report=html</code> and the tab links to it, and only when that folder was written by
+this run. Framing it into the page would break the one property the whole reporter is built on —
+one file you can mail — and it would break silently, showing an empty frame wherever the folder did
+not travel with it.</p>
+
+<figure class="imgslot" data-shot="coverage-tab.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/coverage-tab.png</b>
+  <span>The Test Coverage tab at 1440px, light theme, after a run with <code>--cov</code> and <code>--cov-branch</code>: the percentage ring, the counts beside it, the trend line across several builds, and the top of the per-file table with its Branches column and missing lines, least covered first.</span>
+</figure>
+
+<h2 id="history-and-archives">History and archives</h2>
+
+<p>Every run archives its own record, and the <code>Archives</code> section lists them. That file
+is what Trends, Highlights, the failure delta, the coverage trend and the whole Analytics tab are
+built from: it holds the test counts, a status and a duration per test, and the coverage
+percentage.</p>
+
+<p>A build is dated by the moment its run started, which is kept in the name of its archive file —
+not by the file's mtime, which in CI is the moment of the checkout. That is what lets an age limit
+still measure the right thing after the reports have been copied into a fresh workspace.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The three retention limits</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ --archive-count 7                  # keep the last N builds
+$ pytest tests/ --archive-days 30                  # a rolling window; fractions allowed
+$ pytest tests/ --archive-since &#039;2026-06-01 09:00&#039;  # a one-off cut</code></pre>
+</div>
+
+<p>The three intersect: a build has to satisfy every limit you set to be kept. Set none of them and
+every build is kept for ever, which is what eventually makes a report slow to open — a retained
+build costs roughly 5KB of the page, so an hourly run reaches a multi-megabyte report inside a
+couple of months. How far back Analytics reads is whatever these three have kept.</p>
+
+<div class="note note--tip"><span class="note__title">Tip</span>Retention is a property of the job
+rather than of one run, so the ini file is usually the better place for it: set
+<code>archive_count</code>, <code>archive_days</code> or <code>archive_since</code> once and every
+invocation, however it is started, keeps the same window.</div>
+
+<h2 id="running-at-scale">Running at scale</h2>
+
+<h3 id="parallel-runs">Parallel runs with pytest-xdist</h3>
+
+<p>Runs distributed with <code>pytest-xdist</code> are gathered into a single report. Every worker
+sends its results back to the controller, which merges them and writes one report — one build in
+<code>Archives</code>, one set of totals, one row per test — whichever way the tests were
+distributed. Tests are listed in collection order rather than the order the workers happened to
+finish them in, so a parallel report reads the same as a serial one. Nothing needs configuring,
+and running without <code>-n</code> is unaffected.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Both distribution modes produce one merged report</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ -n 2 --html-report=./report
+$ pytest tests/ -n auto --dist loadfile --html-report=./report</code></pre>
+</div>
+
+<p>The <code>strftime</code> placeholders in <code>--html-report</code> are expanded once, when the
+run starts, which is what lets a parallel run — and a run that crosses a minute boundary — still
+write a single report.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span>Results are handed over when a
+worker finishes, so tests from a worker that <em>crashes outright</em> — rather than failing — are
+not in the report. pytest reports the crash itself.</div>
+
+<h3 id="reruns">Reruns</h3>
+
+<p>The plugin reacts to <code>pytest-rerunfailures</code>; there is no rerun-specific flag to set.
+Two behaviours are worth knowing, and they deliberately differ:</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Attachments survive a green retry</b>A test that attaches nothing on the attempt that
+    finally passed keeps what the failing attempt attached, rather than losing the evidence by
+    succeeding.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Steps report the attempt that stuck</b>The failing attempt's tree beside a green test
+    would describe a run that did not happen.</span>
+  </li>
+</ul>
+
+<p>Analytics counts retries too: a test that needed one to pass is flaky by definition, and the
+per-test row carries a <em>retries</em> column.</p>
+
+<h3 id="matrix-runs">Matrix runs</h3>
+
+<p><code>pytest-xdist</code> merges within one run, so a CI matrix — several processes on several
+machines — is out of its reach. Name each leg with <code>--report-shard</code> instead: it writes a
+bundle to <code>&lt;report&gt;/shards/&lt;id&gt;</code> and no report of its own, and the standalone
+<code>pytest-html-reporter merge</code> command turns every bundle into one build once the legs have
+finished. Legs that run one after another on a single machine can skip the extra command — give the
+last one <code>--report-shard-merge</code> and it merges as it ends.</p>
+
+<p>Each leg still needs its own artifact name to get its bundle off the runner. The
+<a href="github-action.html">GitHub Action</a> takes an <code>artifact-name</code> input for exactly
+this, and a <code>build-info</code> entry is the place to record which leg of the matrix a record
+came from. <a href="cli-reference.html">The CLI reference</a> has the four shard flags and the merge
+command's own options.</p>
+
+<p><a href="ci-integrations.html">CI integrations</a> covers the rest: keeping the archive folder
+between runs so the trend charts have something to draw, and publishing the report where people
+will actually open it.</p>
+
+<h2 id="the-ecosystem">The ecosystem</h2>
+
+<h3 id="github-action">The GitHub Action</h3>
+
+<p>A composite action that installs the plugin, runs pytest and publishes what comes out. Its
+inputs mirror the plugin's flags one for one — <code>report-path</code>, <code>title</code>,
+<code>environment</code>, <code>build-info</code>, <code>archive-days</code>,
+<code>report-logs</code>, <code>report-coverage</code> and the rest — plus the parts that only make
+sense on a runner.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">The whole quick start</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">name: tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prashanth-sams/pytest-html-reporter-action@v1
+        with:
+          python-version: &#039;3.12&#039;
+          requirements: requirements.txt
+          tests: tests/
+          title: Nightly regression</code></pre>
+</div>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>In the job summary</b>The headline, the counts, the failures with their messages up to
+    <code>failure-limit</code>, the suites ranked by damage, the slowest tests, and coverage when the
+    run measured any — without clicking through to an artifact.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>On the pull request</b>The same summary as one comment that is updated on every push,
+    rather than a new comment each time.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>History across runs</b><code>history: &#039;true&#039;</code> carries the
+    <code>archive/</code> folder between runs with the Actions cache, so Trends, Archives and
+    Analytics have more than one build to show on a fresh runner.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Gates and outputs</b><code>min-pass-rate</code> and <code>min-coverage</code> fail the
+    job on a threshold, <code>fail-on-empty</code> catches a mistyped <code>-k</code> that would
+    otherwise go green, and around twenty outputs — <code>passed</code>, <code>failed</code>,
+    <code>pass-rate</code>, <code>coverage</code>, <code>status</code> — let a later step post to
+    Slack, open an issue or gate a deploy.</span>
+  </li>
+</ul>
+
+<p><a href="github-action.html">The GitHub Action in full</a> — every input, the recipes for a
+pull-request comment, a coverage gate and a Pages deploy, and the outputs a later step can read.</p>
+
+<h3 id="vscode-extension">The VS Code extension</h3>
+
+<p>The same results in the sidebar, while you are still in the file that broke. It reads
+<code>output.json</code> rather than the generated HTML, finds the report on its own, and reloads
+when a run finishes.</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Failures at a glance, and one click to the test</b>Every failing test grouped under its
+    suite with a truncated error on the card; clicking one opens the file at the test's
+    <code>def</code>. Copying gives you the original error, terminal colouring intact.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Flaky vs broken</b>Past builds in <code>archive/</code> are read to tell a test that
+    <em>sometimes</em> fails from one that has never passed. Stable tests get no badge, so the ones
+    that do mean something.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The full report in an editor tab</b>Steps, Attachments, Analytics, Coverage and
+    screenshots, opened in VS Code instead of a browser — and a dropdown to switch between several
+    reports.</span>
+  </li>
+</ul>
+
+<p><a href="vscode.html">The VS Code extension in full</a> — where it looks for your report,
+what each setting does, and the layout it expects on disk.</p>
+
+<h2 id="where-to-go-next">Where to go next</h2>
+
+<div class="grid grid--3">
+  <a class="card" href="getting-started.html">
+    <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    <h3 id="next-getting-started">Getting started</h3>
+    <p>Install it and produce your first report, in two commands.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="report-tour.html">
+    <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></div>
+    <h3 id="next-report-tour">Report tour</h3>
+    <p>Tab by tab through a finished report, in the order you would read one.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="cli-reference.html">
+    <div class="card__icon is-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8l4 4-4 4M12 16h7"/></svg></div>
+    <h3 id="next-cli-reference">CLI reference</h3>
+    <p>Every flag with its default, and the pytest options that change what the report
+    can show.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+</div>

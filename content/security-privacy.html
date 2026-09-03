@@ -1,0 +1,700 @@
+<!--META {"title": "Security & privacy", "eyebrow": "Reference", "description": "An inventory of what a generated report contains, exactly which fields the attachment helpers blank out, what redaction does not cover, and how to publish a report from CI without leaking anything.", "lede": "A report is a static file people put on GitHub Pages, attach to tickets and paste into chat. Before you do that on a private codebase, here is what is actually inside it, which credentials are blanked before they are written, and the handful of ways a secret still gets in."} -->
+
+<h2 id="what-you-are-publishing">What you are publishing</h2>
+
+<p>The generated report is one self-contained HTML file. It makes no outbound request at
+generation time and none at read time — every library and icon is inlined into the page, which
+is why it opens on an air-gapped machine — and there is no telemetry of any kind. Nothing about
+your run is sent anywhere. A generated report is inert HTML.</p>
+
+<p>That is the reassuring half. The other half is that the file is a verbatim record of a pytest
+run on your machine: the command you typed, the path you ran it in, the host that ran it, and
+everything your tests printed while they ran. None of that is redacted, because none of it can
+be — a report that dropped the failure text would not be a report.</p>
+
+<p>And it is not one file on disk. A run leaves <code>output.json</code> beside the report, an
+<code>archive/</code> folder of every retained previous build, and a
+<code>pytest_screenshots/</code> folder of PNGs. Publishing the <em>folder</em> publishes all of
+them.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span>A GitHub Pages site is
+public by default, even when the repository is private. Setting the Action's
+<code>pages-artifact</code> input hands <code>actions/upload-pages-artifact</code> the whole report
+directory — so <code>output.json</code>, every archived build and every screenshot go up with the
+page.</div>
+
+<h2 id="what-is-in-a-report">What a report contains by default</h2>
+
+<p>No flag has to be set for any of this. It is what a bare <code>pytest</code> run produces.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>What</th><th>Where it shows</th><th>Can it carry a secret?</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap">Host, platform, Python and pytest versions</td>
+        <td>Environment panel</td>
+        <td>Not directly. The host name of a laptop is often somebody's name.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap">Every installed plugin and its version</td>
+        <td>Environment panel</td>
+        <td>No — but it is a complete inventory of your test toolchain.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap">The full pytest command line</td>
+        <td>Environment panel, <code>Arguments</code></td>
+        <td><strong>Yes.</strong> Whatever you passed is printed as you passed it.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap">The rootdir</td>
+        <td>Environment panel, <code>Root</code></td>
+        <td><strong>Yes.</strong> An absolute path names your org and repo, or your username.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>--build-info</code> values</td>
+        <td>Environment panel</td>
+        <td><strong>Yes.</strong> Printed verbatim, exactly as given.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap">Captured stdout, stderr and logging</td>
+        <td><code>Logs</code> column</td>
+        <td><strong>Yes.</strong> Nothing filters what a test prints.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap">Failure text and tracebacks</td>
+        <td><code>Error Message</code> column, <code>output.json</code></td>
+        <td><strong>Yes.</strong> This is pytest's own representation, kept whole.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap">Screenshots of a failing browser test</td>
+        <td><code>Screenshots</code> gallery, <code>Screens</code> column</td>
+        <td><strong>Yes.</strong> Whatever the page was showing.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap">Attachments and API logs</td>
+        <td><code>API Logs</code> tab</td>
+        <td>Partly redacted — see <a href="#automatic-redaction">below</a>.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap">Test names, docstrings, markers, parameters</td>
+        <td><code>Test Metrics</code></td>
+        <td>These are your source, reproduced.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="the-environment-block">The environment block</h3>
+
+<p><code>generate_environment_info()</code> in <code>util.py</code> writes a fixed set of rows in
+a fixed order. Two of them are worth reading twice.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">output</span>
+    <span class="codeblock__cap">The Environment panel, in source order</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="output">Environment       staging                       # only when --environment is set
+commit            9f2c1ab                       # one row per --build-info entry
+Captured output   all tests: stdout, stderr and logging, logging from WARNING
+Host              fv-az1024-473                 # platform.uname().node
+Platform          Linux 6.8.0-1017-azure
+Python            3.12.7
+pytest            8.3.4
+Plugins           cov-6.0.0, html-reporter-0.4.0, xdist-3.6.1
+Arguments         tests/ --html-report=report/index.html -q
+Root              /home/runner/work/payments-api/payments-api
+Generated         Sep 03 2026, 11:04:18</code></pre>
+</div>
+
+<p><strong>Arguments</strong> is <code>config.invocation_params.args</code> — the command line
+pytest was started with, minus the executable, joined with spaces. A credential passed as a
+pytest argument is in the report. <strong>Root</strong> is <code>config.rootpath</code>, an
+absolute path: on a CI runner it usually spells out the org and the repository, and on a laptop
+it spells out the user's home directory.</p>
+
+<p><strong>Plugins</strong> comes from <code>pluginmanager.list_plugin_distinfo()</code>, with the
+<code>pytest-</code> prefix stripped and the version appended. It is not a secret, but it is a
+precise statement of which versions of which packages you are running, which is more than some
+organisations publish deliberately.</p>
+
+<figure class="imgslot" data-shot="environment-panel-arguments.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/environment-panel-arguments.png</b>
+  <span>The Environment panel of a report generated on a CI runner, 1440px wide, light theme, with a ring drawn around the <code>Arguments</code> row and another around the <code>Root</code> row. The point of the picture is that the exact command line and an absolute workspace path are in every published report.</span>
+</figure>
+
+<h3 id="captured-output-and-failures">Captured output and failures</h3>
+
+<p>Everything pytest captures while a test runs — <code>stdout</code>, <code>stderr</code> and
+<code>logging</code>, from setup, call and teardown alike — is kept against that test and opened
+from the <code>Logs</code> column. This is on by default; no flag turns it on. If a test logs a
+connection string at <code>WARNING</code>, the connection string is in the report. If your run
+lowers <code>--log-level</code> to <code>DEBUG</code>, everything a library logs at DEBUG is in
+there too.</p>
+
+<p>The failure text is <code>report.longreprtext</code> — pytest's own representation of the
+failure, kept whole rather than summarised. That is the traceback with its source lines; if the
+run was started with <code>--showlocals</code>, it is the traceback with local variable values as
+well. It is written into the <code>Error Message</code> column <em>and</em> into
+<code>output.json</code>, from where it is carried into <code>archive/</code> and survives in
+every later report until retention removes it.</p>
+
+<h3 id="screenshots">Screenshots</h3>
+
+<p>A test that fails while holding a Selenium driver or a Playwright page is
+<a href="screenshots.html">photographed automatically</a>, with no hook and no fixture. That is
+the feature, and it is also the least controllable disclosure in the product: the picture is of
+whatever the browser was showing at the moment of failure — a logged-in session, a customer
+record, a staging dataset, an access token sitting in a form field. Nothing inspects an image,
+so nothing can redact one.</p>
+
+<h3 id="the-files-beside-the-report">The files beside the report</h3>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>File</th><th>What it holds</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>output.json</code></td>
+        <td>The build record: per test, its <code>status</code>, <code>test_name</code>, <code>duration</code>, rerun count and <code>message</code> — where <code>message</code> is the full failure text. Plus suite names, the start time, and a coverage block when the run measured coverage.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>archive/*.json</code></td>
+        <td>One of the above per retained previous build. Every failure message from every build you have kept.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytest_screenshots/*.png</code></td>
+        <td>The images. They are files on disk, not data URIs — the report references them by relative path.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="note"><span class="note__title">Note</span>If you send someone the HTML file on its
+own, the screenshots do not travel with it and the images break. If you send them the folder,
+they get the archive of previous builds as well. Decide which one you meant.</div>
+
+<h2 id="automatic-redaction">Automatic redaction</h2>
+
+<p>A report is a build artifact, so the attachment helpers blank credentials before anything is
+written. All of the redaction in the package lives in one file,
+<code>pytest_html_reporter/attachments.py</code>, and it replaces a matched value with the
+literal string <code>&lt;redacted&gt;</code>.</p>
+
+<h3 id="secret-hints">The rule: SECRET_HINTS</h3>
+
+<p>A header or field name is treated as a credential when any of these appears anywhere in its
+lower-cased form. This is the list verbatim.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">pytest_html_reporter/attachments.py</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">REDACTED = &quot;&lt;redacted&gt;&quot;
+
+SECRET_HINTS = (
+    &quot;authorization&quot;, &quot;cookie&quot;, &quot;token&quot;, &quot;secret&quot;, &quot;password&quot;, &quot;passwd&quot;,
+    &quot;api-key&quot;, &quot;apikey&quot;, &quot;api_key&quot;, &quot;x-auth&quot;, &quot;credential&quot;, &quot;private-key&quot;,
+)
+
+
+def is_secret(name):
+    &quot;&quot;&quot;True when a header or field of this name carries a credential.&quot;&quot;&quot;
+    return any(hint in str(name).lower() for hint in SECRET_HINTS)</code></pre>
+</div>
+
+<p>Matching as a substring is what makes the short list sufficient:
+<code>X-Api-Key</code>, <code>Proxy-Authorization</code>, <code>Set-Cookie</code> and
+<code>refresh_token</code> are all covered without anybody listing every spelling that has ever
+been used. The comment in the source says exactly that.</p>
+
+<h3 id="where-redaction-is-applied">Where it is applied</h3>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Headers, request and response alike</b><code>redact_headers()</code> replaces the value of any header whose <em>name</em> matches. The name itself is kept, so you can still see that an <code>Authorization</code> header was sent.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The URL's query string</b><code>redact_url()</code> splits on <code>?</code> and blanks the value of any <code>key=value</code> pair whose key matches. Without this, an <code>?api_key=</code> would reach the report three times over — in the entry's title, in the URL on the meta strip, and in the curl line. A bare flag with no <code>=</code> is left alone.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Decoded JSON bodies, at any depth</b><code>redact_data()</code> walks nested dicts and lists. A bearer token is at least as likely to be in the body of a login response as in a header, and that response is exactly the one someone attaches while working out why the login failed.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>HAR-shaped header entries</b><code>{&quot;name&quot;: &quot;Authorization&quot;, &quot;value&quot;: &quot;Bearer …&quot;}</code> is how a HAR, and most API specs, write a header. Keying off the dict's own keys would look at <code>name</code> and <code>value</code> and find nothing, so the pair is recognised and the <code>value</code> blanked.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The generated curl line</b><code>curl_command()</code> is built from the already-redacted headers, the already-redacted URL and the already-redacted body, so the line you copy out of the report cannot carry a credential the entry above it hid.</span>
+  </li>
+</ul>
+
+<p>Which helper gets which treatment:</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Helper</th><th>Redacted?</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>attach_api()</code></td>
+        <td><span class="pill pill--pass">yes</span></td>
+        <td>Headers, URL query, both bodies and the curl line. <code>redact=False</code> turns it off.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>attach_json()</code></td>
+        <td><span class="pill pill--pass">yes</span></td>
+        <td>Always. There is no way to turn it off — the payload goes through <code>redact_data()</code> whatever you pass.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>attach_file()</code></td>
+        <td><span class="pill pill--accent">only JSON</span></td>
+        <td>A file that resolves to the <code>json</code> format — a <code>.json</code>, a <code>.har</code>, or anything with <code>format=&quot;json&quot;</code> — is redacted and pretty-printed. Everything else is kept verbatim.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>attach_text()</code></td>
+        <td><span class="pill pill--fail">no</span></td>
+        <td>Free text has nothing to key a redaction off. What you pass is what is stored.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>attach()</code></td>
+        <td><span class="pill pill--fail">no</span></td>
+        <td>It is an image.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The cURL part of an attached call, as it reaches the report</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">curl -X POST &#039;https://api.example.com/v2/orders?api_key=&lt;redacted&gt;&#039; \
+  -H &#039;Authorization: &lt;redacted&gt;&#039; \
+  -H &#039;Content-Type: application/json&#039; \
+  --data &#039;{
+  &quot;sku&quot;: &quot;A-1&quot;,
+  &quot;qty&quot;: 2
+}&#039;</code></pre>
+</div>
+
+<figure class="imgslot" data-shot="attachment-curl-redacted.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/attachment-curl-redacted.png</b>
+  <span>The cURL part of an API Logs attachment, light theme, cropped to about 900px wide, showing an Authorization header and an ?api_key= query parameter both reading &lt;redacted&gt; while the Content-Type header and the JSON body are intact.</span>
+</figure>
+
+<p>The bundled demo, <code>tests/functional/test_attachments.py</code>, carries a fake bearer
+token, an <code>?api_key=</code> and a <code>password</code> in a payload precisely so you can
+run it and see that none of them arrive. It needs no browser and no network.</p>
+
+<h3 id="what-redaction-does-not-cover">What redaction does not cover</h3>
+
+<p>This is the important part of the page. Redaction is a name-matching pass over the arguments
+of three helper functions. It is not a scan of the report, and it has no idea what your secrets
+look like. Every one of the following reaches the file untouched.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span>Nothing outside
+<code>attachments.py</code> redacts anything. Captured logs, failure text, the environment block
+and screenshots are written exactly as they were produced.</div>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A secret printed to stdout or handed to a logger</b>The <code>Logs</code> column is verbatim capture. <code>print(token)</code> or <code>log.debug(&quot;auth=%s&quot;, header)</code> lands in the report as written.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A token in a traceback</b>The failure text is pytest's <code>longreprtext</code>, kept whole — including the source line of the failing assertion, and, under <code>--showlocals</code>, the values of the locals around it. It goes into the report <em>and</em> into <code>output.json</code> and its archives.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A token baked into a URL path</b><code>redact_url()</code> only looks after the <code>?</code>. A call to <code>/v1/sessions/eyJhbGciOi…</code> keeps its path — and because an untitled entry is named <code>METHOD /path</code>, the token becomes the entry's own title in the rail.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A body that is not JSON</b><code>prepare_body()</code> redacts a dict or list, and text that really parses as JSON. A form-encoded <code>password=hunter2</code>, an XML envelope or a SOAP body is stored as it stands, because there is nothing structured to key a redaction off.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A file that is not JSON</b><code>attach_file(&quot;.env&quot;)</code>, a <code>.yaml</code> config or a <code>.sql</code> dump is attached verbatim. Mangling a config file would be worse than not trying, so the code does not try.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A credential visible in a screenshot</b>An image is bytes. Nothing reads it, so nothing can blank anything in it.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A header or field whose name gives nothing away</b>Matching is on the name only; the value is never inspected. <code>X-Session</code>, <code>account_pin</code> and a company-specific header name are not on the list and are not detected.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Anything on the command line, or in <code>--build-info</code></b>Both are printed as given. <code>--build-info sha=$GITHUB_SHA</code> is fine; <code>--build-info token=$DEPLOY_KEY</code> is not.</span>
+  </li>
+</ul>
+
+<p>The character limits are not a safety net either. <code>--report-log-limit</code> and
+<code>--report-attachment-limit</code> cut a payload down — the log keeps its <em>tail</em>, the
+attachment keeps its <em>head</em> — but what survives is as unredacted as what was dropped.</p>
+
+<h2 id="what-the-report-never-does">What the report never does</h2>
+
+<p>Four pieces of defensive work you inherit without asking for them.</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>It never reaches the network</b>The ten JavaScript and CSS libraries and the Font Awesome icon set are vendored into the wheel and inlined at generation time. The page loads nothing from a CDN, so it works offline — and so it cannot phone anywhere. See <a href="compatibility.html">Compatibility &amp; files</a> for the full licence inventory.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Test-written text cannot become markup</b>Everything from the run goes through <code>escape_report_text()</code> on its way into the page. It HTML-escapes, and it also breaks up <code>%(</code> — the page is assembled by substituting <code>%(name)%</code> placeholders, so a log line that happened to look like one would otherwise be filled in instead of shown.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A custom nav link cannot run anything</b><code>--report-link</code> puts a URL from the command line into the page, so <code>safe_link()</code> drops any scheme it does not know — <code>javascript:</code> and <code>data:</code> among them. Relative paths are left alone, because linking <code>./htmlcov/index.html</code> beside the report is the whole point of the option.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The VS Code sidebar is locked down</b>The markup the <a href="vscode.html">extension</a> renders itself carries <code>default-src &#039;none&#039;</code>, allowing inline style and script — both generated in the same string — and nothing else at all, so no report content can pull in a remote resource. The full-report panel deliberately injects no policy, because the report is a self-contained document carrying its own inline scripts and a policy tight enough to be worth adding would break the tabs the panel exists to show; its <code>localResourceRoots</code> is limited to the report's own directory.</span>
+  </li>
+</ul>
+
+<h2 id="publishing-from-ci">Publishing a report from CI</h2>
+
+<h3 id="before-you-make-one-public">Before you make one public</h3>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Open the Environment panel and read the Arguments row</b>It is the exact command line. If a secret is in it, it is in the report, and it is in every archived build too.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Open one failing test's Logs column</b>That is a fair sample of what your suite prints. If you would not paste it into a public issue, do not publish it.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Open the Screenshots gallery</b>Look at every picture, not the first one. This is the item people skip.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Check what else is in the folder</b><code>output.json</code> and <code>archive/*.json</code> hold the failure text of every build you have kept, and they are published with the page.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Grep the file once</b>It is one HTML document. <code>grep -io &#039;bearer [a-z0-9._-]*&#039; report/index.html</code> takes a second and answers the question directly.</span>
+  </li>
+</ul>
+
+<h3 id="flags-that-reduce-exposure">The flags that reduce exposure</h3>
+
+<p>Each of these has an <a href="configuration.html">ini key of the same name</a> with underscores,
+so you can set them once in <code>pytest.ini</code> rather than on every command line.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Flag</th><th>Default</th><th>What setting it costs you</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>--report-logs=none</code></td>
+        <td><code>all</code></td>
+        <td>No captured stdout, stderr or logging at all. <code>failed</code> is the middle setting: only the failures keep their output, which is usually the output you need.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>--report-attachments=none</code></td>
+        <td><code>all</code></td>
+        <td>No API logs, JSON, text or file attachments. <code>failed</code> keeps only the failures'.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>--report-screenshots=none</code></td>
+        <td><code>failed</code></td>
+        <td>Stops the automatic photograph of a live driver or page. Images a test hands to <code>attach()</code> are always kept, so an explicit call still gets through.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>--report-steps=none</code></td>
+        <td><code>all</code></td>
+        <td>No step trees, and none of the step names your tests chose.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>--archive-count 0</code></td>
+        <td>no limit</td>
+        <td>Deletes the archive. Every build published thereafter carries only its own failures — and Trends, Archives and Analytics have nothing to show.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Where to set the reducing flags">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">pytest.ini</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">GitHub Action</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <span class="codeblock__cap">A report you intend to publish</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="ini">[pytest]
+html_report = ./report
+report_logs = failed
+report_attachments = none
+report_screenshots = none
+report_open = none</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">yaml</span>
+        <span class="codeblock__cap">There is no screenshots input — pass the flag through pytest-args</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="yaml">- uses: prashanth-sams/pytest-html-reporter-action@v1
+  with:
+    tests: tests/
+    report-logs: failed
+    report-attachments: none
+    pytest-args: --report-screenshots=none
+    build-info: |
+      commit=${{ github.sha }}</code></pre>
+    </div>
+  </div>
+</div>
+
+<h3 id="keep-it-behind-authentication">The argument for keeping it behind authentication</h3>
+
+<p>Turning things off works, and it costs you the report. <code>report_logs = none</code> removes
+the column you open when a test fails at three in the morning; <code>report_screenshots =
+none</code> removes the picture that explains the failure without a re-run. Every flag in the
+table above trades away part of the reason the report exists.</p>
+
+<p>Restricting who can read the file costs you nothing. The Action is built that way round: the
+default is <code>upload-artifact</code>, which puts the report where people who can read the
+repository can download it, and <code>pages-artifact</code> defaults to <code>&#039;false&#039;</code>
+— you have to ask for the public copy.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Input</th><th>Default</th><th>Why it matters here</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>upload-artifact</code></td>
+        <td><code>&#039;true&#039;</code></td>
+        <td>The private route. Readable by whoever can read the repository, not by the world.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pages-artifact</code></td>
+        <td><code>&#039;false&#039;</code></td>
+        <td>The public route. Uploads the whole report directory for a following job to deploy.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>artifact-include-history</code></td>
+        <td><code>&#039;true&#039;</code></td>
+        <td>Set it to <code>&#039;false&#039;</code> to leave <code>archive/</code> out and upload only the current build.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>artifact-retention-days</code></td>
+        <td>repository default</td>
+        <td>How long the copy exists. A report nobody will read after a fortnight need not survive one.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>If you do publish to Pages, publish deliberately: a report built with
+<code>report-logs: failed</code>, no screenshots and a <code>build-info</code> carrying only
+things that are already public. That is what the project's own
+<a href="github-action.html">demo report</a> is.</p>
+
+<h2 id="the-github-action">The Action specifically</h2>
+
+<h3 id="nothing-is-interpolated-into-a-shell">Nothing is interpolated into a shell</h3>
+
+<p>Every input reaches bash as an environment variable, never as <code>${{ ... }}</code> spliced
+into a <code>run:</code> body — which would make <code>pytest-args</code> shell source.
+<code>tests/test_action_yml.py</code> fails the build if anyone writes one, so the rule is
+enforced rather than remembered.</p>
+
+<p>Output gets the same treatment, because on a fork's pull request the test names and failure
+messages are somebody else's code:</p>
+
+<ul>
+  <li>pytest's entire output is wrapped in a <code>::stop-commands::</code> block whose guard is
+  sixteen random bytes of hex, so nothing the tests print is read as a workflow command — not an
+  <code>::add-mask::</code>, and not a <code>::stop-commands::</code> of its own.</li>
+  <li>A name reaching the job summary or a comment is HTML-escaped (it sits inside a
+  <code>&lt;details&gt;</code> block, and a test called <code>&lt;/details&gt;</code> would close
+  it and take the rest of the summary with it), has its <code>[</code> and <code>]</code> escaped
+  so <code>[Security notice](http://evil)</code> cannot become a link posted under the
+  repository's own identity, and — inside a table — its <code>|</code> escaped, because GFM ends a
+  cell at an unescaped one however deeply it is nested.</li>
+  <li>A line opening with <code>::</code> is broken with a zero-width space rather than trusted
+  not to appear.</li>
+  <li>The <code>$GITHUB_OUTPUT</code> heredoc delimiter is
+  <code>phr_&lt;name&gt;_&lt;8 random bytes&gt;</code>, so no payload can close the block early.</li>
+</ul>
+
+<h3 id="fork-pull-requests">Why a fork pull request gets different handling</h3>
+
+<p>A <code>pull_request</code> run from a fork is handed a read-only token on purpose: the code
+being tested is not yours. So the Action cannot post a comment from one. It warns and carries on
+rather than failing the run — a report is not worth turning a build red over.</p>
+
+<p>The safe pattern is a split, and the repository ships both halves.
+<code>examples/fork-pr.yml</code> runs the tests with <code>contents: read</code> and
+<code>comment: &#039;false&#039;</code>, then writes the PR number and the summary into a small
+artifact. <code>examples/fork-pr-comment.yml</code> is triggered by
+<code>workflow_run</code>, runs from your default branch with a writable token, and never checks
+out the fork's code.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">examples/fork-pr-comment.yml — the privileged half</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">on:
+  workflow_run:
+    workflows: [tests]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: write</code></pre>
+</div>
+
+<p>The check that makes the split safe is the one people leave out. The artifact came out of a job
+that ran the fork's tests, so the pull request number inside it is a <em>claim</em>, not a fact.
+The privileged workflow fetches that pull request and refuses unless its head commit is the
+commit the run actually tested:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">output</span>
+    <span class="codeblock__cap">What it prints instead of commenting</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="output">pull request #412 is at 3ab91f0, but this run tested 9f2c1ab.
+Refusing to comment on a pull request the artifact only claims to belong to.</code></pre>
+</div>
+
+<div class="note note--warn"><span class="note__title">Careful</span>If you copy the
+<code>workflow_run</code> pattern from somewhere else, copy that check with it. Without it, a
+fork can name any pull request in your repository and have your workflow comment on it under the
+repository's own identity.</div>
+
+<h3 id="token-permissions">The permissions the workflows request</h3>
+
+<p>The Action needs nothing beyond the default for the basic case. Add what the features you turn
+on need, and nothing more.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">On the job that runs the tests</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">permissions:
+  contents: read        # always
+  pull-requests: write  # only for `comment: &#039;true&#039;`</code></pre>
+</div>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Permission</th><th>Job</th><th>Needed for</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>contents: read</code></td><td>test</td><td>Always.</td></tr>
+      <tr><td class="t-nowrap"><code>pull-requests: write</code></td><td>test</td><td><code>comment: &#039;true&#039;</code>. Since 2023 the default <code>GITHUB_TOKEN</code> is read-only, which is the usual reason a comment does not appear.</td></tr>
+      <tr><td class="t-nowrap"><code>pages: write</code>, <code>id-token: write</code></td><td>deploy</td><td>Deploying to Pages — on the <em>deploy</em> job, not the one running the tests. An action cannot grant itself an environment.</td></tr>
+      <tr><td class="t-nowrap"><code>actions: read</code></td><td>comment</td><td>The <code>workflow_run</code> half, to download the artifact from the run that produced it.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>The <code>github-token</code> input exists so you can hand it a different token. Its own
+description states the requirement plainly: it needs <code>pull-requests: write</code>, and a
+<code>pull_request</code> run from a fork gets a read-only token and cannot comment.</p>
+
+<h2 id="reporting-a-security-problem">Reporting a security problem</h2>
+
+<p>None of the three repositories ships a <code>SECURITY.md</code>, and no private disclosure
+route is documented in any of them. What the repositories do publish is a single issue tracker
+and a maintainer address.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Route</th><th>Where it is published</th><th>Use it for</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>prashanth-sams/pytest-html-reporter/issues</code></td>
+        <td><code>setup.py</code> <code>project_urls</code>; the extension's <code>package.json</code> points its <code>bugs</code> URL there too</td>
+        <td>Anything safe to describe in public — a redaction gap, a missing escape, an over-broad permission in an example.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>sams.prashanth@gmail.com</code></td>
+        <td><code>setup.py</code>'s <code>author_email</code> and <code>maintainer_email</code>, published with the package on PyPI</td>
+        <td>Anything you should not describe in public before it is fixed.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>Whichever you use, include the version of the plugin, Action or extension, the pytest command
+or workflow YAML that produced the problem, and the smallest reproduction you can manage. The
+plugin's version is in <code>pytest_html_reporter/__init__.py</code> and is what
+<code>pytest-html-reporter --version</code> prints.</p>
+
+<div class="note note--danger"><span class="note__title">Don't</span>Attach the real report. If a
+report is leaking something, sending it is sending the leak. Describe the shape — the field, the
+helper, the flag — or rebuild it against a fake credential.</div>
+
+<p>The dividing line between the projects is the same one the Action's troubleshooting doc draws:
+a problem in getting the report <em>built</em> — inputs, permissions, caching, the comment, the
+gate — belongs on the Action; a problem in the report's <em>contents</em> belongs on the plugin.
+Everything from the VS Code extension goes to the plugin's tracker as well.</p>

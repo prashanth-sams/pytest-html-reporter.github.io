@@ -1,0 +1,917 @@
+<!--META {"title": "Contributing", "eyebrow": "Project", "description": "Set up the plugin, the GitHub Action and the VS Code extension for development, run their tests, and ship a release.", "lede": "Three repositories, three toolchains, three release processes. This page is the whole development story for all of them, assembled from the config files where it currently lives. Every command here works from a clean checkout."} -->
+
+<h2 id="the-three-repositories">The three repositories</h2>
+
+<p>The project is split across three repositories that ship independently and share no version
+number. They are deliberately separate: the plugin has no GitHub dependency, the Action has no
+Python dependency beyond the interpreter the workflow set up, and the extension reads a file
+the plugin writes and nothing else.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Repository</th><th>What it is</th><th>Where its issues go</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>pytest-html-reporter</code></td>
+        <td>The pytest plugin itself, plus the <code>pytest-html-reporter</code> console script. Python, MIT.</td>
+        <td class="t-nowrap"><a href="https://github.com/prashanth-sams/pytest-html-reporter/issues">prashanth-sams/pytest-html-reporter</a></td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytest-html-reporter-action</code></td>
+        <td>The composite GitHub Action and its stdlib-only helper, <code>scripts/phr.py</code>. YAML and Python, MIT.</td>
+        <td class="t-nowrap"><a href="https://github.com/prashanth-sams/pytest-html-reporter-action/issues">prashanth-sams/pytest-html-reporter-action</a></td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytest-html-reporter-vscode</code></td>
+        <td>The VS Code sidebar that reads <code>output.json</code>. TypeScript, MIT.</td>
+        <td class="t-nowrap">The <strong>plugin</strong> tracker — <code>package.json</code> points <code>bugs</code> and <code>repository</code> there on purpose.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>So two of the three trackers are the same tracker. The dividing line for the Action, from its
+own troubleshooting notes: if the problem is in <em>getting the report built</em> — inputs,
+permissions, caching, the pull request comment, the coverage gate — it belongs on the Action.
+If the problem is in the report's <em>contents</em>, it belongs on the plugin.</p>
+
+<div class="note"><span class="note__title">Note</span>All three are MIT. The generated report
+additionally redistributes ten MIT-licensed JavaScript and CSS libraries and a set of CC BY 4.0
+Font Awesome 4.7.0 icons; the inventory is in <code>html_page/vendor/README.md</code> and
+<code>html_page/icons/README.md</code>.</div>
+
+<h2 id="plugin-development">Setting up the plugin</h2>
+
+<p>The plugin repository has no <code>CONTRIBUTING.md</code>, so its development story is spread
+across <code>tox.ini</code>, <code>.pre-commit-config.yaml</code>, <code>requirements.txt</code>,
+<code>.github/workflows/main.yml</code>, <code>codecov.yml</code> and the pull request template.
+This section assembles it.</p>
+
+<h3 id="clone-and-install">Clone, virtualenv, install</h3>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">From nothing to a working checkout</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ git clone https://github.com/prashanth-sams/pytest-html-reporter.git
+$ cd pytest-html-reporter
+$ python -m venv venv
+$ source venv/bin/activate          # Windows: venv\Scripts\activate
+$ pip install -r requirements.txt
+$ pip install -e .</code></pre>
+</div>
+
+<p><code>venv/</code> is already in <code>.gitignore</code> under that exact name, so use it and
+nothing leaks into a commit.</p>
+
+<p><code>requirements.txt</code> is the <strong>development</strong> set, not the runtime set. It
+holds <code>pytest</code>, <code>pytest-cov</code>, <code>coveralls</code>, <code>twine</code>,
+<code>pytest-xdist</code>, <code>beautifulsoup4</code>, <code>pytest-rerunfailures</code>,
+<code>Pillow</code> and <code>pytest-bdd</code>. The runtime dependencies declared in
+<code>setup.py</code> are only <code>pytest</code> and <code>Pillow</code>.</p>
+
+<p>Selenium and Playwright are deliberately absent from that file. The browser demos in
+<code>tests/functional/</code> are run by hand, and each one skips itself when its driver is
+missing — see <a href="#browser-demos">the browser demos</a> below.</p>
+
+<h3 id="running-the-unit-suite">Running the unit suite</h3>
+
+<p><code>tests/unit/</code> is what CI runs, and it is the suite to keep green: 33 modules
+covering the plugin lifecycle, analytics, archives, coverage, xdist, reruns, steps, screenshots,
+markers, logs, escaping, deep links, theming, icons, attachments, teardown failures, collection
+errors, offline rendering and the public API.</p>
+
+<p>Run it with the same command the CI job uses, coverage and all:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The exact command from .github/workflows/main.yml</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ python -m pytest --cov ./pytest_html_reporter/ tests/unit/</code></pre>
+</div>
+
+<p><strong>Name the path.</strong> The repository's <code>pytest.ini</code> sets
+<code>addopts = -v -rf --capture=tee-sys</code> and declares the <code>slow</code> and
+<code>fast</code> markers, but it does not restrict <code>testpaths</code> — so a bare
+<code>pytest</code> in the repository root collects the functional bank as well, and several of
+those tests fail on purpose. <code>tox.ini</code> carries a <code>[pytest]</code> section that
+does point <code>testpaths</code> at <code>tests/unit/</code>, which is what the tox environments
+get.</p>
+
+<p><code>--capture=tee-sys</code> is worth understanding rather than changing: it puts test output
+on the terminal <em>and</em> keeps it for the report. Turning capture off with <code>-s</code>
+leaves the Logs column empty, because there is then nothing to collect.</p>
+
+<p>To run the suite the way tox does, across the declared environments:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pip install tox
+$ tox                    # envlist: py37, pypy3, each with and without ansi2html, plus linting
+$ tox -e linting         # pre-commit run --all-files --show-diff-on-failure</code></pre>
+</div>
+
+<p><code>tox.ini</code>'s <code>envlist</code> still names <code>py37</code> and
+<code>pypy3</code>, which is older than anything CI exercises. See
+<a href="compatibility.html">Compatibility</a> for the interpreters actually tested.</p>
+
+<h3 id="linting-and-pre-commit">Linting and pre-commit</h3>
+
+<p>One linter: <code>flake8</code>, run through pre-commit. <code>tox.ini</code> holds its
+configuration — <code>max-line-length = 120</code>, excluding <code>.eggs</code> and
+<code>.tox</code> — and <code>.pre-commit-config.yaml</code> pins the hook and excludes
+<code>docs</code>.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Install the hook once; it then runs on every commit</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pip install pre-commit
+$ pre-commit install
+$ pre-commit run --all-files --show-diff-on-failure</code></pre>
+</div>
+
+<h3 id="what-ci-checks">What CI checks on a pull request</h3>
+
+<p><code>.github/workflows/main.yml</code> is named <code>CI</code> and triggers on
+<code>pull_request</code> against <code>master</code> only — there is no push build. It runs two
+jobs on <code>ubuntu-latest</code>:</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>lint</b><code>cclauss/Find-Python-syntax-errors-action</code>, which catches a file that will not compile at all.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>unit-test</b>Installs <code>requirements.txt</code> and the package in editable mode, runs <code>python3 -m pytest --cov ./pytest_html_reporter/ tests/unit/</code>, then pushes coverage to Coveralls and Codecov.</span>
+  </li>
+</ul>
+
+<p>The Codecov gate is deliberately not a gate. <code>codecov.yml</code> sets
+<code>target: 0%</code> with a <code>threshold: 70%</code>, <code>precision: 3</code>,
+<code>patch: false</code>, and a diff-only comment that only appears when there are changes — so
+coverage informs review rather than blocking it.</p>
+
+<p>A legacy <code>.travis.yml</code> is still in the tree, running the same test command on Python
+3.8. GitHub Actions is the live one.</p>
+
+<h3 id="the-merge-checklist">The merge checklist</h3>
+
+<p>Straight from <code>.github/pull_request_template.md</code>, which is what appears in the PR
+body:</p>
+
+<ul>
+  <li>Changelog</li>
+  <li>Documentation</li>
+  <li>Unit Tests</li>
+  <li>Validated</li>
+  <li>Version number incremented</li>
+</ul>
+
+<p><code>CODEOWNERS</code> puts <code>/pytest_html_reporter/</code> and <code>/tests/</code> under
+<code>@prashanth-sams</code>, so a change to either path requests his review automatically.</p>
+
+<div class="note note--tip"><span class="note__title">House style</span>The source is heavily
+commented, and the comments are all <em>why</em>, never <em>what</em> — the
+<code>console_scripts</code> comment in <code>setup.py</code>, the <code>_CI_RUN_VARIABLES</code>
+block in <code>shards.py</code>, the module docstring in <code>shim.py</code>. Several exist to
+stop a future reader deleting a workaround. If you write a guard, say what goes wrong without
+it.</div>
+
+<h2 id="functional-test-bank">The functional test bank</h2>
+
+<p><code>tests/functional/</code> is not a CI suite. It is a demo gallery: small pytest files
+whose only purpose is to fill each tab of the report, several of which fail on purpose because a
+failure is what puts a screenshot, an error snippet and an attachment in the page. Its own
+<code>Readme.md</code> calls it <em>&quot;pytest bank — pytest exercises&quot;</em>.</p>
+
+<p>It is the fastest way to see a feature working before you wire it into your own suite.</p>
+
+<h3 id="running-the-bank">Running it</h3>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The whole bank, into a folder of its own</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/functional/ --html-report=./report</code></pre>
+</div>
+
+<p>Expect red. The failures are the content. Run it twice and Trends, Archives and Analytics have
+something to draw, because a build only joins the archive when the next run rotates it there.</p>
+
+<p>The three ways the bank's own README suggests running a single file:</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Type</th><th>Command</th></tr></thead>
+    <tbody>
+      <tr><td>Generic run</td><td class="t-nowrap"><code>pytest -v -s test_yield_fixture.py</code></td></tr>
+      <tr><td>One test case</td><td class="t-nowrap"><code>pytest -v -s test_yield_fixture.py::test_fail</code></td></tr>
+      <tr><td>Tagged tests only</td><td class="t-nowrap"><code>pytest -v -s test_mark.py -m 'slow'</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>The <code>slow</code> and <code>fast</code> markers those commands select on are declared in the
+repository's <code>pytest.ini</code>.</p>
+
+<h3 id="attachments-demo">Start with test_attachments.py</h3>
+
+<p><code>tests/functional/test_attachments.py</code> needs <strong>no browser and no
+network</strong> — its HTTP client is a stub class shaped like a <code>requests</code> response —
+so it is the quickest thing in the repository to run:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/functional/test_attachments.py --html-report=./report</code></pre>
+</div>
+
+<p>It exercises every helper — <code>attach_api</code> from a response object and from arguments
+alone, <code>attach_json</code>, <code>attach_text</code>, <code>attach_file</code>, and the
+attach-on-failure fixture. Two of its tests fail on purpose. It also carries a fake bearer token,
+an <code>?api_key=</code> and a <code>password</code> in a payload, none of which reach the report
+— so it doubles as a demonstration of redaction. See
+<a href="security-privacy.html">Security and privacy</a> for what that covers.</p>
+
+<p>Two patterns in that file are worth lifting into your own suite verbatim. The first is the
+fixture that attaches the last call, but only when the test failed:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">tests/functional/test_attachments.py</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">@pytest.fixture
+def api(request):
+    client = Api()
+    yield client
+
+    if getattr(request.node, &quot;rep_call&quot;, None) is not None and request.node.rep_call.failed:
+        if client.last_response is not None:
+            attach_api(client.last_response, name=&quot;Last call before the failure&quot;)</code></pre>
+</div>
+
+<p>That works because the reporter builds a test's record <em>after</em> the fixture finalizers
+have run, which makes a teardown a perfectly good place to attach from. The
+<code>rep_call</code> attribute comes from the standard hook wrapper, which the demo defines in
+the test module itself so the file stands alone:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">In a real suite this belongs in conftest.py</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    setattr(item, &quot;rep_&quot; + outcome.get_result().when, outcome.get_result())</code></pre>
+</div>
+
+<p>pytest calls a hook defined in a test module, but only for that module's tests. Move it to
+<code>conftest.py</code> and it covers everything under it.</p>
+
+<p>The second pattern is that <code>attach_api</code> reads a response <strong>by shape, not by
+type</strong>. That is why the stub <code>Response</code> class in the demo can be swapped for
+<code>requests</code> or <code>httpx</code> and nothing else in the file changes. The
+<a href="python-api.html">Python API</a> page documents the shape it looks for.</p>
+
+<h3 id="browser-demos">The browser demos</h3>
+
+<p><code>test_selenium.py</code>, <code>test_screenshot.py</code> and
+<code>test_playwright.py</code> drive a real browser to exercise screenshot-on-failure. Their
+dependencies are kept out of <code>requirements.txt</code> and each file
+<code>importorskip</code>s itself when its driver is missing, so a checkout with neither installed
+still runs the bank cleanly.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Test</th><th>Install</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>test_selenium.py</code>, <code>test_screenshot.py</code></td>
+        <td class="t-nowrap"><code>pip install selenium</code> (plus a local Chrome)</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>test_playwright.py</code></td>
+        <td class="t-nowrap"><code>pip install pytest-playwright &amp;&amp; playwright install chromium</code></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>Each file has exactly one test that fails on purpose — that is the one that puts a screenshot in
+the report. What all three demonstrate by <em>omission</em> is the actual feature: there is no
+conftest, no hook and no call to <code>attach</code>. The reporter photographs the driver itself,
+because the driver is in the test's own fixtures and the reporter is already standing in its
+teardown. The Playwright file proves the mechanism is not Selenium-specific — the reporter
+recognises a browser by what it can do, so <code>page.screenshot()</code> is found the same way
+<code>get_screenshot_as_png()</code> is. More in
+<a href="screenshots.html">Screenshots</a>.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span>The Playwright demo navigates
+from an <code>autouse</code> fixture rather than wrapping <code>page</code> in a fixture of its
+own, and says so in a comment: navigating from a fixture keeps the name in
+<code>item.funcargs</code>, which is where the lookup reaches for it.</div>
+
+<h3 id="gherkin-demos">The Gherkin demos</h3>
+
+<p><code>test_gherkin.py</code> runs a checkout scenario from
+<code>tests/functional/features/checkout.feature</code>. Nothing in it mentions the reporter — a
+pytest-bdd scenario is already a list of named steps, so the Test Steps tab fills itself, each
+step timed and badged with its Gherkin keyword. <code>test_gherkin_screenshot.py</code> combines
+it with a browser against <code>ui_features/heading.feature</code>, so a failing
+<code>Then</code> carries a picture filed against that step rather than against the test as a
+whole.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pip install pytest-bdd
+$ pytest tests/functional/test_gherkin.py --html-report=./report</code></pre>
+</div>
+
+<p><code>test_steps.py</code> shows the same tab filled by hand, with the
+<code>step</code> helper rather than pytest-bdd — a page object whose methods are the steps. Both
+are covered on <a href="steps-and-bdd.html">Steps and BDD</a>.</p>
+
+<h3 id="the-rest-of-the-bank">The rest of the bank</h3>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>File</th><th>What it puts in the report</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>test_simple.py</code></td><td>One pass and one raised exception — the smallest possible red build.</td></tr>
+      <tr><td class="t-nowrap"><code>test_fixture.py</code></td><td>A mock-data fixture.</td></tr>
+      <tr><td class="t-nowrap"><code>test_usefixtures.py</code></td><td><code>usefixtures</code>, with a note on applying it globally from <code>pytest.ini</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>test_autouse.py</code></td><td>An autouse fixture wrapping a fake DB in begin/rollback.</td></tr>
+      <tr><td class="t-nowrap"><code>test_mark.py</code></td><td>Markers, so the report's marker filtering has something to filter.</td></tr>
+      <tr><td class="t-nowrap"><code>test_parameterize.py</code></td><td>A parametrised test where one case fails — parameters appear on the row.</td></tr>
+      <tr><td class="t-nowrap"><code>test_yield_fixture.py</code></td><td>A yield fixture, setup and teardown.</td></tr>
+      <tr><td class="t-nowrap"><code>test_skip_xfail_xpass.py</code></td><td>Skip, xfail and xpass, which are three separate counts in the summary.</td></tr>
+      <tr><td class="t-nowrap"><code>test_approx.py</code></td><td><code>pytest.approx</code> over scalars, tuples and dicts.</td></tr>
+      <tr><td class="t-nowrap"><code>test_steps.py</code></td><td>The Test Steps tab, driven by the <code>step</code> helper. No browser, no network.</td></tr>
+      <tr><td class="t-nowrap"><code>test_attachments.py</code></td><td>The API Logs tab and every attachment helper. No browser, no network.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2 id="github-action-development">Setting up the GitHub Action</h2>
+
+<p>The Action repository is the best documented of the three: it ships
+<code>CONTRIBUTING.md</code>, <code>RELEASING.md</code>, <code>docs/how-it-works.md</code>,
+<code>docs/troubleshooting.md</code>, four workflows and a commented
+<code>.yamllint.yml</code>. This is the short version.</p>
+
+<h3 id="action-setup-and-tests">Setup and tests</h3>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ git clone https://github.com/prashanth-sams/pytest-html-reporter-action.git
+$ cd pytest-html-reporter-action
+$ python -m pip install pytest pyyaml
+$ python -m pytest</code></pre>
+</div>
+
+<p>Two test files, and they check different kinds of thing:</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>tests/test_phr.py</b>The helper — the counts, the pass rate, the markdown summary, the thresholds and the pytest command it builds.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>tests/test_action_yml.py</b>The metadata — the shape the runner requires, the wiring between steps, and whether the README still describes the inputs that exist.</span>
+  </li>
+</ul>
+
+<p>That last check is why <strong>a new or renamed input needs its README row in the same
+commit</strong>. The test will tell you.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span><code>pyyaml</code> is not
+optional. Without it <code>test_action_yml.py</code> <code>importorskip</code>s away entirely and
+the job passes having checked nothing. <code>ci.yml</code> guards against exactly that by
+asserting the file collects more than ten tests.</div>
+
+<p>CI runs that suite on a matrix of <code>ubuntu-latest</code>, <code>macos-latest</code> and
+<code>windows-latest</code> against Python 3.9 and 3.13, with <code>fail-fast: false</code>.</p>
+
+<h3 id="action-linting">Linting</h3>
+
+<p>Most of this action is bash inside YAML, and shellcheck cannot read YAML. So
+<code>extract_shell.py</code> lifts the <code>run:</code> blocks out first, replacing each
+<code>${{ ... }}</code> with a quoted placeholder so shellcheck does not read <code>${{</code> as a
+broken parameter expansion and give up. Without that step the largest part of the codebase goes
+unlinted.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The three commands from CONTRIBUTING.md</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ python scripts/extract_shell.py action.yml .shellcheck
+$ shellcheck --shell=bash .shellcheck/*.sh
+$ yamllint -c .yamllint.yml action.yml .github/workflows examples</code></pre>
+</div>
+
+<p>CI additionally runs <code>actionlint</code> and validates the metadata against the official
+schema with <code>check-jsonschema --builtin-schema vendor.github-actions action.yml</code>.</p>
+
+<p><code>.yamllint.yml</code> relaxes exactly one default rule, with the reason in a comment: YAML
+1.1 reads a bare <code>on:</code> as the boolean <code>true</code>, which is every workflow file
+ever written.</p>
+
+<h3 id="running-the-action-for-real">Running the action for real</h3>
+
+<p><code>.github/workflows/self-test.yml</code> is the only place the composite wiring is exercised
+end to end, so <strong>a change to <code>action.yml</code> needs a push to see it work</strong>.
+It runs four jobs:</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Job</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>green</code></td><td>A passing run on Linux, macOS and Windows, asserting on every output.</td></tr>
+      <tr><td class="t-nowrap"><code>red</code></td><td>A failing run still uploads its artifact and writes its summary before the step goes red.</td></tr>
+      <tr><td class="t-nowrap"><code>gated</code></td><td>A coverage threshold fails a run that pytest called green.</td></tr>
+      <tr><td class="t-nowrap"><code>history</code></td><td>Two builds into the same folder, and the first one gets archived.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>To reproduce a self-test run by hand, against the sample project the workflow builds:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">make-project.sh takes pass or fail; fail adds a failure, an error and a skip</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ bash tests/fixtures/make-project.sh /tmp/sample fail
+$ cd /tmp/sample
+$ pip install pytest-html-reporter
+$ python /path/to/scripts/phr.py resolve --path report
+$ pytest tests/ --html-report=report --report-open=none
+$ python /path/to/scripts/phr.py summarize --json report/output.json --exit-code 1</code></pre>
+</div>
+
+<p>That is the Action's own sequence with the YAML taken away — <code>resolve</code> works out the
+paths, pytest writes the report, <code>summarize</code> produces the counts and the verdict. See
+<a href="github-action.html">GitHub Action</a> for what each step does in a workflow.</p>
+
+<h3 id="action-house-style">House style and dependencies</h3>
+
+<p><strong>The helper is stdlib-only and stays that way.</strong> It runs on whatever Python the
+workflow set up, and an action that installs its own dependencies to print a table is an action
+that breaks on somebody's locked-down runner.</p>
+
+<p><strong>Comments explain why, not what.</strong> The action works around a number of sharp edges
+in the plugin's behaviour, and each workaround carries a comment saying what would otherwise go
+wrong — because without it the next reader deletes it.</p>
+
+<p><code>.github/dependabot.yml</code> watches two directories weekly with a <code>deps</code>
+commit prefix: <code>/</code> for the actions <code>action.yml</code> itself calls, and
+<code>/.github/workflows</code> for the ones this repository's own workflows call. GitHub treats
+those as separate ecosystems, and watching only one is the usual way half your <code>uses:</code>
+pins go stale.</p>
+
+<p>The pull request checklist, from <code>CONTRIBUTING.md</code> and the tests that enforce it:</p>
+
+<ul>
+  <li><code>python -m pytest</code> passes</li>
+  <li>A new or renamed input has its README row</li>
+  <li>A change to <code>action.yml</code> has been through <code>self-test.yml</code> on a push</li>
+  <li><code>CHANGELOG.md</code> has an entry, if this is user-visible</li>
+</ul>
+
+<h2 id="vscode-extension-development">Setting up the VS Code extension</h2>
+
+<p>The extension repository has no <code>CONTRIBUTING.md</code> and no CI workflows. The
+development story is in <code>package.json</code>'s scripts, <code>.vscode/</code>,
+<code>esbuild.js</code> and <code>tools/preview.mjs</code>.</p>
+
+<h3 id="extension-setup">Setup and the inner loop</h3>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ git clone https://github.com/prashanth-sams/pytest-html-reporter-vscode.git
+$ cd pytest-html-reporter-vscode
+$ npm install
+$ npm run build          # node esbuild.js  -&gt;  dist/extension.js
+$ npm run watch          # the same, rebuilding on change</code></pre>
+</div>
+
+<p>Then press <strong>F5</strong> for an Extension Development Host and open a folder containing a
+report. <code>.vscode/launch.json</code> runs <code>npm: build</code> as its
+<code>preLaunchTask</code> and points <code>outFiles</code> at <code>dist/**/*.js</code>;
+<code>.vscode/tasks.json</code> wires <code>build</code> and <code>watch</code> to the
+<code>$esbuild</code> and <code>$esbuild-watch</code> problem matchers — which is what the small
+<code>problemMatcherPlugin</code> in <code>esbuild.js</code> exists to feed.</p>
+
+<p>The bundle targets <code>node20</code>, CommonJS, with <code>vscode</code> external.</p>
+
+<h3 id="the-preview-renderer">The preview renderer</h3>
+
+<p>Launching the Extension Development Host to look at a colour is a slow loop.
+<code>npm run preview</code> renders the same markup the webview gets to standalone HTML in
+<code>.preview/</code>, so a style change is one command and a browser refresh away.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Each argument writes a dark file and a light file</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ npm run preview                  # the bundled fixture, with failures
+$ npm run preview -- all-passed    # a green run
+$ npm run preview -- no-config     # nothing found yet
+$ npm run preview -- error         # a corrupt report
+
+$ PREVIEW_REPORT=/path/to/output.json npm run preview   # one of your own runs</code></pre>
+</div>
+
+<p>Four fixtures in both themes gives the eight files checked in under <code>.preview/</code>. The
+script compiles first — <code>npm run preview</code> is <code>compile-tests</code> followed by
+<code>node tools/preview.mjs</code> — and imports the real renderer and history service out of
+<code>out/</code>, so what you see is the code that ships.</p>
+
+<p>The subtlety, and the reason the harness is more than twenty lines: a webview inherits a large
+set of <code>--vscode-*</code> custom properties from the host, and nothing outside VS Code
+supplies them. So <code>tools/preview.mjs</code> stubs the <strong>real Dark+ and Light+
+values</strong>. Without them every themed colour falls back to its hard-coded default and the
+preview tells you nothing about what users actually see.</p>
+
+<p>Pointing <code>PREVIEW_REPORT</code> at a real run makes the history charts read that report's
+own <code>archive/</code> too, which is the only way to see the trend and flaky panels with
+plausible data.</p>
+
+<h3 id="extension-tests-and-lint">Tests and type-checking</h3>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ npm test        # tsc -p . --outDir out, then node --test &quot;out/tests/**/*.test.js&quot;
+$ npm run lint    # tsc --noEmit</code></pre>
+</div>
+
+<p>Plain <code>node --test</code> over compiled JavaScript, with no VS Code test harness, because
+none of the tested code touches the <code>vscode</code> API. Three suites:</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>outputJson.test.ts</b>Parsing and shape validation — which is what stops an unrelated <code>output.json</code> in a workspace being shown as test results.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>history.test.ts</b>Flaky verdicts and trends computed across the archive fixtures.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>testLocator.test.ts</b>The <code>def</code>-scanning source-line recovery that stands in for the file and line fields <code>output.json</code> never writes.</span>
+  </li>
+</ul>
+
+<p><code>tests/fixtures/</code> holds an <code>output.json</code>, eight archived
+<code>output_*.json</code> builds for the history tests, and a deliberately
+<code>corrupt.json</code>.</p>
+
+<p><code>tsconfig.json</code> is strict and then some: <code>strict</code>,
+<code>noUnusedLocals</code>, <code>noUnusedParameters</code>, <code>noImplicitReturns</code>,
+<code>noFallthroughCasesInSwitch</code> and <code>forceConsistentCasingInFileNames</code>. There is
+no ESLint — <code>npm run lint</code> is the compiler.</p>
+
+<h3 id="extension-packaging">Packaging</h3>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ npm run package     # vsce package  -&gt;  pytest-html-reporter-vscode-&lt;version&gt;.vsix</code></pre>
+</div>
+
+<p><code>vsce package</code> triggers <code>vscode:prepublish</code>, which is a production
+esbuild — minified, no sourcemap. <code>.vscodeignore</code> keeps <code>src/</code>,
+<code>tests/</code>, <code>out/</code>, <code>tools/</code>, <code>.preview/</code>,
+<code>node_modules/</code>, every <code>.ts</code> and every <code>.map</code> out of the VSIX, so
+what ships is <code>dist/extension.js</code>, <code>resources/</code>, the README, the CHANGELOG
+and the LICENSE.</p>
+
+<h2 id="releasing">Releasing</h2>
+
+<p>Three projects, three processes, and two of them have a step that silently ships to nobody if
+you forget it. The version numbers are <strong>independent</strong> — the Action's changelog links
+out to the plugin's rather than restating it, and there is no relationship between the three
+numbers. Do not try to synchronise them.</p>
+
+<h3 id="releasing-the-plugin">The plugin, to PyPI</h3>
+
+<p><code>RELEASE_GUIDE.md</code> documents this, though it is written for 0.3.0 specifically. The
+version lives in exactly two places that must agree:</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>File</th><th>Line</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>setup.py</code></td><td><code>version=&quot;0.4.0&quot;</code></td></tr>
+      <tr><td class="t-nowrap"><code>pytest_html_reporter/__init__.py</code></td><td><code>__version__ = &quot;0.4.0&quot;</code> — what <code>pytest-html-reporter --version</code> prints</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Build, check, upload, tag</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pip install --upgrade build twine
+$ rm -rf build/ dist/ *.egg-info
+$ python -m build
+$ twine check dist/*
+$ twine upload --repository testpypi dist/*     # optional
+$ twine upload dist/*
+$ git tag -a v0.4.0 -m &quot;Release version 0.4.0&quot;
+$ git push origin v0.4.0</code></pre>
+</div>
+
+<p>Then draft a GitHub release from the tag, with <code>CHANGELOG.txt</code> as the description.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span><strong>Check the wheel
+actually contains the assets.</strong> A report is inlined vendored JavaScript and SVG icons, none
+of which is Python. They reach the distribution through <code>MANIFEST.in</code> (the sdist)
+<em>and</em> <code>setup.py</code>'s <code>package_data</code> plus
+<code>include_package_data</code> (the wheel). Add an asset type to one and not the other and you
+ship a package that generates a blank white page.</div>
+
+<p><code>MANIFEST.in</code> also prunes <code>tests/</code>, <code>test_draft/</code> and
+<code>venv/</code>, and excludes <code>CHANGELOG.txt</code> and <code>requirements.txt</code>.</p>
+
+<p>One manual step that is easy to miss: the PyPI badge in <code>README.rst</code> carries a
+cache-buster, <code>badge.fury.io/py/pytest-html-reporter.svg?v=0.4.0</code>. It has to be bumped
+by hand at release time, so a stale badge is a slip in this process rather than a broken
+publish.</p>
+
+<h3 id="releasing-the-action">The Action, to the Marketplace</h3>
+
+<p>The Marketplace name comes from <code>name:</code> in <code>action.yml</code>, not from the
+repository, and the listing lives at
+<code>github.com/marketplace/actions/pytest-html-reporter</code>. Renaming it breaks that URL and
+every link to it; <code>tests/test_action_yml.py</code> fails the build if it changes. The
+repository is called <code>...-action</code> only because the plugin already owns the shorter
+name.</p>
+
+<ol class="steps">
+  <li>
+    <p><strong>Update the changelog.</strong> <code>CHANGELOG.md</code>, in the repository root.</p>
+  </li>
+  <li>
+    <p><strong>Tag and push.</strong></p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ git tag -a v1.2.3 -m &quot;v1.2.3&quot;
+$ git push origin v1.2.3</code></pre>
+    </div>
+  </li>
+  <li>
+    <p><strong>Draft the release</strong> from the tag, on GitHub, ticking <strong>Publish this Action to the GitHub
+    Marketplace</strong>.</p>
+  </li>
+  <li>
+    <p><strong>Move the major tag.</strong> <code>.github/workflows/release.yml</code> does this on publish, so normally there is
+    nothing to do. By hand it is:</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ git tag -f v1 v1.2.3
+$ git push origin v1 --force</code></pre>
+    </div>
+  </li>
+</ol>
+
+<div class="note note--danger"><span class="note__title">Don't</span>Skip step 4.
+<code>@v1</code> is what nearly everybody uses, and a release that does not move it ships to
+nobody. That is the most common way an action goes stale.</div>
+
+<p>The release workflow is careful in two ways worth knowing about. It skips prereleases and any
+tag that is not exactly <code>vX.Y.Z</code>, and it refuses to drag the major tag backwards: if a
+backport is published after a newer version, <code>v1</code> stays where it is, because
+<code>@v1</code> means the newest v1, not the last published.</p>
+
+<h3 id="releasing-the-extension">The extension, to the VS Code Marketplace</h3>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ npm run package     # produces the .vsix
+$ npx vsce publish    # ships it</code></pre>
+</div>
+
+<p>The publisher is <code>prashanth-sams</code> and the extension id is
+<code>prashanth-sams.pytest-html-reporter-vscode</code>.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span>Keep
+<code>package.json</code>'s <code>version</code> and <code>CHANGELOG.md</code>'s top heading in
+step. At the time of writing they are not — <code>package.json</code> says <code>0.1.2</code> and
+the newest changelog entry is <code>0.1.2</code>. The Marketplace shows the changelog beside the
+version, so the mismatch is visible to users.</div>
+
+<h2 id="community-and-support">Community and support</h2>
+
+<h3 id="where-to-file-what">Where to file what</h3>
+
+<p>Almost everything goes to the plugin's issue tracker, including every extension bug — the
+extension points its <code>bugs</code> URL there on purpose. Action issues are the exception, and
+only when the problem is in getting the report <em>built</em>.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Problem</th><th>Tracker</th></tr></thead>
+    <tbody>
+      <tr><td>A wrong count, a missing tab, a rendering bug, a crash during the run</td><td class="t-nowrap">Plugin</td></tr>
+      <tr><td>The sidebar shows nothing, jump-to-test lands wrong, a webview style bug</td><td class="t-nowrap">Plugin</td></tr>
+      <tr><td>An input is ignored, the PR comment does not appear, caching or the coverage gate</td><td class="t-nowrap">Action</td></tr>
+      <tr><td>A flag or ini key you cannot get to work</td><td class="t-nowrap">Plugin</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="asking-a-good-question">Asking a good question</h3>
+
+<p>Most issues on any of these repositories are answerable in one reply if the report is
+reproducible, and take four rounds of questions if it is not. Include:</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The exact command or workflow YAML</b>The whole pytest invocation, or the whole <code>uses:</code> block with its <code>with:</code> inputs.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Versions</b><code>pytest-html-reporter --version</code>, <code>pytest --version</code>, the Python version, and the Action or extension version if one is involved.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The log</b>Not a screenshot of it. A <code>pytest.UsageError</code> names the option it rejected, and that name is usually the whole answer.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>For an Action issue, its outputs</b>The <code>report-dir</code> and <code>status</code> outputs say what the run thought it did.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A reproduction from the bank if you can</b>&quot;<code>pytest tests/functional/test_attachments.py</code> also does it&quot; removes your suite from the picture entirely.</span>
+  </li>
+</ul>
+
+<p>Check <a href="faq.html">the FAQ</a> first — empty tabs, a missing PR comment, an
+unexpectedly large report and exit code 4 are all answered there.</p>
+
+<h3 id="project-links">Project links</h3>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>What</th><th>Where</th></tr></thead>
+    <tbody>
+      <tr><td>Plugin source and issues</td><td><a href="https://github.com/prashanth-sams/pytest-html-reporter">github.com/prashanth-sams/pytest-html-reporter</a></td></tr>
+      <tr><td>Action source and issues</td><td><a href="https://github.com/prashanth-sams/pytest-html-reporter-action">github.com/prashanth-sams/pytest-html-reporter-action</a></td></tr>
+      <tr><td>Extension source</td><td><a href="https://github.com/prashanth-sams/pytest-html-reporter-vscode">github.com/prashanth-sams/pytest-html-reporter-vscode</a></td></tr>
+      <tr><td>PyPI</td><td><a href="https://pypi.org/project/pytest-html-reporter/">pypi.org/project/pytest-html-reporter</a></td></tr>
+      <tr><td>GitHub Marketplace</td><td><a href="https://github.com/marketplace/actions/pytest-html-reporter">github.com/marketplace/actions/pytest-html-reporter</a></td></tr>
+      <tr><td>VS Code Marketplace</td><td><code>prashanth-sams.pytest-html-reporter-vscode</code></td></tr>
+      <tr><td>Chat</td><td><a href="https://gitter.im/prashanth-sams/pytest-html-reporter">Gitter</a> — predates GitHub Discussions and is still the badge in the README. For anything that needs a record, prefer an issue.</td></tr>
+      <tr><td>Changelog</td><td><a href="changelog.html">On this site</a>, and <code>CHANGELOG.txt</code> in the plugin repository</td></tr>
+      <tr><td>Roadmap</td><td><a href="https://github.com/prashanth-sams/pytest-html-reporter/blob/master/ROADMAP.md">ROADMAP.md</a></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="the-live-demo">The live demo</h3>
+
+<p>The Action repository rebuilds a report on every push and publishes it to GitHub Pages at
+<a href="https://prashanth-sams.github.io/pytest-html-reporter-action/">prashanth-sams.github.io/pytest-html-reporter-action</a>.
+It is deliberately built from the <em>failing</em> flavour of the sample project — three passes, a
+failure, an error and a skip — because a demo that is green all the way down says nothing about
+what the report does with the runs people actually need to read. It is also the only place the
+<code>pages-artifact</code> input is exercised end to end.</p>
+
+<div class="note"><span class="note__title">Note</span>Every badge in the plugin README points at
+a live service: PyPI version, Coveralls line coverage of <code>pytest_html_reporter/</code>,
+cumulative downloads from pepy.tech, and the Gitter room. Codecov receives the same coverage data
+Coveralls does.</div>

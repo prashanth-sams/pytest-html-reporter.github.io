@@ -1,0 +1,412 @@
+<!--META {"title": "Screenshots", "eyebrow": "Guides", "description": "A failing Selenium or Playwright test is photographed automatically — no hook, no fixture, no import, no conftest.py.", "lede": "The screenshot-on-failure recipe this plugin documented for years is now the default behaviour. A browser test that says nothing at all about screenshots still reaches the report with a picture of the page its assertion failed on."} -->
+
+<h2 id="photographed-for-you">A failing browser test photographs itself</h2>
+
+<p>A test that fails while holding a Selenium driver or a Playwright page is photographed for you. There is no hook to write, no fixture to add, nothing to import and no <code>conftest.py</code>. It is an ordinary browser test, and its failure arrives in the report with a picture of the page beside it.</p>
+
+<p>The two tabs below reach the same place. The first is the recipe every browser suite used to carry — an autouse fixture, a <code>pytest_runtest_makereport</code> hook to find out whether the test failed, and an explicit <code>attach</code>. The second is a test file with none of that in it.</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="The screenshot-on-failure recipe, before and after">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">What you used to write</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">What you write now</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">python</span>
+        <span class="codeblock__cap">conftest.py — the recipe, kept here because it still works</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="python"># conftest.py
+import pytest
+from pytest_html_reporter import attach
+
+
+@pytest.fixture(autouse=True)
+def screenshot_on_failure(page, request):
+    yield
+    if request.node.rep_call.failed:
+        attach(data=page.screenshot())
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    rep = outcome.get_result()
+    setattr(item, &quot;rep_&quot; + rep.when, rep)</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">python</span>
+        <span class="codeblock__cap">test_checkout.py — the whole of it</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="python">def test_checkout(page):
+    page.goto(&quot;/cart&quot;)
+    assert page.locator(&quot;h1&quot;).inner_text() == &quot;Cart&quot;     # fails, and is photographed</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="note note--new"><span class="note__title">New in 0.3.9</span>Automatic capture. The reporter is already standing in the test's teardown and the browser is in the test's own fixtures, so everything the conftest recipe did can be done from there instead.</div>
+
+<p>The recipe in the first tab has not stopped working, and it has not started producing two pictures either. A test that took its own picture is <strong>not photographed again on the way out</strong>, so a suite that already calls <a href="python-api.html"><code>attach</code></a> from a hook of its own keeps exactly the images it always had.</p>
+
+<figure class="imgslot" data-shot="screens-column-thumbnail.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/screens-column-thumbnail.png</b>
+  <span>A single FAIL row of the Test Metrics table, cropped to about 900px wide, light theme, showing the error message and the Screens column beside it with one thumbnail on the row. Generate with <code>pytest tests/functional/test_playwright.py --html-report=./report</code>.</span>
+</figure>
+
+<h2 id="how-a-browser-is-recognised">How a browser is recognised</h2>
+
+<p>Nothing in the plugin imports selenium or playwright. A browser is recognised by <strong>what it can do</strong> rather than by what it is: if a thing hands back the bytes of a PNG when asked, it is something worth photographing. That is why the two everybody uses work out of the box — and why appium, splinter and a driver wrapper written in-house work for exactly the same reason, with nothing added for any of them.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>What it answers to</th><th>What it hands back</th><th>Who that usually is</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>get_screenshot_as_png()</code></td><td>PNG bytes</td><td>Selenium, appium</td></tr>
+      <tr><td class="t-nowrap"><code>.driver</code> answering <code>get_screenshot_as_png()</code></td><td>PNG bytes</td><td>splinter's <code>Browser</code>, seleniumbase's <code>sb</code>, or a wrapper of your own</td></tr>
+      <tr><td class="t-nowrap"><code>screenshot()</code></td><td>PNG bytes</td><td>a Playwright <code>Page</code></td></tr>
+      <tr><td class="t-nowrap"><code>.pages</code></td><td>each page, photographed in turn</td><td>a Playwright <code>BrowserContext</code></td></tr>
+      <tr><td class="t-nowrap"><code>.contexts</code></td><td>each context's pages</td><td>a Playwright <code>Browser</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>The order in that table is the order the calls are tried, and it is not arbitrary. Selenium's call goes first; then the driver <em>underneath</em> a wrapper, before the wrapper's own <code>screenshot()</code>. splinter's <code>Browser.screenshot()</code> writes a file and hands back its path, so a return value that is not the image itself is not treated as one.</p>
+
+<h3 id="fixture-name-hints">The fixture name is a hint, not the test</h3>
+
+<p>Before anything is called, the reporter has to decide <em>what</em> to look at. It starts with the fixture names a browser suite tends to use, in this order:</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Fixture name</th><th>Where it comes from</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>page</code></td><td>pytest-playwright</td></tr>
+      <tr><td class="t-nowrap"><code>driver</code></td><td>the name almost every Selenium suite uses</td></tr>
+      <tr><td class="t-nowrap"><code>browser</code></td><td>splinter, playwright</td></tr>
+      <tr><td class="t-nowrap"><code>context</code></td><td>playwright</td></tr>
+      <tr><td class="t-nowrap"><code>selenium</code></td><td>pytest-selenium</td></tr>
+      <tr><td class="t-nowrap"><code>sb</code></td><td>seleniumbase</td></tr>
+      <tr><td class="t-nowrap"><code>webdriver</code></td><td>—</td></tr>
+      <tr><td class="t-nowrap"><code>session_browser</code></td><td>pytest-splinter</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p><code>page</code> leads because a Playwright test is usually handed the page, the context and the browser at once, and the page is the one worth photographing.</p>
+
+<h3 id="beyond-the-hints">Then every other fixture, then the class</h3>
+
+<p>The list above is where the search starts, not where it ends. After it come <strong>every other fixture the test named</strong> — so a suite whose browser fixture is called <code>chrome</code>, or <code>staging_site</code>, or anything else at all, is covered without configuring a thing — and after those, the <strong>test class's own attributes</strong>, which is where a <code>unittest</code> suite keeps its driver.</p>
+
+<p>Each candidate is read defensively. Attribute access on a live browser handle runs whatever the client put behind the name, and a driver whose session has already gone raises rather than answering; none of that is allowed to fail a test.</p>
+
+<h2 id="when-the-picture-is-taken">When the picture is taken</h2>
+
+<p>At the top of the reporter's own teardown wrapper, before the fixture finalizers it wraps. That is the last moment the browser is still open — the finalizer that calls <code>driver.quit()</code> or closes the page is usually the first thing to run inside that wrapper — and it is late enough that anything the suite attached for itself has already arrived.</p>
+
+<ol>
+  <li>The test body runs and fails.</li>
+  <li>pytest enters <code>pytest_runtest_teardown</code>; the reporter's wrapper is on the way in.</li>
+  <li><strong>The capture runs here</strong>, while every fixture the test used is still alive.</li>
+  <li>The wrapped implementations run the finalizers — the browser is quit.</li>
+  <li>The test's record is built, <em>after</em> the finalizers, so an image attached from a fixture's own teardown still has a record to land on.</li>
+</ol>
+
+<div class="note"><span class="note__title">Note</span>This ordering is the entire reason automatic capture is the reporter's job rather than a hook everybody has to write for themselves. There is no other place in a plugin's life where the browser is guaranteed open and the outcome is already known.</div>
+
+<h2 id="report-screenshots">--report-screenshots</h2>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-screenshots</span>
+    <div class="def__meta">
+      <span class="pill">failed | all | none</span>
+      <span class="pill pill--brand">default: failed</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>When the reporter photographs a live browser <em>without the suite asking</em>. It governs the pictures nobody asked for; see <a href="#attach">attach</a> below for the ones that were asked for.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Value</th><th>What it photographs</th></tr></thead>
+        <tbody>
+          <tr><td class="t-nowrap"><code>failed</code></td><td>FAIL and ERROR tests only. The default, and the shape almost every suite writes by hand.</td></tr>
+          <tr><td class="t-nowrap"><code>all</code></td><td>Every test. A screenshot of a pass is a baseline worth having.</td></tr>
+          <tr><td class="t-nowrap"><code>none</code></td><td>Nothing automatic. <code>attach</code> still works.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><code>failed</code> is the default because photographing a green run is a lot of pictures of pages that were fine, and every one of them costs a round trip to the browser.</p>
+  </div>
+</div>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Setting the screenshot mode">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">CLI</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pytest.ini</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Photograph every test, not only the failures</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report --report-screenshots=all</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <span class="codeblock__cap">The same setting, written once</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="ini">[pytest]
+report_screenshots = all</code></pre>
+    </div>
+  </div>
+</div>
+
+<p>The flag wins over the ini key. An unrecognised value in the ini file falls back to <code>failed</code> rather than failing the run; on the command line the same value is rejected by pytest's own argument parser, because the option declares its choices. See <a href="configuration.html">configuration</a> for the full <code>pytest.ini</code> surface and <a href="cli-reference.html">the CLI reference</a> for the rest of the flags.</p>
+
+<h2 id="attach">Taking the picture yourself</h2>
+
+<p>The automatic capture takes the page as it was when the test ended. When the moment matters — a page mid-test, a chart, a rendered PDF, an image diff — hand <code>attach</code> the PNG bytes yourself. <strong>It takes the image rather than the browser</strong>, so anything that can produce one reaches the report.</p>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">attach(data=...)</span>
+    <div class="def__meta">
+      <span class="pill">bytes</span>
+      <span class="pill pill--teal">pytest_html_reporter</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Attaches the bytes of an image to the test that is running. Every accepted form is a form of "bytes that are an image":</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">python</span>
+        <span class="codeblock__cap">Every input attach() takes</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="python">from pytest_html_reporter import attach
+
+attach(data=self.driver.get_screenshot_as_png())   # Selenium
+attach(data=page.screenshot())                     # Playwright
+attach(data=await page.screenshot())               # Playwright, async API</code></pre>
+    </div>
+    <p>Call it from anywhere in the test's lifecycle: the test body, a <code>unittest</code> <code>tearDown</code>, a pytest fixture's teardown, or a <code>pytest_runtest_makereport</code> hook. A test may call it more than once — each image is kept, which is also what lets one test carry a picture of each of two browsers.</p>
+  </div>
+</div>
+
+<div class="note note--tip"><span class="note__title">Kept regardless</span>Every image handed to <code>attach</code> is kept, whatever the test did and whatever <code>--report-screenshots</code> says. That option is about the pictures nobody asked for; this one was asked for.</div>
+
+<p><code>attach</code> takes bytes, not text. Passing a string raises a <code>TypeError</code> naming the three helpers that do take text — <code>attach_text()</code>, <code>attach_json()</code> and <code>attach_api()</code> — rather than letting Pillow fail with "cannot identify image file", which says nothing about the mistake actually made. All six functions are on the <a href="python-api.html">Python API</a> page.</p>
+
+<h2 id="playwright">Playwright: pages, contexts and browsers</h2>
+
+<p>Asking for <code>page</code>, <code>context</code> and <code>browser</code> together is the ordinary way to write a Playwright test, and all three lead to the same picture. A page reached through three fixtures at once is <strong>photographed once</strong>: the capture dedupes by the object it ends up pointing at, not by the fixture it came in through.</p>
+
+<p>A suite that drives a <code>context</code> or a <code>browser</code> and never asks for a page is covered from the other direction. A context is photographed through the pages inside it; a browser through its contexts' pages. The walk stops two levels down, which is as deep as those objects nest.</p>
+
+<h3 id="async-pages">Async pages</h3>
+
+<p>The automatic capture is <strong>synchronous</strong>. Playwright's async API hands back a coroutine rather than bytes, and there is nowhere in a teardown hook to await it — so the coroutine is closed (leaving it unawaited would print a warning against the test) and the report simply has no picture of that one. An async suite attaches from the test body, where there is somewhere to await:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">Playwright, async API — attach where you can await</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">async def test_home(page):
+    try:
+        assert await page.title() == &quot;Example Domain&quot;
+    except AssertionError:
+        attach(data=await page.screenshot())
+        raise</code></pre>
+</div>
+
+<h2 id="unittest">unittest suites</h2>
+
+<p>A <code>unittest</code> suite keeps its driver on the test class rather than in a fixture, so after the fixtures the reporter looks at the test instance's own attributes under the same names — <code>self.driver</code>, <code>self.browser</code>, <code>self.page</code>. A driver built in <code>setUpClass</code> and quit in <code>tearDownClass</code> is still open when the capture runs, and is photographed like any other.</p>
+
+<p>The common shape is the other one: a driver built in <code>setUp</code> and quit in <code>tearDown</code>. <code>unittest</code> runs <code>tearDown</code> as part of the test itself, so by the time the reporter's teardown wrapper is reached <strong>the browser is already closed</strong>. Attach from there instead, before the quit:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">unittest — the order matters</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">def tearDown(self):
+    attach(data=self.driver.get_screenshot_as_png())
+    self.driver.quit()                    # after, never before</code></pre>
+</div>
+
+<p><code>tests/functional/</code> in the repository has both halves. <code>test_selenium.py</code> and <code>test_playwright.py</code> are photographed automatically and say nothing about screenshots at all; <code>test_screenshot.py</code> is a <code>unittest.TestCase</code> that attaches its own from <code>tearDown</code>, guarded so only the failing test spends the round trip. The same guidance is printed on the Screenshots tab itself whenever a run captures nothing.</p>
+
+<figure class="imgslot" data-shot="screenshots-tab-empty-state.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/screenshots-tab-empty-state.png</b>
+  <span>The Screenshots tab after a run that captured nothing, 1440px wide, light theme, showing the empty state with its Selenium, Playwright, async and unittest snippets. Generate with <code>pytest tests/functional/test_simple.py --html-report=./report</code>, then open the Screenshots tab.</span>
+</figure>
+
+<h2 id="pytest-bdd">pytest-bdd scenarios</h2>
+
+<p>Until 0.4.0 a Gherkin scenario produced <strong>no picture at all</strong>, and nothing said so. The run did not error; it simply came back with an empty Screens column.</p>
+
+<p>The reason is in how pytest-bdd builds a test. The generated test function <em>takes no fixtures</em> — every step asks for what it needs through <code>request.getfixturevalue</code> as it runs. <code>item.funcargs</code>, which is where the capture looked, holds what a test named in its own signature, so for a scenario it holds nothing. The browser the scenario was driving was real, open, and invisible.</p>
+
+<div class="note note--new"><span class="note__title">New in 0.4.0</span>Fixture values are now read out of the request's own cache as well as out of <code>funcargs</code>, so a scenario's <code>page</code> is found the way a plain test's is.</div>
+
+<p>They are read <strong>from the cache</strong> rather than asked for by name. <code>getfixturevalue</code> on a fixture the test never used would <em>build</em> it — which at teardown means starting a browser in order to photograph it. Only fixtures that already ran are considered, and one that raised has no value to photograph.</p>
+
+<p>Nothing changes in the suite. The scenario below fails on its <code>Then</code>, and neither the feature file nor the step definitions mention screenshots, hooks or this plugin:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">gherkin</span>
+    <span class="codeblock__cap">ui_features/heading.feature</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="gherkin">Feature: Reading the heading of a page
+
+  Scenario: A wrong heading is photographed on the step that failed
+    Given the example page is open
+    When the heading is read
+    Then it reads &quot;Not the heading&quot;</code></pre>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">test_gherkin_screenshot.py — a step function asks for page, and the rest is the reporter's doing</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">from pytest_bdd import given, parsers, scenarios, then, when
+
+scenarios(&quot;ui_features&quot;)
+
+
+@given(&quot;the example page is open&quot;)
+def _open(page):
+    page.goto(&quot;https://example.com&quot;)
+
+
+@when(&quot;the heading is read&quot;, target_fixture=&quot;heading&quot;)
+def _read(page):
+    return page.locator(&quot;h1&quot;).inner_text()
+
+
+@then(parsers.parse(&#039;it reads &quot;{expected}&quot;&#039;))
+def _reads(heading, expected):
+    assert heading == expected</code></pre>
+</div>
+
+<p>The Given/When/Then arrive in the report as steps on their own, badged as Gherkin — see <a href="steps-and-bdd.html">steps and BDD</a> for that half of the tab.</p>
+
+<figure class="imgslot" data-shot="test-steps-gherkin-screenshot.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/test-steps-gherkin-screenshot.png</b>
+  <span>The Test Steps tab, 1440px wide, light theme, with the failing scenario open: the Given/When/Then tree, the feature and scenario named above it, and the screenshot thumbnail sitting on the failed <code>Then</code> step beside its assertion message. Generate with <code>pytest tests/functional/test_gherkin_screenshot.py --html-report=./report</code>.</span>
+</figure>
+
+<h2 id="where-the-picture-appears">Where the picture appears</h2>
+
+<p>One capture, three places in the report — because a picture is useful for a different reason in each of them.</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The Screens column, on Test Metrics</b>A thumbnail on the row itself, next to the error it explains, opening full size when clicked. The column sorts on the count, since every one of those cells has the same empty text.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The Screenshots gallery</b>Every image the run produced, each card naming the suite and the test, badged with how the test ended and carrying its error. The lightbox is the report's own: the arrow keys and the buttons move through the run's screenshots, Escape or a click outside closes it.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The step that threw, in Test Steps</b>New in 0.4.0. The Screens column and the gallery both say a picture exists; neither says <em>where in the test</em> it was taken.</span>
+  </li>
+</ul>
+
+<p>Filing a picture on a step takes a little care. An image attached mid-test knows its own step already and says so itself — which is what puts one on a step of a test that <em>passed</em>. An automatic capture runs from the teardown hook with no step open at all, so those are filed against the step carrying the error: a photograph of the browser at the end of a failing test is a photograph of the state that step left behind.</p>
+
+<p>A test that named no steps — which is most tests — shows its picture under <strong>Test body</strong>. The body is where it ran, and a picture with nowhere better to go is still worth having on the page.</p>
+
+<figure class="imgslot" data-shot="screenshots-gallery-lightbox.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/screenshots-gallery-lightbox.png</b>
+  <span>The Screenshots tab at 1440px, dark theme, with the lightbox open over the gallery: one full-size capture, the caption naming the suite and the test, the FAIL badge and the error line, and the previous/next buttons visible. Generate with <code>pytest tests/functional/test_selenium.py tests/functional/test_playwright.py --html-report=./report</code>.</span>
+</figure>
+
+<div class="note"><span class="note__title">Under xdist</span>The PNGs are written by whichever worker ran the test — workers share the filesystem with the controller — while the markup is left to the controller, so every screenshot lands in the one report. File names carry a counter as well as milliseconds and the worker id: two tests can finish inside the same millisecond, and the worker id only separates the processes. See <a href="ci-integrations.html">CI integrations</a>.</div>
+
+<h2 id="what-is-not-photographed">What is deliberately not photographed</h2>
+
+<p>Recognising a browser by capability has one thing wrong with it, and it has a name.</p>
+
+<div class="note note--warn"><span class="note__title">A Mock</span>A <code>Mock</code> answers every call ever made to it, screenshot calls included — so it would be photographed on the strength of a method it does not have, and calling it would record a call the test may well be asserting on afterwards. Anything from <code>unittest.mock</code> or <code>mock</code> is ruled out by what it is rather than by what it can do. It is the only such exception.</div>
+
+<p>The rest are quieter, and all of them end the same way: a report with no picture of one test beats a test that failed while being reported.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Situation</th><th>What happens</th></tr></thead>
+    <tbody>
+      <tr><td>A screenshot call raises — a page already closed, a driver whose session is gone, a browser that crashed on its way out</td><td>Caught. That test has no picture; nothing else changes.</td></tr>
+      <tr><td>The call hands back something that is not the image — splinter's <code>screenshot()</code> returns a file path</td><td>Not treated as a screenshot. The driver underneath the wrapper is tried first for exactly this reason.</td></tr>
+      <tr><td>The call hands back a coroutine — Playwright's async API</td><td>Closed rather than left to warn against the test. <a href="#async-pages">Attach from the test body</a> instead.</td></tr>
+      <tr><td>A test is driving more than four browsers at once</td><td>The first four are photographed. A row of thumbnails stops being readable long before it stops being generated.</td></tr>
+      <tr><td>The test already attached an image of its own</td><td>No automatic capture. The picture it asked for is the one it keeps.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>An image that no test claims is discarded rather than left in the buffer — otherwise the next test to finish would pick it up and present it as a picture of a page it never opened.</p>

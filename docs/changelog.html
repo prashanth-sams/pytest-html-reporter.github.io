@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Changelog · pytest-html-reporter</title>
+<meta name="description" content="Every released version of pytest-html-reporter, newest first, with what changed and what changes under you when you upgrade.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../assets/img/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="../assets/img/icon-256.png">
+<meta property="og:title" content="Changelog · pytest-html-reporter">
+<meta property="og:description" content="Every released version of pytest-html-reporter, newest first, with what changed and what changes under you when you upgrade.">
+<meta property="og:type" content="article">
+<meta property="og:image" content="../assets/img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script>
+/* Set the theme before first paint so a dark reader never sees a white flash. */
+(function(){try{var t=localStorage.getItem('phr-theme');
+if(!t)t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}
+document.documentElement.classList.add('js');})();
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="topbar__inner">
+    <button class="iconbtn navburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <a class="brand" href="../index.html" aria-label="pytest-html-reporter home">
+      <svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="3.9" height="18" rx="1" fill="#3571a3"/><rect x="7.4" y="7.85" width="3.9" height="13.15" rx="1" fill="#ffd143"/><rect x="12.8" y="12.7" width="3.9" height="8.3" rx="1" fill="#8b8b8b"/><rect x="18.2" y="17.3" width="3.9" height="3.7" rx="1" fill="#3571a3"/></svg>
+      <span class="brand__text"><span class="brand__a">pytest</span><span class="brand__b">HTML Reporter</span></span>
+    </a>
+    <nav class="navlinks" aria-label="Main"><a href="../docs/getting-started.html">Docs</a><a href="../docs/report-tour.html">Report tour</a><a href="../docs/cli-reference.html">Reference</a><a href="../docs/github-action.html">Action</a><a href="../docs/vscode.html">VS&nbsp;Code</a><a href="../docs/changelog.html" class="is-active">Changelog</a></nav>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <a class="iconbtn" href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener" title="PyPI" aria-label="pytest-html-reporter on PyPI">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+      </a>
+      <a class="iconbtn" href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener" title="GitHub" aria-label="Source on GitHub"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.5 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.26 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg></a>
+      <button class="iconbtn theme-toggle" type="button" aria-label="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div class="navscrim" aria-hidden="true"></div>
+<div class="docs">
+<aside class="sidebar" id="sidebar"><nav aria-label="Documentation">
+<div class="sidebar__group">
+<span class="sidebar__label">Introduction</span>
+<a class="sidebar__link" href="../docs/getting-started.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2 2 0 0 0-2.9 0z"/><path d="M12 15 9 12a11 11 0 0 1 2-6c2.2-3 5.5-3.5 8-3.5 0 2.5-.5 5.8-3.5 8a11 11 0 0 1-6 2z"/><path d="M9 12H5s.4-2.5 2-3.5c1.7-1 3.5-.5 3.5-.5M12 15v4s2.5-.4 3.5-2c1-1.7.5-3.5.5-3.5"/></svg>Getting started</a>
+<a class="sidebar__link" href="../docs/features.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"/><path d="M19 3v4M17 5h4M5 17v2M4 18h2"/></svg>Features</a>
+<a class="sidebar__link" href="../docs/report-tour.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Report tour</a>
+<a class="sidebar__link" href="../docs/comparison.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M7 21h10M3 8l4-5 4 5M3 8a4 4 0 0 0 8 0M13 12l4-5 4 5M13 12a4 4 0 0 0 8 0"/></svg>Compared to others</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Reference</span>
+<a class="sidebar__link" href="../docs/cli-reference.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 4 4-4 4M13 16h6"/><rect x="2" y="3" width="20" height="18" rx="2"/></svg>CLI reference</a>
+<a class="sidebar__link" href="../docs/configuration.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Configuration</a>
+<a class="sidebar__link" href="../docs/python-api.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg>Python API</a>
+<a class="sidebar__link" href="../docs/compatibility.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>Compatibility &amp; files</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Guides</span>
+<a class="sidebar__link" href="../docs/screenshots.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="m8 6 1.5-2.5h5L16 6"/><circle cx="12" cy="13" r="3.4"/></svg>Screenshots</a>
+<a class="sidebar__link" href="../docs/steps-and-bdd.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Steps &amp; BDD</a>
+<a class="sidebar__link" href="../docs/analytics.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>Analytics &amp; history</a>
+<a class="sidebar__link" href="../docs/ci-integrations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><path d="M6 6.5h.01M6 17.5h.01"/></svg>CI, xdist &amp; scale</a>
+<a class="sidebar__link" href="../docs/security-privacy.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>Security &amp; privacy</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Ecosystem</span>
+<a class="sidebar__link" href="../docs/github-action.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>GitHub Action</a>
+<a class="sidebar__link" href="../docs/vscode.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 3-9 7-4-3-2 1.5v7L4 17l4-3 9 7 4-2V5z"/></svg>VS Code extension</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Project</span>
+<a class="sidebar__link is-active" href="../docs/changelog.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Changelog</a>
+<a class="sidebar__link" href="../docs/faq.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a2.9 2.9 0 0 1 5.6 1c0 2-2.8 2.8-2.8 2.8M12 17h.01"/></svg>FAQ</a>
+<a class="sidebar__link" href="../docs/contributing.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>Contributing</a>
+</div>
+</nav></aside>
+<main class="docmain" id="main">
+<div class="crumbs">
+  <a href="../index.html">Home</a>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+  <a href="../docs/getting-started.html">Docs</a>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+  <span>Changelog</span>
+</div>
+<header class="doc-hero">
+  <span class="eyebrow">Project</span>
+  <h1>Changelog</h1>
+  <p class="lede">Twenty-six releases, read from the project's own CHANGELOG.txt. The plugin shipped fifteen small releases between July 2020 and February 2022, went quiet for four and a half years, then shipped eleven releases in six days to reach 0.4.0.</p>
+</header>
+<h2 id="published-releases">Where releases are published</h2>
+
+<p>Every version is published to PyPI as <code>pytest-html-reporter</code>. The project is MIT
+licensed (Copyright &copy; 2020 Prashanth Sams), <code>setup.py</code> declares
+<code>python_requires=&quot;&gt;=3.5&quot;</code>, and the only runtime dependencies are
+<code>pytest</code> and <code>Pillow</code> &mdash; since 0.3.7 everything the report draws with ships
+inside the package, so a rendered report has no JavaScript or CDN dependency at all.</p>
+
+<div class="note note--new">
+  <span class="note__title">Current release</span>
+  <strong>0.4.0</strong>, 3 September 2026 &mdash; the version <code>setup.py</code> declares. It adds
+  per-row copy-command and copy-link buttons, stable deep links into Test Metrics, screenshots filed
+  on the step that threw, and the <em>Why this run failed</em> exception-grouping panel on Analytics.
+</div>
+
+<p>Upgrades within the 0.3.x line change behaviour as well as adding features, so pin the version if
+your CI depends on the report's shape. See <a href="#upgrade-notes">what changes when you
+upgrade</a> below before moving off 0.2.x.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Pin a release, or move to the newest one</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pip install pytest-html-reporter==0.4.0
+$ pip install --upgrade pytest-html-reporter</code></pre>
+</div>
+
+<p><code>CHANGELOG.txt</code> writes its dates as <code>DD/MM/YYYY</code> &mdash; entries such as
+<code>0.2.9 (13/02/2022)</code> and <code>0.2.6 (25/04/2021)</code> settle which component is which.
+This page spells the dates out. The file has no entries for 0.1.0&ndash;0.1.4 or 0.2.0; it jumps from
+0.0.1 to 0.1.5 and from 0.1.9 to 0.2.1, and nothing in the repository says whether those numbers were
+released and undocumented or never used, so they are absent here rather than reconstructed.</p>
+
+<h2 id="release-timeline">Release timeline</h2>
+
+<p>The 2026 line, newest first. Eleven releases between 29 August and 3 September 2026, several
+landing on the same day, each of them larger than anything in the plugin's first era.</p>
+
+<div class="tl">
+
+  <div class="tl__item is-latest">
+    <div class="tl__head"><span class="tl__ver">0.4.0</span><span class="tl__date">3 Sep 2026</span><span class="pill pill--brand">latest</span></div>
+    <ul>
+      <li><strong>Copy the command that reruns one test.</strong> A third button beside a failure message
+        copies <code>pytest tests/test_a.py::test_one</code>. It is built from the test's node id rather
+        than from the suite and test names on the row &mdash; those are what a person reads, and a test
+        inside a class is listed under its own name where pytest wants the class in front of it. A node id
+        a shell would not read as one word is quoted, so a parametrised test's brackets are not a zsh glob;
+        a row with no node id of its own, such as a file that failed to import, offers no command rather
+        than a bare <code>pytest</code> that would run the whole suite.</li>
+      <li><strong>Every Test Metrics row now has an address.</strong> A fourth button copies this report's
+        URL with the row's anchor on the end, read off the row itself so link and id cannot drift apart.
+        The anchor comes from the node id, not the row's position in the table &mdash; a positional link
+        opened hours later would still resolve, to whichever test had since taken that place. It stays
+        readable: the node id flattened to letters, digits and dashes, cut back to a whole word, with six
+        hex digits of the whole id after it. Repeats of the same node id are numbered. Opening a link shows
+        the Test Metrics tab, clears any search box or status chip hiding the row, pages the table to it
+        through the DataTables API, and flashes it.</li>
+      <li><strong>The button strip folds, and every copy says what it did.</strong> All four buttons (error,
+        command, link, expand) hide behind a <code>...</code> control and come back out along the row a
+        tenth of a second apart, so forty failures rest as forty single buttons rather than 160. They fold
+        by width and opacity rather than <code>display: none</code>, which cannot be transitioned, and take
+        no clicks or tab stops while folded. Each copy raises one centred <code>role=&quot;status&quot;</code>
+        panel reading <em>Error copied</em>, <em>Command copied</em> or <em>Link copied</em>, showing what
+        went onto the clipboard with anything past four lines faded out; a browser that refuses the
+        clipboard, which is what <code>file://</code> gets in some of them, says <em>Press Ctrl+C to
+        copy</em> instead.</li>
+      <li><strong>A failure's screenshot now sits on the step that threw</strong>, in the
+        <a href="steps-and-bdd.html">Test Steps</a> tab, beside the error it explains. Automatic captures run
+        from the teardown hook with no step open, so they are filed against the step carrying the error; a
+        test that named no steps shows its picture under <em>Test body</em>. <strong>pytest-bdd scenarios
+        were never photographed at all</strong> &mdash; the generated test function takes no fixtures, every
+        step pulling what it needs through <code>request.getfixturevalue</code>, so the page it was driving
+        never reached <code>item.funcargs</code>, the only place the capture looked. Fixture values are now
+        also read out of the request's own cache: read, not requested, because
+        <code>getfixturevalue</code> on an unused fixture would <em>build</em> it, which at teardown means
+        starting a browser in order to photograph it. See <a href="screenshots.html">Screenshots</a>.</li>
+      <li><strong>Analytics opens on <em>Why this run failed</em>.</strong> This run's failures grouped by
+        the exception each came out of, biggest group first &mdash; <code>12 failures, 9 are
+        TimeoutException</code> &mdash; each group carrying its share of the run, the tests in it by name,
+        and its movement since the last build. Nothing new is collected: the exception is read back out of
+        the message pytest already stored. The exception that surfaced wins over the one it came from, a
+        bare <code>assert</code> reads as <code>AssertionError</code>, and messages naming nothing land in
+        <em>Unclassified</em>, held at the bottom however large it grows. A green run leaves the card out
+        rather than showing it empty. See <a href="analytics.html">Analytics</a>.</li>
+      <li><strong>Every <em>and N more</em> is now a link</strong>, opening the card's own hidden items in a
+        scrollable dialog that searches as you type over test name and suite together and says
+        <code>3 of 41 tests</code> while a search is on. Separately, a cut error message now fades out at
+        its tail instead of ending in an ellipsis &mdash; the literal ellipsis stays in the cell, hidden, so
+        a CSV, an Excel sheet and a print-out still say the message was cut.</li>
+    </ul>
+  </div>
+
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.3.9</span><span class="tl__date">2 Sep 2026</span></div>
+    <ul>
+      <li><strong>Screenshots are taken automatically.</strong> A test that fails while holding a Selenium
+        driver or a Playwright page is photographed with no hook, no fixture, no import and no conftest
+        &mdash; the recipe this plugin has documented for years is now the default. The capture runs at the
+        top of the reporter's own teardown wrapper, before the fixture finalizers it wraps: the last moment
+        the browser is still open, and late enough that anything the suite attached for itself has already
+        arrived.</li>
+      <li><strong>A browser is recognised by what it can do, not by what it is</strong>, so nothing imports
+        selenium or playwright. Anything answering <code>get_screenshot_as_png()</code> or handing bytes
+        back from <code>screenshot()</code> qualifies, which covers appium, splinter and a driver wrapper of
+        your own for free. Fixture names (<code>page</code>, <code>driver</code>, <code>browser</code>,
+        <code>context</code>) are a hint rather than the test, and a unittest suite's driver is found on the
+        class. A <code>Mock</code> is the one thing ruled out by type: it answers every call ever made to
+        it, so it would be photographed on the strength of a method it does not have.</li>
+      <li><strong><code>--report-screenshots</code></strong> (<code>failed</code> by default,
+        <code>all</code> or <code>none</code>) with a <code>report_screenshots</code> ini key. An image
+        handed to <code>attach()</code> is kept whatever the setting says, and a test that took its own
+        picture is not photographed again. <code>attach()</code> now keeps <em>every</em> image a test hands
+        over rather than only the last, which is what lets one test carry a picture of each of two
+        browsers.</li>
+      <li><strong>A Screens column on Test Metrics</strong> carries the pictures themselves: a thumbnail on
+        the row beside the error it explains, opening full size in the same overlay the gallery uses. It
+        sorts on the count, since every one of those cells has the same empty text.</li>
+      <li><strong>A dark theme</strong>, with a switch at the foot of the side nav. The choice is remembered
+        per reader; until it is touched the report follows the operating system, and the theme is settled by
+        a script in the head <em>before</em> the stylesheets, so a report opened in dark never flashes a
+        white frame. Light mode is unchanged, verified by expanding every <code>var()</code> back and
+        diffing the CSS, and by comparing the rendered colour of 838 elements across all nine tabs &mdash;
+        worst difference 1.94 CIEDE2000. Status colours are carried across deliberately (pass
+        <code>#98cc64</code>, fail <code>#fc6766</code>, skip <code>#ffd050</code>); only ERROR moves,
+        because <code>#b13635</code> sits at 2.7:1 on a dark card.</li>
+      <li><strong>Three things fought the theme.</strong> Chart.js copies the colours it is handed into its
+        own model at construction, so every chart is built through <code>themedChart()</code>, which
+        re-resolves its tokens when the theme changes. The vendored light-mode Bootstrap and DataTables
+        stylesheets are undone for dark only. The sort arrows, search glyph and select caret are SVG data
+        URIs, which cannot hold a <code>var()</code>, so each theme carries its own copy &mdash; base64
+        rather than percent-encoded, because the PDF export serialises the page into an SVG data URL and a
+        <code>%3C</code> would be decoded by the URL parser.</li>
+    </ul>
+  </div>
+
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.3.8</span><span class="tl__date">1 Sep 2026</span></div>
+    <ul>
+      <li><strong>New Test Steps tab:</strong> the named, timed pieces a test is actually made of, drilling
+        down from suite to test to what it did. A status column says a test failed; this says <em>where</em>,
+        and how long it had been running when it got there. <code>step()</code> is both a decorator and a
+        <code>with</code> block, and steps nest by being called from inside one another, with nothing
+        threaded between them; a decorated function's arguments fill the <code>{placeholders}</code> of its
+        title and are kept as the step's parameters.</li>
+      <li><strong>The tab is never empty.</strong> Every test has a set up, a body and a tear down, each
+        timed from pytest's own per-phase report, plus its markers, parameters, fixtures and docstring.
+        Markers are read with <code>iter_markers_with_node</code>, so a module-level <code>pytestmark</code>
+        and a class marker are no longer invisible; a <code>skipif</code> shows its reason rather than the
+        bare <code>True</code>/<code>False</code> it evaluates to at import; and the fixtures listed are the
+        ones the test asked for rather than <code>item.fixturenames</code>, the whole transitive closure,
+        where a test naming two fixtures read as a test naming nine.</li>
+      <li><strong>pytest-bdd needs no changes at all.</strong> Given/When/Then arrive as steps
+        automatically, badged as Gherkin, with the feature, scenario and feature file named above the tree.
+        The bdd hooks are declared <code>optionalhook</code>, which is the whole of the defence: pytest does
+        not warn or skip an unknown hook, it refuses to start, so declaring them plainly would have broken
+        every run without pytest-bdd installed. See <a href="steps-and-bdd.html">Steps &amp; BDD</a>.</li>
+      <li><strong>Correctness of the tree.</strong> Anything attached while a step is open is filed under
+        that step. A failure's message is kept on the step that raised, and the steps it walked out through
+        are marked failed without repeating it &mdash; one exception was printing the same traceback four
+        times. A yield fixture's open step no longer swallows the test that used it; steps are recorded per
+        thread; a <code>with</code> block that never exited is closed at the drain and marked failed; and
+        durations are summed from per-phase milliseconds rather than seconds rounded to two places, where
+        every test faster than 5ms arrived as a flat 0.</li>
+      <li><strong><code>--report-steps</code></strong> (all/failed/none) and
+        <strong><code>--report-step-limit</code></strong> (default 500), with matching ini keys; the cut is
+        followed by a line saying the rest were dropped, because a tree that stops halfway reads as a test
+        that stopped there. A Steps column on Test Metrics crosses to the tab with that test already open,
+        and step trees are parked outside the metrics table, so they never reach its search index or its
+        CSV, Excel and print exports.</li>
+      <li><strong>Layout.</strong> The tab opens on a failure that <em>has</em> steps rather than on the
+        first test in collection order, which is almost always one that named none. The rail opens with
+        every suite shut, with Expand all / Collapse all beside the filters. API Logs gets the same
+        card-sizing fixes and the same type sizes, its rail entries, status, heading, meta strip and payload
+        all having been a point or two smaller.</li>
+    </ul>
+  </div>
+
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.3.7</span><span class="tl__date">1 Sep 2026</span></div>
+    <ul>
+      <li><strong>New Analytics tab, reading every archived build.</strong> The Dashboard is one run seen
+        from every angle; Analytics is every archived build seen from the test's angle. Nothing extra is
+        collected &mdash; every archive already holds a status per test, and that history had simply never
+        been read <em>across</em> files. Six figures across the top, a pass-rate chart on an axis
+        deliberately not pinned to 0&ndash;100 (a suite living between 96% and 99% is exactly the one whose
+        two-point drops matter), build-to-build movement, a duration histogram, a slowest-ten chart, four
+        cards naming what changed since the last build, and a row per test showing recent outcomes as one
+        coloured block per build.</li>
+      <li><strong>The scoring rules are opinionated and documented.</strong> The stability score starts at
+        the mean per-test pass rate and is charged half the mean flip rate. Flaky and always-failing are
+        counted apart, because a test that only ever fails is a bug with an owner. A retry <em>inside</em>
+        one build counts as flaky on its own. Skips are left out of the pass/fail arithmetic rather than
+        counted against a test, and <code>xfail</code>/<code>xpass</code> count as passes.</li>
+      <li><strong>Robustness of the history read.</strong> Tables count every build still on disk within the
+        retention limits while the charts draw the most recent twenty. Archives are ordered on the timestamp
+        <em>inside</em> the file rather than the file name, where <code>1788194287.2</code> sorts after
+        <code>1788194287.271306</code> as text; builds stamped to the same minute are numbered; one
+        unreadable archive is skipped rather than costing the whole tab. <code>output.json</code> now records
+        each test's duration alongside its status.</li>
+      <li><strong>The finished report opens in a browser when the run ends</strong>, with
+        <code>--report-open</code> / <code>report_open</code> to turn it off. It only happens on a run
+        somebody is sat in front of: output going to a terminal, no CI variable set, and a desktop to open
+        into. <code>CI=false</code> counts as &quot;not CI&quot;. A <code>report_open</code> that is not one
+        of the three modes fails the run with a usage error while it is still being configured.</li>
+      <li><strong>Everything the report draws with now travels inside it.</strong> jQuery, DataTables and
+        its Buttons, Bootstrap, Chart.js, jsPDF, dom-to-image and JSZip ship with the plugin; the Font
+        Awesome glyphs ship as SVGs inlined as CSS masks, with the markup unchanged; the favicon, rail logo
+        and spinner were being fetched from imgur and are now data URIs. <strong>fancyBox is gone</strong>
+        &mdash; GPLv3 or a paid commercial licence, never something an MIT-licensed package could ship
+        &mdash; replaced by a lightbox of the report's own. Run offline before this and the report was a
+        blank white page. The report grew from about 300KB to about 1.3MB, which is one file per report
+        folder, not per archived build.</li>
+      <li><strong>Dashboard and Test Metrics.</strong> The Highlights card gains a
+        <code>&#9650; +3 failures</code> tile over a <code>SINCE LAST BUILD</code> caption, read off the same
+        per-build list the chart under it is drawn from; no change is written <code>&#177;0 failures</code>
+        and a first build leaves the entry out. Test Metrics gains a per-test Rerun column, a copy button on
+        every row with an error, and an expand button where the blue <code>(...)</code> link was, opening
+        the full error in the report's own monospace panel. The full error now travels in a data attribute,
+        so it no longer reaches the search box or the CSV, Excel, Copy and print exports.</li>
+    </ul>
+  </div>
+
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.3.6</span><span class="tl__date">31 Aug 2026</span></div>
+    <ul>
+      <li><strong>Retention by time, not just by count.</strong> <code>--archive-days</code> keeps only the
+        builds from the last N days; <code>--archive-since</code> takes a date, or a date and a time, for a
+        one-off cut. <code>--archive-count</code>, <code>--archive-days</code> and
+        <code>--archive-since</code> <em>intersect</em>: a build has to satisfy every limit that is set.
+        <code>archive_count</code> gains an ini key, having been the one option with no ini equivalent
+        &mdash; retention belongs to the job rather than to one invocation. (#223)</li>
+      <li><strong>Four retention bugs.</strong> <code>--archive-count</code> did nothing at all when
+        <code>--html-report</code> named the html file itself, so those setups had been keeping every build
+        for ever. A build's age is now read from the moment in its archive file's <em>name</em> rather than
+        the file's mtime, so retention still measures the right thing in a fresh CI workspace where every
+        mtime is the checkout. Retention only ever deletes the plugin's own <code>output_*.json</code>
+        archives. A nonsense value now fails the run with a usage error instead of being silently
+        ignored.</li>
+      <li><strong>New Test Coverage tab:</strong> the overall percentage as a ring, the counts beside it, a
+        row per file with its missing lines, and the percentage plotted across the retained builds. The
+        figure is coverage.py's own, read through its public <code>json_report</code> API, so the tab and
+        the terminal beside it can never print different totals. Coverage is read <em>after</em> the run
+        rather than measured, so a parallel run reports one combined percentage. Files are listed
+        least-covered first, which is also how the list is cut when the limit applies.</li>
+      <li><strong>Reading coverage from elsewhere.</strong> <code>--report-coverage-file</code> reads a
+        <code>coverage.json</code>, a Cobertura <code>coverage.xml</code> (needing no coverage package
+        installed at all) or a <code>.coverage</code> data file. A json or xml file beside the report or at
+        the project root is found without being named; a <code>.coverage</code> file is <em>not</em>,
+        because one is usually left over from an earlier run and publishing last Tuesday's number is worse
+        than publishing none. The coverage html report is linked, never embedded.</li>
+      <li><strong><code>--report-link LABEL=URL</code></strong> adds entries to the report's side nav
+        &mdash; the annotated coverage source, a CI job, anything else worth reaching from here &mdash;
+        dropping any scheme other than http, https or mailto. (#203)</li>
+    </ul>
+  </div>
+
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.3.5</span><span class="tl__date">31 Aug 2026</span></div>
+    <ul>
+      <li><strong>Report text that looked like markup was being written into the page as markup.</strong> A
+        parameter id or an assertion message holding angle brackets &mdash;
+        <code>assert &lt;Foo object at 0x7f&gt; == 3</code> is what an ordinary failure looks like &mdash;
+        mangled its own row and swallowed the rows after it, so <strong>tests went missing from Test
+        Metrics</strong>. Names, failure messages, captions, the report title and the environment badge are
+        now escaped on the way into the page, and the chart labels are written as a JSON literal.
+        <code>output.json</code> still carries its text unescaped, because the archive and trend views read
+        that file back.</li>
+      <li><strong>Two ways a run could under-report itself.</strong> A file that fails to import produced no
+        test items and was missing from the report entirely; it is now a row of its own, reported once
+        rather than once per xdist worker. And a test whose fixture raised <em>while cleaning up</em> was
+        reported as a plain pass, so a failing run could read as green.</li>
+      <li><strong>Text attachments:</strong> <code>attach_text()</code>, <code>attach_json()</code>,
+        <code>attach_api()</code> and <code>attach_file()</code> keep a payload against the test that
+        produced it. <code>attach_api()</code> takes a response object apart into the response body, the
+        request body, both sets of headers and the curl command that repeats the call; response objects are
+        read by duck typing, so <code>requests</code> and <code>httpx</code> both work with no new
+        dependency. (#191) See the <a href="python-api.html">Python API</a>.</li>
+      <li><strong>Credentials are blanked out by default</strong> &mdash; <code>Authorization</code>,
+        <code>Cookie</code> and anything named like a token, secret, password or api key, in headers, in a
+        URL query string, in the curl line, and in the fields of a JSON body at any depth.
+        <code>redact=False</code> keeps them.</li>
+      <li><strong>New API Logs tab:</strong> a rail of everything the run attached with the payload open
+        beside it, filterable by kind and searchable, whose summary counts what the rail is currently
+        showing so the numbers cannot disagree with the list under them. Test Metrics gains a Data column.
+        <code>--report-attachments</code> narrows whose attachments are kept and
+        <code>--report-attachment-limit</code> caps the characters per payload (default 20000); a trimmed
+        payload keeps its <em>start</em>, unlike a trimmed log.</li>
+      <li><strong>Smaller fixes.</strong> <code>attach()</code> raises a <code>TypeError</code> naming
+        <code>attach_text()</code> when handed a string, instead of Pillow's <code>cannot identify image
+        file</code>. The report and its templates are read and written as UTF-8 regardless of the machine's
+        locale.</li>
+    </ul>
+  </div>
+
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.3.4</span><span class="tl__date">30 Aug 2026</span></div>
+    <ul>
+      <li><strong><code>html_report</code> ini key</strong>, so the report location can be set in
+        <code>pytest.ini</code> without going through <code>addopts</code>. (#228) See
+        <a href="configuration.html">Configuration</a>.</li>
+      <li><strong>The report path expands strftime placeholders</strong> &mdash;
+        <code>--html-report=./reports/%Y%m%d/report_%H%M.html</code> gives each run a folder or filename of
+        its own with no conftest hook. Placeholders are expanded once while the run is configured, so an
+        xdist run and a run that crosses a minute boundary still write a single report; a <code>%</code>
+        that is not a placeholder is left alone, and <code>%%</code> writes a literal one.</li>
+      <li><strong>A screenshot attached from a fixture's teardown never reached the report.</strong> The
+        record is now built after the fixture finalizers have run, so the capture-on-failure recipe from an
+        autouse fixture works.</li>
+      <li><strong>A screenshot attached by a test that did not fail was handed to the next test that
+        did</strong>, which was then illustrated with a picture of a test it never ran. The image is now
+        discarded, with one warning per run.</li>
+      <li><strong>Screenshots are no longer limited to failures:</strong> every image passed to
+        <code>attach()</code> is kept and shown in the gallery whatever the test did, and a tile for a test
+        that did not fail is captioned with its outcome rather than the blank space where a failure message
+        would be. <code>attach()</code> works with Playwright as well as Selenium &mdash; it takes PNG
+        bytes, not a browser.</li>
+    </ul>
+  </div>
+
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.3.3</span><span class="tl__date">30 Aug 2026</span></div>
+    <ul>
+      <li><strong>Captured logs per test.</strong> stdout, stderr and logging output from setup, call and
+        teardown are kept against the test that produced them and opened from a new Logs column in Test
+        Metrics. Captured output is held outside the table, so it is not swept into the metrics search box
+        or the CSV, Excel and print exports, and it survives an xdist run intact.</li>
+      <li><strong>The report explains an empty Logs column.</strong> Under <code>-s</code> /
+        <code>--capture=no</code> pytest captures no stdout or stderr at all, only logging output, and the
+        report now says so; the Environment panel states what the run kept and from which log level. The
+        bundled <code>pytest.ini</code> switched from <code>-s</code> to <code>--capture=tee-sys</code>.</li>
+      <li><strong><code>--report-logs</code></strong> (all/failed/none) narrows whose output is kept and
+        <strong><code>--report-log-limit</code></strong> caps the characters per test (default 10000); a
+        trimmed test keeps the <em>end</em> of its output, cut to a whole line.</li>
+      <li><strong>Reruns were counted as extra failures</strong> when the retry count came from
+        <code>@pytest.mark.flaky(reruns=n)</code> rather than <code>--reruns</code>. Attempts are now
+        collapsed into one record, so <code>--reruns</code>, the ini key, the flaky marker, a marker that
+        disagrees with <code>--reruns</code>, and <code>--only-rerun</code> all report the same totals
+        pytest itself prints. (#212)</li>
+    </ul>
+  </div>
+
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.3.2</span><span class="tl__date">30 Aug 2026</span></div>
+    <ul>
+      <li><strong>pytest-xdist support:</strong> a parallel run now produces <em>one</em> report instead of
+        one per worker, with every test, suite and total in it, and a single build in Archives. Tests are
+        listed in collection order, so a parallel report reads the same as a serial one whatever
+        <code>--dist</code> mode is used. (#178, #55) See <a href="ci-integrations.html">CI, xdist &amp; scale</a>.</li>
+      <li><strong><code>--reruns</code> was silently ignored under xdist</strong> &mdash; workers are
+        started with an empty argv, so the value is now read from the pytest config instead.</li>
+      <li><strong>Screenshot fixes:</strong> <code>attach()</code> raised <code>AttributeError</code>
+        instead of saving the image, and each screenshot is now written once, under a name that cannot
+        collide between workers. Run times over a minute were being reported as seconds.</li>
+      <li><strong>Environment overlay</strong> on the dashboard: host, platform, python and pytest versions,
+        active plugins, invocation arguments, rootdir and generation time. <code>--environment</code> names
+        the environment under test, shown as a badge beside the report title, and
+        <code>--build-info KEY=VALUE</code> carries branch, commit or CI job into the same panel.</li>
+    </ul>
+  </div>
+
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.3.1</span><span class="tl__date">30 Aug 2026</span></div>
+    <ul>
+      <li>Dashboard, suite highlights and test metrics tables redesigned with a cleaner, consistent layout,
+        and the Archives view reworked &mdash; fixing the archive build count, which was silently dropped by
+        a typo, and the chart sizing.</li>
+      <li>The PDF download now renders the desktop dashboard at a fixed viewport, waits for the charts to
+        settle and keeps a white background.</li>
+      <li>An empty-state UI for the Screenshots tab, and charts that re-fit on window resize instead of
+        reloading the page, so the open tab, the scroll position and the table filters are preserved.</li>
+    </ul>
+  </div>
+
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.3.0</span><span class="tl__date">29 Aug 2026</span></div>
+    <ul>
+      <li><strong>pytest 9.x compatibility.</strong> Older versions reached into pytest's internal
+        <code>_sessionstarttime</code> attribute on the terminal reporter, which raises
+        <code>AttributeError: &#039;TerminalReporter&#039; object has no attribute
+        &#039;_sessionstarttime&#039;</code> on pytest 9. Session timing is now self-managed.</li>
+      <li><code>KeyError: &#039;status&#039;</code> in <code>append_suite_metrics_row</code> &mdash; both
+        raising it and reaching test results through it &mdash; is fixed, with improved safety checks around
+        test-data access generally.</li>
+      <li><strong>Templates are shipped as package data</strong> and resolved from the <em>installed</em>
+        package, so template lookup no longer depends on a source folder named
+        <code>pytest-html-reporter</code> being present. Plus responsive fixes, a fix for URL reset on page
+        load, and unit-test fixes.</li>
+    </ul>
+  </div>
+
+</div>
+
+<h2 id="earlier-releases">Earlier releases, 2020 to 2022</h2>
+
+<p>Fifteen releases across the plugin's first era: single fixes, single features, and long stretches
+between them. The whole foundation went in over ten weeks in 2020; the last of them, 0.2.9, shipped in
+February 2022 and was followed by four and a half years of silence before 0.3.0. Several of these
+entries were superseded outright in the 0.3.x line &mdash; the 0.2.6 error dialog became the report's own
+monospace panel in 0.3.7, the 0.1.7 screenshots-on-failure recipe became automatic capture in 0.3.9, and
+the 0.1.6 pytest-rerunfailures support was rewritten in 0.3.3.</p>
+
+<div class="tl">
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.2.9</span><span class="tl__date">13 Feb 2022</span></div>
+    <ul><li>Fixed desktop CSS inconsistencies.</li></ul>
+  </div>
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.2.8</span><span class="tl__date">11 Feb 2022</span></div>
+    <ul><li>Fixed all the code-related inconsistencies.</li></ul>
+  </div>
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.2.7</span><span class="tl__date">11 Feb 2022</span></div>
+    <ul><li>Added a custom title on the Dashboard.</li></ul>
+  </div>
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.2.6</span><span class="tl__date">25 Apr 2021</span></div>
+    <ul><li>Dashboard execution time in H:M:S format; long error text shortened to open in a dialog box.</li></ul>
+  </div>
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.2.5</span><span class="tl__date">20 Apr 2021</span></div>
+    <ul><li>Fixed the incorrect execution time in the test metrics.</li></ul>
+  </div>
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.2.4</span><span class="tl__date">19 Apr 2021</span></div>
+    <ul><li>Added support for downloading the current report (dashboard) as a PDF.</li></ul>
+  </div>
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.2.3</span><span class="tl__date">28 Sep 2020</span></div>
+    <ul><li>Fixed UI bugs in the dashboard and the Archives layout; added error details on failed test cases.</li></ul>
+  </div>
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.2.2</span><span class="tl__date">13 Sep 2020</span></div>
+    <ul><li>Codecov; unit tests for the plugin; UI alignment fixes.</li></ul>
+  </div>
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.2.1</span><span class="tl__date">12 Sep 2020</span></div>
+    <ul><li>Hot fix for a CSS issue.</li></ul>
+  </div>
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.1.9</span><span class="tl__date">12 Sep 2020</span></div>
+    <ul><li>Optimised the library size; added unit tests.</li></ul>
+  </div>
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.1.8</span><span class="tl__date">12 Sep 2020</span></div>
+    <ul><li>Replaced the report path CLI; coverage measurement.</li></ul>
+  </div>
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.1.7</span><span class="tl__date">8 Sep 2020</span></div>
+    <ul><li>Screenshots on failure; updated loader.</li></ul>
+  </div>
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.1.6</span><span class="tl__date">29 Aug 2020</span></div>
+    <ul><li>pytest-rerunfailures library support.</li></ul>
+  </div>
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.1.5</span><span class="tl__date">23 Aug 2020</span></div>
+    <ul><li>Added a report icon; updated the trend tooltips; added a reusable CSS file; fixed the test suite details.</li></ul>
+  </div>
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.0.1</span><span class="tl__date">13 Jul 2020</span></div>
+    <ul><li>First release.</li></ul>
+  </div>
+</div>
+
+<h2 id="upgrade-notes">What changes when you upgrade</h2>
+
+<p>Everything below is drawn from the entries above. Upgrading from anywhere in the 0.2.x line lands you
+in a substantially different plugin, so the notes are grouped by what will actually change under you.</p>
+
+<h3 id="behaviour-changes">Behaviour that changes without you asking</h3>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Since</th><th>What changes</th><th>How to keep the old behaviour</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>0.3.9</code></td>
+        <td>A test failing with a live Selenium driver or Playwright page is photographed automatically. A test that took its own picture is not photographed again.</td>
+        <td class="t-nowrap"><code>--report-screenshots=none</code></td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>0.3.9</code></td>
+        <td><code>attach()</code> keeps every image, not only the last, so a test that calls it twice now shows two.</td>
+        <td>&mdash;</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>0.3.7</code></td>
+        <td>The report opens in a browser when the run ends. Guarded three ways, so build agents are unaffected. An <em>invalid</em> <code>report_open</code> now fails the run at configure time.</td>
+        <td class="t-nowrap"><code>--report-open=none</code></td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>0.3.6</code></td>
+        <td>Retention actually deletes. <code>--archive-count</code> had been doing nothing whenever <code>--html-report</code> named the html file itself, so such setups had kept every build for ever. A nonsense retention value now fails the run.</td>
+        <td>Raise or drop the limit</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>0.3.4</code></td>
+        <td>The report path is strftime-expanded, so a <code>%</code> that happens to form a placeholder is expanded.</td>
+        <td class="t-nowrap">Write <code>%%</code></td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>0.3.3</code></td>
+        <td>Rerun totals change to match what pytest itself prints, including when the count comes from <code>@pytest.mark.flaky(reruns=n)</code>. Suites reading the old inflated failure counts will see different numbers.</td>
+        <td>&mdash;</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>0.3.2</code></td>
+        <td>An xdist run produces one report, not one per worker, and one Archives build rather than several.</td>
+        <td>&mdash;</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="content-and-exports">Report content and exports that change shape</h3>
+
+<ul>
+  <li><strong>0.4.0</strong> &mdash; Test Metrics rows gained <code>id</code> anchors derived from node ids,
+    and the four per-row buttons fold behind a <code>...</code> control by default. Cut messages fade at the
+    tail; the ellipsis remains in the cell text, hidden, so CSV, Excel and print exports still show that a
+    message was cut.</li>
+  <li><strong>0.3.8</strong> &mdash; step trees are parked outside the metrics table, so they are absent from
+    its search index and its CSV, Excel and print exports, as captured logs (0.3.3) and attachments (0.3.5)
+    already were.</li>
+  <li><strong>0.3.7</strong> &mdash; the full error text moved out of the table cell into a data attribute.
+    The exports used to carry the cut message, the <code>(...)</code>, the whole error again and the word
+    <code>Close</code> run together in one field; they now carry the cut message and an ellipsis.</li>
+  <li><strong>0.3.5</strong> &mdash; a file that fails to import is now a row of its own, so reports gain rows
+    that previously vanished silently; a test whose fixture raised during cleanup is now reported as an error
+    rather than a pass, so a run that read green may now read red &mdash; correctly.</li>
+  <li><strong>0.3.3</strong> &mdash; the bundled <code>pytest.ini</code> uses <code>--capture=tee-sys</code>
+    instead of <code>-s</code>. Under <code>-s</code> the Logs column holds logging output only, and the
+    report says so.</li>
+</ul>
+
+<h3 id="older-archives">Archives written by older versions</h3>
+
+<p>The longitudinal views &mdash; Archives, <a href="analytics.html">Analytics</a> and the coverage trend
+line &mdash; are built by reading back the <code>output.json</code> each build writes, and a folder of
+builds is usually written by more than one version of the plugin.</p>
+
+<ul>
+  <li><strong>0.3.6</strong> &mdash; <code>output.json</code> gained the coverage percentage. A build that
+    measured nothing leaves a gap in the trend line rather than a drop to zero.</li>
+  <li><strong>0.3.7</strong> &mdash; <code>output.json</code> gained each test's duration. Builds archived by
+    an earlier version have no such key and are read as &quot;not measured&quot; rather than as instant.</li>
+  <li><strong>0.3.5</strong> &mdash; <code>output.json</code> deliberately keeps its text unescaped. Escaping
+    belongs to the page; the archive and trend views read this file back.</li>
+</ul>
+
+<div class="note note--warn">
+  <span class="note__title">Careful</span>
+  Retention deletes only the plugin's own <code>output_*.json</code> archives, and reads a build's age from
+  the timestamp in the archive filename rather than the file's mtime &mdash; which is what keeps it correct
+  after reports have been copied into a fresh CI workspace.
+</div>
+
+<h2 id="following-releases">Following releases</h2>
+
+<p>Releases are cut by tagging <code>vX.Y.Z</code> and publishing the built distribution to PyPI, with
+<code>CHANGELOG.txt</code> as the GitHub release description. The canonical copy of everything on this page
+is that file in the repository.</p>
+
+<div class="grid grid--3">
+  <a class="card" href="https://pypi.org/project/pytest-html-reporter/">
+    <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div>
+    <h3>PyPI</h3>
+    <p>Every published version, and the one <code>pip install</code> resolves to.</p>
+    <span class="card__more">Open PyPI <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="https://github.com/prashanth-sams/pytest-html-reporter/releases">
+    <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h.01"/><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-7.2-7.2A2 2 0 0 1 3 12V5a2 2 0 0 1 2-2h7a2 2 0 0 1 1.4.6l7.2 7.2a2 2 0 0 1 0 2.6z"/></svg></div>
+    <h3>GitHub releases</h3>
+    <p>Tags, release notes and the source archive for each version.</p>
+    <span class="card__more">Open releases <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="https://github.com/prashanth-sams/pytest-html-reporter/issues">
+    <div class="card__icon is-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></div>
+    <h3>Issue tracker</h3>
+    <p>Where the numbered fixes on this page (#228, #212, #191) came from. Report a bug or ask for a feature here.</p>
+    <span class="card__more">Open issues <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+</div>
+
+<div class="note note--tip">
+  <span class="note__title">Tip</span>
+  New to the plugin? Start at <a href="getting-started.html">Getting started</a>. If a release note above
+  named a flag you have not met, every option is listed in the
+  <a href="cli-reference.html">CLI reference</a> with its ini equivalent in
+  <a href="configuration.html">Configuration</a>.
+</div>
+<nav class="pagenav" aria-label="Pagination">
+<a class="prev" href="../docs/vscode.html"><span>&larr; Previous</span><b>VS Code extension</b></a>
+<a class="next" href="../docs/faq.html"><span>Next &rarr;</span><b>FAQ</b></a>
+</nav>
+</main>
+<aside class="toc" aria-label="On this page">
+  <div class="toc__title">On this page</div>
+  <ul>
+<li class="lvl-2"><a href="#published-releases">Where releases are published</a></li>
+<li class="lvl-2"><a href="#release-timeline">Release timeline</a></li>
+<li class="lvl-2"><a href="#earlier-releases">Earlier releases, 2020 to 2022</a></li>
+<li class="lvl-2"><a href="#upgrade-notes">What changes when you upgrade</a></li>
+<li class="lvl-3"><a href="#behaviour-changes">Behaviour that changes without you asking</a></li>
+<li class="lvl-3"><a href="#content-and-exports">Report content and exports that change shape</a></li>
+<li class="lvl-3"><a href="#older-archives">Archives written by older versions</a></li>
+<li class="lvl-2"><a href="#following-releases">Following releases</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div class="footer__about">
+        <a class="brand" href="../index.html"><svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="3.9" height="18" rx="1" fill="#3571a3"/><rect x="7.4" y="7.85" width="3.9" height="13.15" rx="1" fill="#ffd143"/><rect x="12.8" y="12.7" width="3.9" height="8.3" rx="1" fill="#8b8b8b"/><rect x="18.2" y="17.3" width="3.9" height="3.7" rx="1" fill="#3571a3"/></svg>
+          <span class="brand__text"><span class="brand__a">pytest</span><span class="brand__b">HTML Reporter</span></span>
+        </a>
+        <p>A light-weight static HTML report for the pytest framework. MIT licensed, built by Prashanth Sams and contributors.</p>
+      </div>
+      <div>
+        <h2>Documentation</h2>
+        <ul>
+          <li><a href="../docs/getting-started.html">Getting started</a></li>
+          <li><a href="../docs/features.html">Features</a></li>
+          <li><a href="../docs/report-tour.html">Report tour</a></li>
+          <li><a href="../docs/cli-reference.html">CLI reference</a></li>
+          <li><a href="../docs/python-api.html">Python API</a></li>
+          <li><a href="../docs/compatibility.html">Compatibility &amp; files</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Ecosystem</h2>
+        <ul>
+          <li><a href="../docs/github-action.html">GitHub Action</a></li>
+          <li><a href="../docs/vscode.html">VS Code extension</a></li>
+          <li><a href="../docs/ci-integrations.html">CI &amp; scale</a></li>
+          <li><a href="../docs/analytics.html">Analytics &amp; history</a></li>
+          <li><a href="../docs/security-privacy.html">Security &amp; privacy</a></li>
+          <li><a href="../docs/comparison.html">Compared to others</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Project</h2>
+        <ul>
+          <li><a href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener">Source on GitHub</a></li>
+          <li><a href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener">PyPI package</a></li>
+          <li><a href="https://marketplace.visualstudio.com/items?itemName=prashanth-sams.pytest-html-reporter-vscode" target="_blank" rel="noopener">VS Code Marketplace</a></li>
+          <li><a href="https://github.com/prashanth-sams/pytest-html-reporter/issues" target="_blank" rel="noopener">Issue tracker</a></li>
+          <li><a href="../docs/contributing.html">Contributing</a></li>
+          <li><a href="../docs/faq.html">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>MIT licensed &middot; &copy; Prashanth Sams</span>
+      <span>Built for people who read their test reports.</span>
+    </div>
+  </div>
+</footer>
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

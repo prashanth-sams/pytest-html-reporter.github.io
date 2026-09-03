@@ -1,0 +1,1331 @@
+<!--META {"title": "Running at scale", "eyebrow": "Guides", "description": "Run pytest-html-reporter under pytest-xdist, shard a suite across machines and merge the shards into one build, publish JUnit XML, and read coverage in CI.", "lede": "A report folder has exactly one writer per build. Everything on this page follows from that one rule — why a parallel run needs no configuration, why a matrix needs a merge step, and why the merge is its own command rather than a fifth pytest run."} -->
+
+<h2 id="one-run-one-build">One run, one build</h2>
+
+<p>A build is not only an HTML file. Writing one means rotating the previous <code>output.json</code> into <code>archive/</code>, writing a new <code>output.json</code>, appending a point to the trend chart, applying archive retention, recomputing Suite Highlights, and re-reading every retained build to rebuild the Analytics histories.</p>
+
+<p>So four matrix legs each writing a report into one folder do not add up to a build. They overwrite each other's <code>output.json</code> and manufacture four builds out of one run: four trend points, four archive files, four Analytics entries, and Suite Highlights counting every suite four times — with nothing left on disk afterwards to say which four belonged together.</p>
+
+<p>There are two ways a run can be spread out, and they get two different answers.</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>One machine, many processes</b>That is <code>pytest-xdist</code>. The workers are children of one controller and share its filesystem, so they hand their records back in-process and the controller renders once. Nothing to configure.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Many machines, or many separate pytest invocations</b>That is sharding. There is no shared process, so each leg writes a <em>bundle</em> and no report at all, and a separate command merges the bundles later.</span>
+  </li>
+</ul>
+
+<figure class="imgslot" data-shot="sharded-run-one-build.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Diagram: assets/img/shots/sharded-run-one-build.png</b>
+  <span>A diagram, not a screenshot, at 1440px wide. Three boxes labelled "shard 1/3", "2/3", "3/3", each writing a file icon labelled <code>shards/&lt;id&gt;/records.json + pytest_screenshots/</code>; three arrows into a box labelled "CI artifact store"; one arrow out of it into a box labelled "pytest-html-reporter merge"; and out of that exactly one of each: pytest_html_report.html, output.json, archive/output_&lt;ts&gt;.json, junit.xml, one trend point. Caption underneath: "one run, one build".</span>
+</figure>
+
+<h3 id="why-not-merge-the-outputs">Why the merge works on records and nothing else</h3>
+
+<p>Two simpler designs were rejected in both directions, and the reasons are what decide the file formats.</p>
+
+<ul>
+  <li><strong>Merging <code>output.json</code> files does not work.</strong> That file keeps only <code>status</code>, <code>message</code>, <code>test_name</code>, <code>rerun</code> and <code>duration</code> per test — no node id, no logs, no steps, no attachments, no phases. A merge built on it would produce correct totals over an empty report, and could not name a single test in a JUnit file.</li>
+  <li><strong>Merging rendered HTML does not work.</strong> There is nothing to merge: the page is one document with one dashboard, one trend chart and one Analytics view, all computed from the records.</li>
+</ul>
+
+<p>So the merge happens at the level of <em>records</em> — the dicts the plugin builds as each test finishes — and nowhere else.</p>
+
+<div class="note note--tip"><span class="note__title">Tip</span>If your pipeline is GitHub Actions and you want the report published to the job summary, a pull request comment, an artifact and GitHub Pages, the <a href="github-action.html">dedicated GitHub Action</a> does all of that in one step. This page is the underlying machinery, and the two compose.</div>
+
+<h2 id="parallel-runs-with-xdist">Parallel runs with pytest-xdist</h2>
+
+<p>Runs distributed with <code>pytest-xdist</code> are gathered into a single report with no configuration at all — one build in <code>Archives</code>, one set of totals, one row per test, whichever way the tests were distributed.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Both distribution modes produce one report</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ -n 2 --html-report=./report
+$ pytest tests/ -n auto --dist loadfile --html-report=./report</code></pre>
+</div>
+
+<h3 id="how-workers-hand-back">How the workers hand their results back</h3>
+
+<ol>
+  <li>Every worker collects the whole suite, and the plugin records each node id's collection index. A test therefore sits at the same position in every process.</li>
+  <li>Each worker builds ordinary record dicts as its tests finish. Records are made only of JSON-safe built-ins on purpose — that is what lets them cross a process boundary.</li>
+  <li>At the end of the session a worker writes its record list into <code>config.workeroutput</code> and renders nothing.</li>
+  <li>On the controller, each finished worker's output is read back and stored as it goes down.</li>
+  <li>The terminal-summary hook returns early on a worker. Only the controller reaches the render.</li>
+  <li>The report is built from records sorted by collection index and worker, so a parallel report reads exactly like a serial one whatever order the workers finished in.</li>
+</ol>
+
+<p>Screenshots are written by whichever process ran the test — the workers share the controller's filesystem — into <code>pytest_screenshots/</code> under the report base. An image is named <code>&lt;milliseconds&gt;[-&lt;worker id&gt;]-&lt;counter&gt;</code>: milliseconds alone collided because two tests can finish inside the same one, the counter settles that, and the worker id settles the cross-process case.</p>
+
+<div class="note"><span class="note__title">Note</span>Results are handed over when a worker finishes, so tests from a worker that <strong>crashes outright</strong> — rather than failing — are not in the report. pytest reports the crash itself.</div>
+
+<p>Two more consequences worth knowing. The controller never runs a test, so run-wide totals cannot be accumulated as tests go by; they are counted off the merged record list at the end. And an <code>-n 8</code> run that is <em>also</em> one leg of a matrix writes its bundle <strong>once</strong>, from the controller, after it has merged all eight workers' records — never eight times with an eighth of the tests each.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">A shard that is itself parallel — one bundle, written by the controller</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ -n 8 --html-report=./report --report-shard=1/4</code></pre>
+</div>
+
+<h2 id="reruns-and-retries">Reruns: how retries are represented</h2>
+
+<p><code>pytest-rerunfailures</code> runs the whole setup/call/teardown protocol again for every retry, so a retried test arrives at the reporter once per attempt. The plugin keeps <strong>one record per test</strong> and uses the <code>rerun</code> field to say how many attempts it stands for. There is no rerun-specific flag: the plugin reacts to <code>pytest-rerunfailures</code> being installed rather than configuring it.</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Attempts are summed, not listed</b>The surviving record's <code>rerun</code> becomes the superseded record's count plus its own plus one, because the record being replaced is an attempt itself and either side may already stand for several.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Screenshots and attachments survive a green retry</b>The surviving attempt back-fills them from the attempt it replaces when it has none of its own. A flaky test that captured the failing response on its first attempt should not lose it by then passing.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Steps do not</b>Steps are back-filled only when the surviving attempt recorded none. A retry that passed did so by running its own steps, and the failing attempt's tree beside a green test would describe a run that did not happen.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The row keeps its place</b>The folded record inherits the superseded record's collection index, so a retried test does not jump down the table.</span>
+  </li>
+</ul>
+
+<p>Counting attempts is the only reliable signal available: <code>--reruns</code>, the ini key and <code>@pytest.mark.flaky(reruns=n)</code> can each set a different budget, and <code>--only-rerun</code> can stop the retries early, so no single number says how many attempts a given test will take.</p>
+
+<p>The count then travels everywhere — into <code>output.json</code> as a per-test string and a per-suite total, into the JUnit <code>&lt;properties&gt;</code> as <code>reruns</code> and into each testcase's <code>&lt;system-out&gt;</code> as a <code>reruns: N</code> line, and into <a href="analytics.html">Analytics</a>, where a non-zero rerun count is by itself enough to mark a test flaky. A retry inside a single build is the least ambiguous flake evidence there is: same code, same build, two different answers.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span>On a merge this folding is switched off entirely. A cross-shard duplicate must not be folded by rules that depend on what happens to be installed on the merging machine, and the fold pins the survivor to a per-process index that means nothing once several machines are involved. The merge has <a href="#duplicate-node-ids">its own duplicate policy</a> instead.</div>
+
+<h2 id="sharding-across-machines">Sharding a run across machines</h2>
+
+<p>A shard writes <strong>no report</strong>: no <code>pytest_html_report.html</code>, no <code>output.json</code>, no archive rotation. It writes one file — its record list exactly as it stands in memory, plus everything only that machine knows about itself — and the screenshots those records name.</p>
+
+<h3 id="shard-flags">The four shard flags</h3>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Flag</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>--report-shard</code></td>
+        <td><code>""</code></td>
+        <td>Name this process as one leg of a sharded run. Writes its records to <code>&lt;report base&gt;/shards/&lt;id&gt;/records.json</code> and renders nothing. ini key: <code>report_shard</code>.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>--report-shard-merge</code></td>
+        <td><code>false</code></td>
+        <td>After writing this leg's bundle, merge every bundle beside it under <code>&lt;report base&gt;/shards</code> and render one report. Needs <code>--report-shard</code>, or the run fails with a usage error. ini key: <code>report_shard_merge</code>.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>--report-shard-run</code></td>
+        <td>the CI system's own run id</td>
+        <td>The token saying which CI run this leg belongs to. A merging leg merges only bundles carrying the same token, and names the ones it put aside. ini key: <code>report_shard_run</code>.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>--report-shard-reset</code></td>
+        <td><code>false</code></td>
+        <td>Delete <code>&lt;report base&gt;/shards</code> entirely before this leg writes into it. For the first leg of a sequential run with no run token. Never implied by anything else, because it deletes the other legs' work. ini key: <code>report_shard_reset</code>.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Four legs of a matrix, each on its own machine</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ --html-report=./report --report-shard=1/4
+$ pytest tests/ --html-report=./report --report-shard=2/4
+$ pytest tests/ --html-report=./report --report-shard=3/4
+$ pytest tests/ --html-report=./report --report-shard=4/4</code></pre>
+</div>
+
+<h3 id="shard-ids">How a shard id becomes a directory</h3>
+
+<p>The shard is a <em>directory under the report base</em>, never a bare file beside the report. That is what makes merging in place safe: the merge clears <code>&lt;report base&gt;/pytest_screenshots</code>, while every source image sits under <code>&lt;report base&gt;/shards/&lt;id&gt;/pytest_screenshots</code> and is untouched.</p>
+
+<p>Ids are sanitised into directory names. Everything outside <code>A-Z a-z 0-9 . _ -</code> becomes a dash, runs of dashes collapse, dots and dashes are stripped from both ends, and the result is capped at 64 characters.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>You pass</th><th>The directory is</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>1/4</code></td><td class="t-nowrap"><code>1-4</code></td></tr>
+      <tr><td class="t-nowrap"><code>python3.11 (ubuntu)</code></td><td class="t-nowrap"><code>python3.11-ubuntu</code></td></tr>
+      <tr><td class="t-nowrap"><code>ubuntu 22.04</code></td><td class="t-nowrap"><code>ubuntu-22.04</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>The <em>raw</em> value is kept as the shard's <strong>label</strong> — <code>1/4</code> reads better than <code>1-4</code> in the report — while the sanitised value is the <strong>id</strong>, which names the directory and the screenshot folder.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span>A value made entirely of unsafe characters is a usage error rather than a silent fallback, because a shard with an empty id would write over the report base itself. Dots are trimmed from the ends for the same reason, so <code>--report-shard=..</code> cannot resolve to the report base; a dot <em>inside</em> the id is left alone.</div>
+
+<p>Before a leg writes, it removes <strong>its own directory</strong> outright — never the whole report folder, which would take a sibling leg's screenshots with it, and never only <code>pytest_screenshots</code>, because a <code>records.json</code> left by a previous run of the same leg would survive and, if that run collected more tests, would be what the merge reads. If two differently-named legs sanitise to the same directory, the second write prints a warning naming both labels; it is never fatal, because this runs after every test in the leg has finished.</p>
+
+<h3 id="what-a-leg-writes">What a leg leaves on disk</h3>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">output</span>
+    <span class="codeblock__cap">After four legs have run — no output.json and no .html anywhere</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="output">report/
+└── shards/
+    ├── 1-4/
+    │   ├── records.json
+    │   └── pytest_screenshots/
+    │       ├── 1788426639123-1.png
+    │       └── 1788426639771-gw0-2.png
+    ├── 2-4/
+    │   ├── records.json
+    │   └── pytest_screenshots/
+    ├── 3-4/
+    │   └── records.json
+    └── 4-4/
+        └── records.json</code></pre>
+</div>
+
+<div class="note note--danger"><span class="note__title">Don't</span>Upload only <code>records.json</code>. Upload the whole <code>shards/&lt;id&gt;/</code> directory, bundle and <code>pytest_screenshots/</code> together, or the merge will report every image as one the bundle named but did not carry.</div>
+
+<h3 id="the-records-bundle">The bundle: records.json</h3>
+
+<p>One file per leg, written atomically — to a temporary file in the same directory, flushed, <code>fsync</code>ed, then replaced over the top. A bundle is written from the terminal-summary hook, which is the last thing a CI leg does before the job may be cancelled or the runner reclaimed, so what is on disk is either the previous file or the whole new one, never half of one.</p>
+
+<p>The file is identified by its <code>schema</code> string, not by its name: anything whose schema is not exactly <code>pytest-html-reporter/records</code> is walked past with a note, because a folder of CI artifacts is full of other JSON. A bundle whose <code>version</code> is <em>higher</em> than the reader understands stops the merge by name — silently dropping a quarter of a matrix produces a report that is wrong in a way nobody looking at it can see. Unknown keys survive a round trip untouched, at both the payload and the record level.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">json</span>
+    <span class="codeblock__cap">records.json — abridged</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="json">{
+  &quot;schema&quot;: &quot;pytest-html-reporter/records&quot;,
+  &quot;version&quot;: 1,
+  &quot;generator&quot;: &quot;pytest-html-reporter 0.4.0&quot;,
+  &quot;shard&quot;: { &quot;id&quot;: &quot;1-4&quot;, &quot;label&quot;: &quot;1/4&quot;, &quot;assets&quot;: &quot;pytest_screenshots&quot; },
+  &quot;run&quot;: {
+    &quot;session_start&quot;: 1788426000.11,
+    &quot;session_end&quot;: 1788426724.53,
+    &quot;exitstatus&quot;: 1,
+    &quot;token&quot;: &quot;github:1234567-2&quot;,
+    &quot;collected&quot;: 203,
+    &quot;hostname&quot;: &quot;runner-1&quot;,
+    &quot;platform&quot;: &quot;Linux 6.5.0-1024-azure&quot;,
+    &quot;python&quot;: &quot;3.11.9&quot;,
+    &quot;pytest&quot;: &quot;8.2.0&quot;,
+    &quot;plugins&quot;: [&quot;cov-5.0.0&quot;, &quot;html-reporter-0.4.0&quot;, &quot;xdist-3.5.0&quot;],
+    &quot;arguments&quot;: &quot;tests/ -n 4 --html-report=./report --report-shard=1/4&quot;,
+    &quot;rootdir&quot;: &quot;/home/runner/work/proj/proj&quot;,
+    &quot;environment&quot;: &quot;staging&quot;,
+    &quot;build_info&quot;: [[&quot;Commit&quot;, &quot;a1b2c3d&quot;], [&quot;Branch&quot;, &quot;main&quot;]],
+    &quot;xdist_workers&quot;: [&quot;gw0&quot;, &quot;gw1&quot;, &quot;gw2&quot;, &quot;gw3&quot;]
+  },
+  &quot;coverage&quot;: { &quot;percent&quot;: 84.12, &quot;statements&quot;: 5120, &quot;covered&quot;: 4307 },
+  &quot;counts&quot;: { &quot;records&quot;: 203, &quot;collect&quot;: 1 },
+  &quot;records&quot;: [ { &quot;nodeid&quot;: &quot;tests/test_login.py::test_valid_user&quot; } ]
+}</code></pre>
+</div>
+
+<p>The <code>run</code> block is the machine's own account of itself — host, platform, interpreter, pytest version, plugins, command line, rootdir, environment, build info, what it kept of each test's output — captured here because the merge often runs on a machine that ran none of the tests. <code>counts</code> is there for <code>inspect</code> and is never trusted by the merge, which counts the records it actually read.</p>
+
+<h3 id="sequential-legs">Sequential legs on one machine</h3>
+
+<p>Unit, then integration, then e2e, on one machine, is the case where a fourth command to merge the three is a fourth thing to remember. The last leg passes <code>--report-shard-merge</code>, and three commands do the work of four.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Three sequential legs, one build</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/unit        --html-report=./report --report-shard=unit --report-shard-reset
+$ pytest tests/integration --html-report=./report --report-shard=integration
+$ pytest tests/e2e         --html-report=./report --report-shard=e2e --report-shard-merge</code></pre>
+</div>
+
+<p><code>&lt;base&gt;/shards</code> is persistent, so it also holds whatever the last run left in it. A leg that was renamed or deleted between two CI runs leaves its bundle sitting there, and the next merging leg picks it up and reports tests that did not run — four tests run and the build says six, with nothing on the page saying where the other two came from. A clock cannot tell the two cases apart, because every bundle beside a merging leg was written before it, whether ten minutes ago by this run or yesterday by the last one. There are two answers, for two situations:</p>
+
+<ul>
+  <li><strong>A run token.</strong> A leg with a token merges only the bundles carrying the same one, and writes to stderr exactly which bundles it put aside, what token each carries, and the advice to clear the folder or use <code>--report-shard-reset</code>. It is taken from the CI system's own variables when you do not pass one — <code>GITHUB_RUN_ID</code> plus <code>GITHUB_RUN_ATTEMPT</code> on GitHub Actions, <code>CI_PIPELINE_ID</code> on GitLab, <code>BUILD_TAG</code> on Jenkins, <code>CIRCLE_WORKFLOW_ID</code> on CircleCI, <code>BUILDKITE_BUILD_ID</code>, <code>BUILD_BUILDID</code> on Azure Pipelines. A leg with <strong>no</strong> token merges everything, which is the only thing it can do: an empty token says nothing about which run a bundle came from.</li>
+  <li><strong><code>--report-shard-reset</code> on the first leg</strong>, which empties <code>&lt;base&gt;/shards</code> before anything is written.</li>
+</ul>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">ini</span>
+    <span class="codeblock__cap">The same options as ini keys</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="ini">[pytest]
+html_report = ./report
+report_shard_run = nightly-42</code></pre>
+</div>
+
+<p>A merging leg that cannot merge — a bundle from a newer release, a duplicate under an <code>error</code> policy — says so and carries on rather than raising. This runs after every test has finished, and a traceback there would leave the run with no report and no verdict. Its own bundle is on disk either way, and the message names the folder and tells you to run the merge command once it is sorted out.</p>
+
+<h2 id="merging-the-shards">Merging the shards</h2>
+
+<p>The merge is its own process, not another pytest run. A fifth <code>pytest</code> started in the report folder to do the merging would clean the screenshots on the way in and delete the images it was sent to collect. It is installed as a console script by <code>setup.py</code> and is also reachable as a module, which matters in containers that pip-installed a wheel, in tox environments and in a checkout somebody is trying the feature out in.</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Two ways to reach the same command">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">Console script</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">Module</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest-html-reporter merge ./artifacts --html-report ./report</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ python -m pytest_html_reporter merge ./artifacts --html-report ./report</code></pre>
+    </div>
+  </div>
+</div>
+
+<p>It uses argparse and the standard library only. The package's install requirements are <code>pytest</code> and <code>Pillow</code>, and a merge command that needed a dependency of its own would be a command CI could not run.</p>
+
+<h3 id="merge-subcommands">Three subcommands</h3>
+
+<div class="grid grid--3">
+  <article class="card">
+    <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v4a2 2 0 0 1-2 2H2M16 21v-4a2 2 0 0 1 2-2h4M2 15h4a2 2 0 0 1 2 2v4M22 9h-4a2 2 0 0 1-2-2V3"/></svg></div>
+    <h3>merge</h3>
+    <p>The whole of it: the report, and the JUnit XML when asked. <code>--html-report</code> is the only required flag.</p>
+  </article>
+  <article class="card">
+    <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg></div>
+    <h3>junit</h3>
+    <p>Stops after the XML, for a pipeline that publishes test results without publishing a report. No report base is written, so no screenshots are copied and no archive is rotated. Takes <code>-o</code>.</p>
+  </article>
+  <article class="card">
+    <div class="card__icon is-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4.3-4.3"/></svg></div>
+    <h3>inspect</h3>
+    <p>Stops before anything is written at all, which is what you want when four artifacts were downloaded and only three of them are there.</p>
+  </article>
+</div>
+
+<p>All three take the same positional <code>PATH</code> arguments — default, the current directory — and the same three <em>shaping</em> flags: <code>--on-duplicate</code>, <code>--order</code> and <code>--strip-path-prefix</code>. Those are shared deliberately, because they decide the answer rather than the output: <code>inspect</code> reporting a different set of tests from the <code>merge</code> that follows it would make it useless as a pre-flight check.</p>
+
+<p>Paths may be directories, which are walked, or <code>records.json</code> files named directly, for a step that unpacked one artifact and knows where it put it. The walk is sorted at every level and duplicates are removed by absolute path. A folder of CI artifacts holds JUnit files, logs and a coverage report beside the bundles, and every one of them is walked past with a note rather than treated as a failure.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The shapes a merge call takes</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell"># one folder holding the downloaded artifacts
+$ pytest-html-reporter merge ./artifacts --html-report ./report
+
+# report and JUnit XML in one pass
+$ pytest-html-reporter merge ./artifacts --html-report ./report --junit-xml ./report/junit.xml
+
+# merging back into the folder the shards were written in - safe by design
+$ pytest-html-reporter merge ./report --html-report ./report
+
+# bundles named directly
+$ pytest-html-reporter merge ./a/records.json ./b/records.json --html-report ./report
+
+# XML only, no report
+$ pytest-html-reporter junit ./artifacts -o ./junit.xml
+
+# pre-flight: what is there, and what merging it would come to
+$ pytest-html-reporter inspect ./artifacts
+$ pytest-html-reporter inspect ./artifacts --json</code></pre>
+</div>
+
+<h3 id="merge-flags-that-matter">The flags a pipeline actually reaches for</h3>
+
+<p>The complete list of every merge flag is in the <a href="cli-reference.html">CLI reference</a>. These are the ones that change the shape of a CI job.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Flag</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>--html-report</code></td><td>required</td><td>Where the merged report is written: a folder, or the <code>.html</code> file itself.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-xml</code></td><td><code>""</code></td><td>Also write the merged JUnit XML here.</td></tr>
+      <tr><td class="t-nowrap"><code>--on-duplicate</code></td><td><code>merge</code></td><td>What to do when one node id ran in more than one shard. Every fold is reported whichever is chosen.</td></tr>
+      <tr><td class="t-nowrap"><code>--order</code></td><td><code>shard</code></td><td>Row order: <code>shard</code> keeps each suite's rows in shard order, <code>name</code> sorts by suite and test name.</td></tr>
+      <tr><td class="t-nowrap"><code>--strip-path-prefix</code></td><td>none</td><td>Strip this prefix from the front of every node id, so shards that ran under different checkout roots group into one suite. Repeatable.</td></tr>
+      <tr><td class="t-nowrap"><code>--start-time</code></td><td><code>earliest</code></td><td><code>earliest</code>, <code>now</code>, or a unix timestamp. Names the file the next build archives this one as, stamps <code>output.json</code>, labels the trend point and orders the builds in Analytics.</td></tr>
+      <tr><td class="t-nowrap"><code>--strict</code></td><td>off</td><td>Exit 1 when anything was quarantined, unreadable, folded, superseded, missing or carried a status this version has never heard of, or when the JUnit writer warned. The report is still written.</td></tr>
+      <tr><td class="t-nowrap"><code>--exit-code</code></td><td>off</td><td>Exit 1 when the merged build has any FAIL or ERROR.</td></tr>
+      <tr><td class="t-nowrap"><code>--dry-run</code></td><td>off</td><td>Merge and print the summary, writing nothing.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-open</code></td><td><code>none</code></td><td>Deliberately not the pytest run's <code>auto</code>: a merge run on somebody's laptop to look at four downloaded artifacts must not steal a browser tab.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="note"><span class="note__title">Note</span><code>--html-report</code> is refused up front if it contains <code>.html</code> without ending in it. The report path decides between "a folder" and "a file" on whether <code>.html</code> appears in it, so <code>./my.html.d</code> would be read as a file name and the report would land somewhere else — and by the time anybody looks for it the run has already happened. The archive flags are validated before anything is written, in the same words a pytest run uses.</div>
+
+<h3 id="what-the-merge-does">What the merge does, in order</h3>
+
+<ol class="steps">
+  <li>
+    <h3>Discover and read</h3>
+    <p>Every <code>records.json</code> under the given paths, in a stable order, without repeats. A bundle carrying no shard id is given its own directory's name as a fallback — hand-assembled bundles and artifacts unpacked by a step that renamed the folder both turn up without one.</p>
+  </li>
+  <li>
+    <h3>Order the bundles</h3>
+    <p>Sorted by the natural key of the shard id, never by load order: runs of digits read as numbers, so <code>1-4</code>, <code>2-4</code>, <code>10-16</code> sort in that order. Two jobs downloading the same artifacts in different orders have to produce the same report, or the diff between two builds is unreadable. If two files claim one shard id, the one that finished later is kept and both paths are named in a note.</p>
+  </li>
+  <li>
+    <h3>Normalise every record</h3>
+    <p>Every key is filled in from defaults and every type coerced, which is the whole defence against a bundle written by another release. Coercion is tolerant rather than strict: a duration that arrives as the string <code>"1.2"</code> or as <code>null</code> becomes <code>0.0</code> rather than losing the row. Then the node id is normalised, the suite name recomputed from it, and the record tagged with the leg it came from.</p>
+  </li>
+  <li>
+    <h3>Deduplicate collectors, then tests</h3>
+    <p>On completely different grounds. Every process collects the whole suite, so a broken import is <em>expected</em> in all four bundles and is not a duplicate at all: one record is kept per collector, an <code>ERROR</code> supersedes a <code>SKIP</code>, and for the same status the longer message wins. Tests follow <a href="#duplicate-node-ids">the duplicate policy</a>.</p>
+  </li>
+  <li>
+    <h3>Rebase every index</h3>
+    <p>Four shards each number their tests from zero. Collect rows are renumbered ahead of every test, test rows densely and uniquely, so the report's own sort can never fall back to a worker name that means nothing across machines. Under <code>--order shard</code> a suite split across shards stays contiguous instead of appearing twice.</p>
+  </li>
+  <li>
+    <h3>Build the run metadata and the coverage</h3>
+    <p>One set of run facts assembled from every bundle's own account, never one machine's answer generalised to all of them; and coverage through <a href="#coverage-on-a-merge">five branches and no sixth</a>.</p>
+  </li>
+  <li>
+    <h3>Render, once</h3>
+    <p>Through the same render path a plain pytest run drives. A merged build assembled by different code is a build that drifts away from every other one on the report's own history.</p>
+  </li>
+</ol>
+
+<h3 id="duplicate-node-ids">Duplicate node ids</h3>
+
+<p>A node id that ran in more than one shard means the matrix overlaps, and somebody has to be told. There is no single right answer — a matrix that overlaps by accident wants <code>merge</code>, a matrix that retries a whole leg wants <code>last</code>, a gate that must not be fooled wants <code>error</code> — so it is asked rather than guessed. <strong>Every fold is reported on stderr and counted in the summary whichever policy is in force.</strong></p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th><code>--on-duplicate</code></th><th>What survives</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>merge</code> <span class="pill pill--brand">default</span></td><td>The last shard's record, with <code>rerun</code> set to the members' reruns plus one per dropped attempt, and empty screenshots, attachments and steps back-filled from the latest loser that has them. Never a concatenation.</td></tr>
+      <tr><td class="t-nowrap"><code>first</code></td><td>The first shard's record in the merge's deterministic order; the rest are dropped.</td></tr>
+      <tr><td class="t-nowrap"><code>last</code></td><td>The last shard's record. For a matrix that retries a whole leg.</td></tr>
+      <tr><td class="t-nowrap"><code>worst</code></td><td>The most severe outcome: ERROR, FAIL, xPASS, SKIP, xFAIL, PASS. A status this version has never heard of scores below every real one, so an unreadable value cannot outrank a genuine failure. Ties break on the earlier shard.</td></tr>
+      <tr><td class="t-nowrap"><code>error</code></td><td>Nothing. The merge stops, listing every clashing node id at once and the shards each ran in.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="node-identity">Node identity across machines</h3>
+
+<p>Two machines can run the same test under different roots — a Windows runner's backslashes, a container that checked the repo out at <code>/src</code> and a runner that used <code>/home/runner/work/proj/proj</code>. The same test under two spellings is two rows, two histories in Analytics and two entries in the JUnit file.</p>
+
+<p>Node ids are normalised in a fixed order: backslashes become forward slashes, repeated slashes collapse, a leading <code>./</code> is stripped, then each <code>--strip-path-prefix</code> value is removed from the front. A prefix that would swallow the whole node id is <strong>not</strong> applied — the original is worth more than nothing. When the node id changes, the suite name is recomputed from it, so grouping follows identity instead of drifting away from it.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Folding three checkout roots into one identity</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest-html-reporter merge ./artifacts \
+    --html-report ./report \
+    --strip-path-prefix /home/runner/work/proj/proj/ \
+    --strip-path-prefix C:/actions-runner/_work/proj/proj/ \
+    --strip-path-prefix /src/</code></pre>
+</div>
+
+<p>A record whose node id is empty <em>after</em> all this is quarantined: dropped from the merge, counted in the summary and named in a note. It cannot be grouped, sorted against a duplicate, or linked to. Dropped rather than fatal, because the merge runs after every test in the matrix has finished, which is the worst moment there is to raise.</p>
+
+<h3 id="screenshots-across-shards">Screenshots across shards</h3>
+
+<p>The merge copies every PNG the merged records name into the report's own folder — <strong>by the names the records hold, never by globbing the shard's folder</strong>. A shard folder can still be holding images from a previous build of the same leg, and sweeping the folder would carry them into this report as tests that did not run in it. The merge owns <code>&lt;report base&gt;/pytest_screenshots</code> and removes it outright first: one build comes out of one merge.</p>
+
+<p>Each shard's images land in a folder of their own, because the screenshot counter restarts at 1 in every process — two machines' first screenshots are both <code>&lt;ms&gt;-1</code>, and one would overwrite the other in a shared folder. An image a bundle <em>named</em> but did not <em>carry</em> is dropped rather than left pointing at nothing, counted as a missing screenshot, and named in a note that says which file the bundle promised.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">output</span>
+    <span class="codeblock__cap">The merged report folder, after merging in place</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="output">report/
+├── pytest_html_report.html
+├── output.json
+├── archive/
+│   ├── output_1788425529.352927.json
+│   └── output_1788426203.302967.json
+├── pytest_screenshots/          &lt;- owned by the merge, wiped and restaged
+│   ├── 1-4/
+│   │   └── 1788426639123-1.png
+│   ├── 2-4/
+│   │   └── 1788426639123-1.png   (same name, different shard, no collision)
+│   └── 3-4/
+└── shards/                      &lt;- untouched when merging in place
+    ├── 1-4/
+    ├── 2-4/
+    └── 3-4/</code></pre>
+</div>
+
+<div class="note"><span class="note__title">Note</span>A test that failed and was photographed on shard 1 and then passed on shard 2 ends up as a shard-2 row holding shard-1 images, so screenshots carry their own shard tag separately from the row. Looking them up under the row's shard would drop the picture of the only failure in the matrix while it sat on disk in the shard next door.</div>
+
+<h3 id="notes-and-exit-codes">Provenance, notes and exit codes</h3>
+
+<p>Provenance is printed on every merge, with no threshold anywhere near it. There is no honest way to decide from inside a merge that a bundle is stale — every bundle beside a merging leg was written before it — so nothing is guessed and the times are shown. That is what turns yesterday's leg from a silent extra two tests in the totals into a line in the log of the run that merged it. Times are local, because this is read beside a CI log whose own timestamps are on the same clock.</p>
+
+<p><strong>Notes go to stderr and the summary goes to stdout</strong>, so a pipeline that captures one can discard the other, and <code>inspect --json</code> stays a clean document. <code>-q</code> suppresses the notes but never the summary and never an error.</p>
+
+<figure class="imgslot" data-shot="terminal-merge-summary.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/terminal-merge-summary.png</b>
+  <span>A terminal at about 100 columns, dark theme, showing a real <code>pytest-html-reporter merge ./artifacts --html-report ./report --junit-xml ./report/junit.xml</code> run: the stderr notes interleaved with the stdout summary, including the per-shard provenance lines, one folded duplicate, and the final report and junit paths.</span>
+</figure>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">output</span>
+    <span class="codeblock__cap">The merge summary, on stdout</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="output">merged 4 shards: 812 tests
+  shard 1-4: 203 tests, finished 2026-09-03 11:42:07
+  shard 2-4: 204 tests, finished 2026-09-03 11:44:31
+  shard 3-4: 203 tests, finished 2026-09-03 11:41:55
+  shard 4-4: 202 tests, finished 2026-09-03 11:45:02
+  PASS 780, FAIL 21, SKIP 11
+  3 collection records
+  duplicates folded: 2
+  missing screenshots: 1
+  bundles superseded by a newer copy: 1
+  ran on runner-1, runner-2, runner-3, runner-4 over 12 mins 04 secs
+  report: /home/runner/work/proj/proj/report/pytest_html_report.html
+  junit:  /home/runner/work/proj/proj/report/junit.xml</code></pre>
+</div>
+
+<p>There are <strong>two independent failure flags, because they answer two different questions</strong>. <code>--strict</code> is about the <em>merge</em> being complete; <code>--exit-code</code> is about the <em>tests</em>. A pipeline that wants the build to go red on a failing test uses one; a pipeline that only wants to know all four artifacts arrived uses the other. <strong>The report is written either way</strong> — a merge that exits 1 has still produced the page that explains why.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Exit code</th><th>Means</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>0</code></td><td>The merge produced what it was asked for, and neither <code>--strict</code> nor <code>--exit-code</code> had anything to say.</td></tr>
+      <tr><td class="t-nowrap"><code>1</code></td><td>A verdict about the tests or about the completeness of the merge — and it always comes with a report. Also returned when <code>--junit-xml</code> could not be written, since the report is already on disk by then.</td></tr>
+      <tr><td class="t-nowrap"><code>2</code></td><td>Nothing was produced at all: a bad flag, no bundles under the given paths, a bundle from a newer release, a merge error, or <code>junit -o</code> failing to write the one thing that subcommand exists to produce.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="inspect-as-a-gate">inspect, as a pre-flight gate</h3>
+
+<p><code>inspect</code> answers "did all the artifacts arrive, and do they overlap". It writes nothing and always exits 0 unless it could not start at all, so a pipeline that wants to fail loudly on a missing shard reads the count out of <code>--json</code>.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">output</span>
+    <span class="codeblock__cap">inspect, plain output — one line per bundle</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="output">1-4                     203 records    1 collect  runner-1         ./artifacts/shard-1/records.json
+2-4                     204 records    0 collect  runner-2         ./artifacts/shard-2/records.json
+3-4                     203 records    1 collect  runner-3         ./artifacts/shard-3/records.json
+4-4                     202 records    0 collect  runner-4         ./artifacts/shard-4/records.json</code></pre>
+</div>
+
+<figure class="imgslot" data-shot="terminal-inspect-missing-shard.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/terminal-inspect-missing-shard.png</b>
+  <span>A terminal at about 110 columns, dark theme, running <code>pytest-html-reporter inspect ./artifacts</code> where only three of four shards are present — three bundle lines and a summary showing three shards — so the reader recognises the failure this step is meant to catch.</span>
+</figure>
+
+<p>The JSON document carries the same information: one object per bundle, and a <code>summary</code> holding <code>shards</code>, <code>tests</code>, <code>collects</code>, <code>statuses</code>, <code>reruns</code>, <code>duplicates_folded</code>, <code>quarantined</code>, <code>unreadable</code>, <code>superseded</code>, <code>unrecognised</code>, the matrix's start, end and wall span, the distinct hosts, the agreed environment, any coverage notice, and every note the merge made in order.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Failing the pipeline unless exactly four shards arrived</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest-html-reporter inspect ./artifacts --json &gt; merge.json
+$ test &quot;$(python -c &#039;import json;print(json.load(open(&quot;merge.json&quot;))[&quot;summary&quot;][&quot;shards&quot;])&#039;)&quot; = 4</code></pre>
+</div>
+
+<h2 id="worked-example">A three-shard matrix, end to end</h2>
+
+<p>The shape of a sharded pipeline is always the same three moves: <strong>each leg writes a bundle</strong>, <strong>the bundles are uploaded as artifacts</strong>, <strong>one job downloads them all and merges once</strong>. Here it is with three legs, coverage, and the merged report published as an artifact.</p>
+
+<h3 id="worked-example-legs">Step one: the legs</h3>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">.github/workflows/tests.yml — the matrix job</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: &quot;3.11&quot;
+      - run: pip install pytest-html-reporter pytest-xdist pytest-cov
+      - run: |
+          pytest tests/ -n 4 \
+            --cov=myapp --cov-report= \
+            --html-report=./report \
+            --report-shard=${{ matrix.shard }}/3
+      # keep this leg&#039;s coverage data beside its bundle
+      - if: always()
+        run: cp .coverage report/shards/${{ matrix.shard }}-3/.coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shard-${{ matrix.shard }}
+          path: report/shards/
+          include-hidden-files: true</code></pre>
+</div>
+
+<p>Three things about that job are worth saying out loud.</p>
+
+<ul>
+  <li><code>-n 4</code> and <code>--report-shard</code> compose. Each leg is itself a four-worker xdist run, and writes exactly one bundle from its controller.</li>
+  <li>The uploaded path is <code>report/shards/</code>, the whole directory. Uploading only the JSON leaves the merge with records naming pictures that are not there.</li>
+  <li><code>if: always()</code> on the copy <em>and</em> on the upload, so a leg with failing tests still contributes its half of the story: a red pytest step fails the step, and every later step without that condition is skipped — which would leave the shard with no coverage data and no artifact. And <code>include-hidden-files</code>, because <code>.coverage</code> is a dotfile and would otherwise be left out of the artifact.</li>
+</ul>
+
+<div class="note note--danger"><span class="note__title">Don't</span>Pass <code>--report-junit</code> on a plain shard. It is ignored, with a notice on stderr, on purpose: the alternative a CI author expects is three shard XMLs plus the merged one, and a <code>**/*.xml</code> glob that found all four would count every test in the matrix twice. Ask the <em>merge</em> for the XML instead.</div>
+
+<h3 id="worked-example-artifacts">Step two: what each leg uploads</h3>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">output</span>
+    <span class="codeblock__cap">./artifacts after actions/download-artifact@v4 with no name</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="output">artifacts/
+├── shard-1/
+│   └── 1-3/
+│       ├── records.json
+│       ├── .coverage
+│       └── pytest_screenshots/
+│           └── 1788426639123-1.png
+├── shard-2/
+│   └── 2-3/
+│       ├── records.json
+│       └── .coverage
+└── shard-3/
+    └── 3-3/
+        ├── records.json
+        └── .coverage</code></pre>
+</div>
+
+<p>The nesting does not matter to the merge: the paths it is given are walked, so <code>./artifacts</code> finds all three bundles wherever the download step put them. It matters to <code>--coverage-data</code>, which reads a named directory <strong>one level deep</strong> — every entry in it whose name starts with <code>.coverage</code> — and does not walk subdirectories. So the data files are gathered into one flat folder first.</p>
+
+<h3 id="worked-example-merge">Step three: the merge job</h3>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">.github/workflows/tests.yml — the merge job</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">  merge:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: &quot;3.11&quot;
+      - run: pip install pytest-html-reporter coverage
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: every shard arrived
+        run: |
+          pytest-html-reporter inspect ./artifacts --json &gt; merge.json
+          test &quot;$(python -c &#039;import json;print(json.load(open(&quot;merge.json&quot;))[&quot;summary&quot;][&quot;shards&quot;])&#039;)&quot; = 3
+
+      - name: gather the coverage data files
+        run: |
+          mkdir -p covdata
+          i=0
+          for f in $(find artifacts -name &#039;.coverage&#039;); do
+            i=$((i + 1))
+            cp &quot;$f&quot; &quot;covdata/.coverage.$i&quot;
+          done
+
+      - name: merge
+        run: |
+          pytest-html-reporter merge ./artifacts \
+            --html-report ./report \
+            --junit-xml ./report/junit.xml \
+            --coverage-data ./covdata \
+            --coverage-target 80 \
+            --title &quot;NIGHTLY&quot; \
+            --environment staging \
+            --build-info &quot;Commit=${{ github.sha }}&quot; \
+            --build-info &quot;Branch=${{ github.ref_name }}&quot; \
+            --strict
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: report
+          path: report/</code></pre>
+</div>
+
+<p>What comes out is one build: one <code>pytest_html_report.html</code>, one <code>output.json</code>, one archived build, one trend point, one <code>junit.xml</code> with exactly one <code>&lt;testcase&gt;</code> per node id, and one coverage figure combined from the three legs' data.</p>
+
+<div class="note"><span class="note__title">Note</span>The merge job starts from an empty <code>./report</code>, so there is no archive for it to rotate and the build has no history behind it. History needs the report folder to persist between builds — restore the previous folder from GitHub Pages, from a cache, or from wherever you publish it, and the merge will archive it and rebuild <a href="analytics.html">Analytics</a> from what it finds.</div>
+
+<figure class="imgslot" data-shot="report-environment-merged-shards.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/report-environment-merged-shards.png</b>
+  <span>The Environment panel of a merged report at 1440px wide, light theme, showing the Environment badge, the build-info rows, "Merged from: 3 shards", and one "Shard 1/3", "Shard 2/3", "Shard 3/3" row underneath, each naming a different hostname, platform, Python version and command line.</span>
+</figure>
+
+<p>Every row in that panel is something a shard reported about itself, never the merging machine's answer — the merging machine ran no tests. Where the legs disagree the panel says so rather than picking: an <code>Environment</code> the shards do not agree on is left blank with a note listing the values, and captured-output settings that differ produce one row per leg instead of one summarised row that would be a lie. The run header shows the <strong>span</strong> of the matrix rather than the sum of the legs, so three shards that each took ten minutes in parallel are reported as ten minutes.</p>
+
+<h2 id="junit-xml">JUnit XML</h2>
+
+<p>There is <strong>no JUnit input path anywhere in this plugin</strong>. Nothing reads a JUnit XML — not the plugin, not the merge command. The writer is a pure function over the record dicts, which is what makes a live pytest run and a merge produce the same document from the same input.</p>
+
+<h3 id="junit-why-from-records">Why it is built from records rather than merged from XMLs</h3>
+
+<p>Every merging tool available gets one of four things wrong, and building from records answers all four at once.</p>
+
+<ul>
+  <li><strong>Counts are summed.</strong> Tools that merge XMLs add up the <code>tests</code> and <code>failures</code> attributes they find, so a test that ran on two machines is counted twice while only one element survives — the header and the body of the same file then disagree. Here every count is recomputed from the elements actually emitted.</li>
+  <li><strong>A duplicate <code>&lt;testcase&gt;</code> is read differently by every consumer.</strong> GitLab keeps the first and Jenkins keeps the last, so a flaky test that failed and then passed is reported red by one and green by the other. Here there is exactly one element per node id; two records that mangle to one address are renamed <code>name [2]</code>, with a warning, rather than emitted twice.</li>
+  <li><strong>Azure DevOps derives the end of the run from the timestamp plus the sum of the per-test times.</strong> So a per-test time that is short by a teardown, or rounded to <code>0.0</code>, makes a forty-minute matrix read as instantaneous. Here <code>testcase@time</code> is the sum of the phase milliseconds, not the two-decimal duration the table shows.</li>
+  <li><strong>Properties are invisible to two of the four consumers.</strong> GitLab ignores them outright and Jenkins reads them only with <code>keepProperties</code> on, so which shard ran a test and how many retries it took are written into <code>&lt;system-out&gt;</code> as well as into <code>&lt;properties&gt;</code>.</li>
+</ul>
+
+<p>It is one <code>&lt;testsuite&gt;</code>, not one per shard: Azure's run-level timing across several suites is ambiguous and every other consumer flattens them anyway, so shard identity lives in the properties and in each testcase's captured output instead. Writing is atomic — a temporary file beside the target, then a rename — because a CI collector very often watches the directory it will read from, and half a document is a parse error attributed to the tests rather than to the reporting.</p>
+
+<h3 id="junit-writing-it">Writing it, from a run or from a merge</h3>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Where the XML comes from">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">From a pytest run</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">From a merge</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">XML only</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/ --html-report=./report --report-junit=./report/junit.xml
+$ pytest tests/ --html-report=./report --report-junit=./report/junit.xml --report-junit-xpass=fail</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest-html-reporter merge ./artifacts \
+    --html-report ./report \
+    --junit-xml ./report/junit.xml \
+    --junit-logging failed \
+    --junit-suite-name e2e</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest-html-reporter junit ./artifacts -o ./junit.xml --no-junit-attachments</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Flag</th><th>Where</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>--report-junit</code></td><td>pytest</td><td><code>""</code></td><td>Write a JUnit XML of this run. strftime placeholders are expanded, as with <code>--html-report</code>. Ignored on a shard that is not also the merging leg. ini key: <code>report_junit</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-junit-xpass</code></td><td>pytest</td><td><code>pass</code></td><td>How an xPASS is written down. An invalid value fails the run rather than falling back, because the whole point of setting it is that the team disagrees with the default. ini key: <code>report_junit_xpass</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-xml</code></td><td>merge</td><td><code>""</code></td><td>Also write the merged XML here.</td></tr>
+      <tr><td class="t-nowrap"><code>-o</code>, <code>--output</code></td><td>junit</td><td>required</td><td>Where the XML is written. This subcommand exists to produce it, so failing to write it is exit 2.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-suite-name</code></td><td>merge, junit</td><td><code>pytest</code></td><td>The <code>&lt;testsuite&gt;</code> name; the root element is named after it.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-hostname</code></td><td>merge, junit</td><td>the shards' host</td><td>Unset means the shards' single host, or the literal <code>merged</code> when they ran on more than one — never the machine doing the merging, which Azure would read as the agent name.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-xpass</code></td><td>merge, junit</td><td><code>pass</code></td><td><code>pass</code>, <code>fail</code> or <code>skip</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-logging</code></td><td>merge, junit</td><td><code>no</code></td><td><code>no</code>, <code>all</code> or <code>failed</code> — which tests carry their captured output. The spelling and the default are pytest's own <code>junit_logging</code> ini key.</td></tr>
+      <tr><td class="t-nowrap"><code>--junit-attachments</code></td><td>merge, junit</td><td>on</td><td>Write <code>[[ATTACHMENT|path]]</code> lines for screenshots — the one attachment convention GitLab and Azure both understand. <code>--no-junit-attachments</code> leaves them out.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">output</span>
+    <span class="codeblock__cap">A merged document, with --junit-logging all</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="output">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;testsuites name=&quot;pytest tests&quot; tests=&quot;3&quot; failures=&quot;1&quot; errors=&quot;1&quot; skipped=&quot;0&quot; time=&quot;724.000&quot;&gt;
+  &lt;testsuite name=&quot;pytest&quot; tests=&quot;3&quot; failures=&quot;1&quot; errors=&quot;1&quot; skipped=&quot;0&quot; time=&quot;724.000&quot;
+             timestamp=&quot;2026-09-03T13:00:00&quot; hostname=&quot;merged&quot;&gt;
+    &lt;properties&gt;
+      &lt;property name=&quot;pytest-html-reporter&quot; value=&quot;0.4.0&quot; /&gt;
+      &lt;property name=&quot;shards&quot; value=&quot;4&quot; /&gt;
+      &lt;property name=&quot;shard.ids&quot; value=&quot;1-4,2-4,3-4,4-4&quot; /&gt;
+      &lt;property name=&quot;shard.hosts&quot; value=&quot;runner-1,runner-2,runner-3,runner-4&quot; /&gt;
+      &lt;property name=&quot;reruns&quot; value=&quot;2&quot; /&gt;
+      &lt;property name=&quot;duplicates-folded&quot; value=&quot;0&quot; /&gt;
+    &lt;/properties&gt;
+    &lt;testcase classname=&quot;tests.test_login&quot; name=&quot;test_valid_user&quot; time=&quot;1.204&quot;&gt;
+      &lt;system-out&gt;[[ATTACHMENT|pytest_screenshots/1-4/1788426639123-1.png]]
+shard: 1/4 (runner-1)
+reruns: 2&lt;/system-out&gt;
+    &lt;/testcase&gt;
+    &lt;testcase classname=&quot;tests.test_cart&quot; name=&quot;test_add[qty=2]&quot; time=&quot;0.400&quot;&gt;
+      &lt;failure message=&quot;AssertionError: assert 1 == 2&quot;&gt;AssertionError: assert 1 == 2&lt;/failure&gt;
+      &lt;system-out&gt;shard: 2/4 (runner-2)&lt;/system-out&gt;
+    &lt;/testcase&gt;
+    &lt;testcase classname=&quot;tests.test_api&quot; name=&quot;(collection error)&quot; time=&quot;0.000&quot;&gt;
+      &lt;error message=&quot;collection failure&quot;&gt;ImportError: No module named &#039;requests&#039;&lt;/error&gt;
+      &lt;system-out&gt;shard: 3/4 (runner-3)&lt;/system-out&gt;
+    &lt;/testcase&gt;
+  &lt;/testsuite&gt;
+&lt;/testsuites&gt;</code></pre>
+</div>
+
+<p>The order inside <code>&lt;system-out&gt;</code> is fixed: attachments first, because a collector scans for them; then the shard and the rerun count, the two facts that would otherwise only live in properties nobody reads; then the captured output, which is the longest and least machine-read part. There is at most one <code>&lt;system-out&gt;</code> and one <code>&lt;system-err&gt;</code> per testcase, because a document with two of them is one whose second some parsers drop and others concatenate.</p>
+
+<h3 id="junit-status-mapping">How each status becomes an element</h3>
+
+<p>The mapping is explicit and closed on purpose. A canonical CI file is the last place that should be guessing, so a status this version has never heard of is written as an <code>&lt;error&gt;</code> and warned about loudly rather than absorbed into a plausible total.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Status</th><th>Element</th><th>Counted as</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>PASS</code></td><td>A bare <code>&lt;testcase&gt;</code> with no child element.</td><td>passed</td></tr>
+      <tr><td class="t-nowrap"><code>FAIL</code></td><td><code>&lt;failure&gt;</code>, its <code>message</code> the first non-blank line, or <code>test failed</code> when there is none.</td><td>failures</td></tr>
+      <tr><td class="t-nowrap"><code>ERROR</code></td><td><code>&lt;error&gt;</code> naming the phase — a record that never got as far as a call never ran the test, so that is a setup error; anything else fell over on the way out.</td><td>errors</td></tr>
+      <tr><td class="t-nowrap"><code>SKIP</code></td><td><code>&lt;skipped type="pytest.skip"&gt;</code> with the reason and the location parsed back out of the stored message.</td><td>skipped</td></tr>
+      <tr><td class="t-nowrap"><code>xFAIL</code></td><td><code>&lt;skipped type="pytest.xfail"&gt;</code> with an empty body, as pytest's own writer leaves it. Never a <code>&lt;failure&gt;</code>: mapping an expected failure onto one turns every suite that documents its known bugs red across Jenkins, GitLab and Azure at once.</td><td>skipped</td></tr>
+      <tr><td class="t-nowrap"><code>xPASS</code></td><td>A bare passing testcase by default; <code>&lt;failure&gt;</code> under <code>--junit-xpass fail</code>; <code>&lt;skipped type="pytest.xpass"&gt;</code> under <code>skip</code>.</td><td>depends</td></tr>
+      <tr><td class="t-nowrap">collection error</td><td><code>&lt;error message="collection failure"&gt;</code>, with the classname set to the dotted path of the module that would not load — pytest's own answer leaves it empty, and every consumer that groups by classname then files every broken module under one nameless heading.</td><td>errors</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="note"><span class="note__title">Note</span>On a plain pytest run, failing to write the XML is reported and never raised. A raise there would cost the run its HTML report, its <code>output.json</code> and its archived build as well as its XML, over a mistyped path, in the one hook that runs after every test has finished.</div>
+
+<h2 id="test-coverage">Test coverage</h2>
+
+<p>Coverage is <strong>read, never re-measured</strong>. Nothing in that path is allowed to take a test run down: every branch either returns data or returns nothing, and a failure to read is reported into the page rather than raised. By the time it runs the tests are over, and failing the run over a decoration would turn a green build red.</p>
+
+<h3 id="coverage-sources">Where the percentage comes from</h3>
+
+<p>On a live run the sources are tried in this order, stopping at the first that yields data.</p>
+
+<ol>
+  <li><strong><code>--report-coverage none</code></strong> — nothing at all, and no tab.</li>
+  <li><strong><code>--report-coverage-file PATH</code></strong> — read that file. If nothing there can be read as coverage data, the tab shows a notice naming the path. It does <em>not</em> fall through to the other sources, because you said where to look.</li>
+  <li><strong>The live pytest-cov run.</strong> The coverage object is asked for its own JSON report through coverage.py's public API, so the tab and your terminal always agree. This is read rather than raced for: pytest-cov stops, saves and combines its data — including every xdist worker's share — long before the report is written. The tab says <code>Measured by pytest-cov during this run</code>.</li>
+  <li><strong>Discovery</strong> — <code>coverage.json</code>, then <code>coverage.xml</code>, looked for beside the report, at the rootdir and in the working directory, first hit wins. Only those two deliberate report artifacts are looked for: a stray <code>.coverage</code> data file is often left over from a run days ago, and quietly reporting yesterday's number is worse than reporting none.</li>
+  <li>If pytest-cov ran but measured nothing, the tab explains why rather than showing a setup guide to somebody who has already installed the plugin and passed the flag.</li>
+</ol>
+
+<p><strong>The format is sniffed from the first byte, not the extension</strong> — <code>&lt;</code> is Cobertura XML, <code>{</code> is coverage.py JSON, anything else is tried as a <code>.coverage</code> SQLite data file. CI hands these files whatever name the pipeline felt like.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Source format</th><th>What it needs</th><th>How the percentage is arrived at</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>coverage.json</code></td><td>nothing at read time</td><td>coverage.py's own <code>totals.percent_covered</code>, taken as given rather than recomputed. With branch coverage on it already folds branches in, and it is the same total pytest-cov printed to the terminal.</td></tr>
+      <tr><td class="t-nowrap"><code>coverage.xml</code></td><td>nothing at all</td><td>Cobertura: covered lines plus covered branches over valid lines plus valid branches — the same formula coverage.py uses, so an XML-read report and a live one agree on the headline number. The one path that needs no <code>coverage</code> package installed, which makes it the useful one when the reporting job is not the job that ran the tests.</td></tr>
+      <tr><td class="t-nowrap"><code>.coverage</code></td><td>the <code>coverage</code> package</td><td>The SQLite data file, loaded and turned into the same shape. Without the package this returns nothing rather than raising.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Coverage on a live run</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell"># the ordinary case: pytest-cov measures, the reporter reads
+$ pytest tests/ --cov=myapp --cov-report=html --cov-fail-under=80 --html-report=./report
+
+# read an artifact another step produced
+$ pytest tests/ --html-report=./report --report-coverage-file=./coverage.xml
+
+# no Coverage tab at all
+$ pytest tests/ --html-report=./report --report-coverage=none</code></pre>
+</div>
+
+<div class="note"><span class="note__title">Note</span>An empty report is not 100%. Coverage is only accepted when it measured some statements or some files, because coverage.py calls a file with no statements fully covered — a run that measured nothing would otherwise open a Coverage tab announcing a perfect score.</div>
+
+<h3 id="coverage-per-file">The per-file split</h3>
+
+<p>Files are listed <strong>worst first</strong>, by percentage then by missing lines then by name. That is both the useful default and the only defensible way to cut the list: a cap that kept the alphabetical head would hide exactly the files the tab is opened to find. The full count is always recorded, so the cap note can say how many were left out and how to see them all.</p>
+
+<p>Each row carries the file's percentage, statements, covered, missing, excluded, branches, partial branches and the missing line numbers written the way coverage.py writes them — <code>12-15, 88, 91-140</code> — trimmed at a comma and never mid-range, because <code>91-14</code> reads as a line range that does not exist. Paths are relativised against the rootdir, since four directories of CI checkout in front of <code>src/api.py</code> identify nothing. A file with no branches shows an em dash rather than <code>0/0</code>: having no branches to cover is not the same statement as covering none of them, and the Branches and Partial tiles appear only when branch coverage was actually switched on.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Flag</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>--report-coverage</code></td><td><code>auto</code></td><td><code>auto</code> builds the tab from whatever coverage is there; <code>none</code> switches it off, including the entry in <code>output.json</code>. ini key: <code>report_coverage</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-coverage-file</code></td><td><code>""</code></td><td>Read coverage from this file instead of looking for one. ini key: <code>report_coverage_file</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-coverage-limit</code></td><td><code>500</code></td><td>Files listed on the tab, least covered first; <code>0</code> lists every one. ini key: <code>report_coverage_limit</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>--coverage-target</code></td><td>unset</td><td><em>Merge only.</em> The percentage this project set for itself, which colours the ring. It is the merge's answer to <code>--cov-fail-under</code>, and is never read as a coverage source.</td></tr>
+      <tr><td class="t-nowrap"><code>--coverage-data</code></td><td>none</td><td><em>Merge only.</em> <code>.coverage</code> data files, or directories holding them, combined with the <code>coverage</code> package. Repeatable.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="coverage-colour-and-drift">Colour, targets and drift</h3>
+
+<p>The ring is green at 90% and above, amber at 75%, red below — unless the project has stated its own bar with <code>--cov-fail-under</code> (or <code>--coverage-target</code> on a merge), in which case that is the line the colour is drawn at and the tab says so. A report should not disagree with the build that just passed or failed beside it, so a hair of slack keeps 79.999999999 against a target of 80 from reading as a failure in the report while the build itself passed.</p>
+
+<p>The percentage is written into <code>output.json</code> alongside the test counts, so it travels with the archived builds. That is what gives the tab its <code>+0.8 since the last build</code> chip and its trend line. The delta compares this build against the <strong>most recent earlier build that measured any coverage</strong>, skipping builds that ran without it rather than counting them as a drop to zero; a movement under 0.05 reads as <code>no change</code>. A build that ran without coverage leaves a gap in the line rather than a drop to zero, because the <code>coverage</code> key is simply absent from that build's <code>output.json</code> — and absent means "not measured", which is a different answer from zero and the true one.</p>
+
+<figure class="imgslot" data-shot="coverage-tab-merged.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/coverage-tab-merged.png</b>
+  <span>The Coverage tab at 1440px wide, light theme, on a build with a target set: the ring with its grade colour, the "+0.8 since the last build" chip, the stat tiles including Branches and Partial, the coverage trend chart, and the top of the least-covered-first file table with the cap note visible underneath it.</span>
+</figure>
+
+<h3 id="coverage-annotated-source">The annotated source</h3>
+
+<p>The one thing a summary cannot replace is the source, line by line, with the missed lines marked. Generate it with <code>--cov-report=html</code> and the tab links to it.</p>
+
+<p>It is <strong>linked, never embedded</strong>. An iframe would break the property the whole reporter is built on — one file you can mail, publish as a CI artifact or open off a stick — and it would break <em>silently</em>, showing an empty frame wherever the folder did not travel. The link is offered only when the index file exists <strong>and was written after this run started</strong>: coverage.py names that folder whether or not the HTML report was asked for, so a stale <code>htmlcov</code> sits there looking exactly like a fresh one, and annotations that disagree with the summary beside them are worse than no link.</p>
+
+<h3 id="coverage-on-a-merge">Coverage on a merged build</h3>
+
+<p>The merge has <strong>five branches, in this order, and no sixth</strong>.</p>
+
+<ol>
+  <li><code>--report-coverage none</code> — nothing. Reachable only through a <code>--report-shard-merge</code> leg, which reads the pytest flag; the <code>merge</code> command has no such flag, so coverage there is <code>auto</code> unless you name a source.</li>
+  <li><strong><code>--report-coverage-file</code></strong> — read it. If nothing there can be read, the build gets no coverage and a notice naming the path.</li>
+  <li><strong><code>--coverage-data</code></strong> — collect every named file, and every entry named <code>.coverage*</code> directly inside every named directory, and combine them with the <code>coverage</code> package. The source line reads <code>N combined data files</code>. A missing <code>coverage</code> package, no files matched, or a combine that raised are each reported as a notice rather than a failure.</li>
+  <li><strong>Exactly one bundle measured coverage</strong> — use it, with a notice saying it covers that shard's share of the run.</li>
+  <li><strong>More than one measured, or none did</strong> — no coverage, and a notice telling you what to do about it.</li>
+</ol>
+
+<div class="note note--warn"><span class="note__title">Careful</span>The merge <strong>never averages the shards' percentages</strong> — four percentages over four different subsets of the code do not average to anything — and it <strong>never discovers</strong> a coverage file on the merging machine. Discovery searches the working directory and stops at the first hit, so a stray <code>coverage.json</code> would become the build's headline number, and <code>output.json</code> would archive it into the trend chart for as long as the archive is kept.</div>
+
+<p>The data files are copied into a temporary directory before being combined, because coverage.py's own <code>combine()</code> deletes the files it reads — and these are somebody's CI artifacts, which are very often the only copy.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Two routes to one figure over a whole matrix</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell"># let the merge combine the data files itself
+$ pytest-html-reporter merge ./artifacts \
+    --html-report ./report \
+    --coverage-data ./covdata \
+    --coverage-target 80
+
+# or combine first with coverage.py and hand over one report
+$ coverage combine ./covdata/.coverage.*
+$ coverage json -o ./coverage.json
+$ pytest-html-reporter merge ./artifacts \
+    --html-report ./report \
+    --report-coverage-file ./coverage.json \
+    --coverage-target 80</code></pre>
+</div>
+
+<h3 id="coverage-tab-empty">Troubleshooting: the Coverage tab is empty</h3>
+
+<p>Work down this list. The first one that applies is the answer.</p>
+
+<details class="acc">
+  <summary>Did anything measure coverage at all?</summary>
+  <div class="acc__body"><p><code>pytest-cov</code> has to be installed <em>and</em> <code>--cov</code> passed. With neither, the tab shows the setup guide — which is the correct answer, not a fault.</p></div>
+</details>
+
+<details class="acc">
+  <summary>Is --cov pointing at code that actually gets imported?</summary>
+  <div class="acc__body"><p>This is the usual one. <code>--cov</code> takes the <strong>import name or the path of the code under test</strong> — your package, not the tests, and not a folder that is not there. <code>--cov=src</code> against a project with no <code>src</code> directory measures nothing, and pytest-cov prints <code>Module src was never imported</code> and <code>No data was collected</code> among the rest of the run. The tab repeats it, naming the flag you typed, rather than showing you a guide to what you have already done.</p></div>
+</details>
+
+<details class="acc">
+  <summary>Is --report-coverage=none set somewhere you are not looking?</summary>
+  <div class="acc__body"><p>Check <code>addopts</code> and the <code>report_coverage</code> ini key in <a href="configuration.html">pytest.ini, pyproject.toml or tox.ini</a>, not only the command you typed.</p></div>
+</details>
+
+<details class="acc">
+  <summary>Is --report-coverage-file pointing at something that is not a coverage report?</summary>
+  <div class="acc__body"><p>Naming a file switches off every other source, so a file that cannot be read leaves the tab empty rather than falling through. The tab names the file it could not read.</p></div>
+</details>
+
+<details class="acc">
+  <summary>Is this a merged build with more than one shard measuring?</summary>
+  <div class="acc__body"><p>Then there is no coverage on the build by design, and the notice on the tab names the fix: combine the data first and pass the result with <code>--report-coverage-file</code>, or pass the shards' data files with <code>--coverage-data</code>.</p></div>
+</details>
+
+<p>Whichever source the numbers do come from, the tab states it — <code>Measured by pytest-cov during this run</code>, or <code>Read from coverage.xml, written 2026-08-31 20:23</code> — so you can always tell which of these you are in.</p>
+
+<h2 id="ci-recipes">CI recipes</h2>
+
+<p>Five things are worth getting right whatever the platform.</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Upload the whole shard directory</b><code>report/shards/&lt;id&gt;/</code>, bundle and screenshots together — not only <code>records.json</code>.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Ask the merge for the XML, not the legs</b><code>--report-junit</code> on a plain shard is ignored with a notice, and a glob that collected one XML per leg plus the merged one would count every test twice.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Run inspect before merge</b>It writes nothing and exits 0 whatever it finds, so a pipeline that has to fail loudly on an artifact that did not arrive reads the shard count out of <code>inspect --json</code>.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Pick your failure flag deliberately</b><code>--strict</code> catches the quiet failures — a folded duplicate, a missing image, a bundle superseded by a second copy. <code>--exit-code</code> catches failing tests. They are independent.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>On separate machines, --html-report only decides where each leg's own shards directory goes</b>What has to match is the artifact you upload, not the path.</span>
+  </li>
+</ul>
+
+<h3 id="recipe-github-actions">GitHub Actions</h3>
+
+<p>The full three-shard workflow is <a href="#worked-example">the worked example above</a>. For a single unsharded job there is a <a href="github-action.html">dedicated composite Action</a> that installs Python, runs pytest with the plugin, and publishes the result to the workflow job summary, a self-editing pull request comment, a downloadable artifact and GitHub Pages — with step outputs a later step can gate on.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">The whole of an unsharded job, with the Action</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">- uses: actions/checkout@v4
+- uses: prashanth-sams/pytest-html-reporter-action@v1</code></pre>
+</div>
+
+<h3 id="recipe-gitlab-ci">GitLab CI</h3>
+
+<p>GitLab's <code>parallel</code> keyword hands each job a <code>CI_NODE_INDEX</code> and a <code>CI_NODE_TOTAL</code>, which is exactly a shard id. The run token is derived automatically from <code>CI_PIPELINE_ID</code>, and the merged XML goes into <code>reports:junit:</code> so the pipeline's own test tab reads it — one entry per test, because the document has exactly one <code>&lt;testcase&gt;</code> per node id.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">yaml</span>
+    <span class="codeblock__cap">.gitlab-ci.yml</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="yaml">test:
+  parallel: 4
+  script:
+    - pip install pytest-html-reporter
+    - pytest tests/ --html-report=./report --report-shard=$CI_NODE_INDEX/$CI_NODE_TOTAL
+  artifacts:
+    when: always
+    paths: [report/shards/]
+
+merge:
+  needs: [test]
+  script:
+    - pip install pytest-html-reporter
+    - pytest-html-reporter merge ./report
+        --html-report ./report
+        --junit-xml ./junit.xml
+        --exit-code
+  artifacts:
+    when: always
+    paths: [report/]
+    reports:
+      junit: junit.xml</code></pre>
+</div>
+
+<p>The merge reads <code>./report</code> and writes <code>./report</code>, which is safe by design: the shards live in a subtree the merge never clears, and only <code>report/pytest_screenshots</code> is wiped and restaged.</p>
+
+<h3 id="recipe-jenkins">Jenkins</h3>
+
+<p>Jenkins is the sequential case — several stages on one agent, in one workspace — so it is the one that <code>--report-shard-merge</code> was written for. The run token is derived from <code>BUILD_TAG</code>, which is <code>jenkins-${JOB_NAME}-${BUILD_NUMBER}</code> and so is unique across jobs, unlike the bare build number, which only counts within one. The first stage passes <code>--report-shard-reset</code> so a stage that was renamed or removed since the last build cannot leave a bundle behind for this build to merge.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The three commands, one per stage, in one workspace</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell"># stage: unit
+$ pytest tests/unit --html-report=./report --report-shard=unit --report-shard-reset
+
+# stage: integration
+$ pytest tests/integration --html-report=./report --report-shard=integration
+
+# stage: e2e - the last leg merges the three and writes the one report and the one xml
+$ pytest tests/e2e --html-report=./report \
+    --report-shard=e2e --report-shard-merge \
+    --report-junit=./report/junit.xml \
+    --archive-count=60</code></pre>
+</div>
+
+<p>Publish the results from the pipeline's <code>post</code> block with Jenkins' own steps: <code>junit 'report/junit.xml'</code> for the test result page, and <code>archiveArtifacts artifacts: 'report/**'</code> to keep the HTML report against the build. Because the workspace persists between builds, <code>report/output.json</code> and <code>report/archive/</code> survive, which is what gives this job a real trend chart and a populated <a href="analytics.html">Analytics</a> tab rather than a one-build view.</p>
+
+<div class="note"><span class="note__title">Note</span>The merging leg's <code>--report-junit</code> writes the <em>merged</em> document — the shard properties, the matrix's timestamp and span, the reruns and the folds — not just its own stage's tests. Only the xPASS mapping comes from the run's own flag, because <code>--report-junit-xpass</code> is the one shaping flag a pytest run has.</div>
+
+<h2 id="keeping-the-report-down">Keeping the report file down</h2>
+
+<p>Set no retention at all and every build is kept for ever, which is what eventually makes a report slow to open: <strong>a retained build costs roughly 5KB of the page</strong>, so an hourly job reaches a multi-megabyte report inside a couple of months.</p>
+
+<h3 id="retention-flags">Retention: three limits that intersect</h3>
+
+<p>An archived build has to satisfy <em>every</em> limit you set in order to survive. Retention runs after the trend has been drawn and before the Archives section and Analytics are built, so the history Analytics reads is exactly the history the report ships with.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Flag</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>--archive-count</code></td><td>unlimited</td><td>Builds to keep. Empty keeps every build. <code>0</code> deletes <code>archive/</code> outright and removes the Archives section. <code>N</code> keeps <code>N - 1</code> files on disk, because the build being reported now is shown alongside the archived ones and counts against the limit.</td></tr>
+      <tr><td class="t-nowrap"><code>--archive-days</code></td><td>unset</td><td>Keep only builds newer than <em>now</em> minus D days. Fractions are allowed — <code>0.5</code> is half a day. For a job on a schedule, where "the last 30 days" does not have to be retuned every time the schedule changes.</td></tr>
+      <tr><td class="t-nowrap"><code>--archive-since</code></td><td>unset</td><td>Delete every archived build older than this moment. <code>YYYY-MM-DD</code> means midnight local time that day; <code>'YYYY-MM-DD HH:MM'</code> and with seconds are also accepted.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>When both a days limit and a since date are given, the <strong>stricter</strong> of the two wins, so neither can widen the other. All three are validated by name: a non-numeric or negative count, a non-numeric or negative days value, or an unparseable date each fail the run rather than being ignored — and on the merge command they are checked <em>before anything is written</em>, so a typo cannot abort a build that had already rotated the archive.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The same limits on a run and on a merge, with the same words on error</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell"># a nightly job: keep a month of history, never more than 60 builds
+$ pytest tests/ --html-report=./report --archive-days=30 --archive-count=60
+
+# the same limits applied by a merge
+$ pytest-html-reporter merge ./artifacts --html-report ./report \
+    --archive-days 30 --archive-count 60
+
+# keep nothing but this build
+$ pytest tests/ --html-report=./report --archive-count=0</code></pre>
+</div>
+
+<p>Retention is a property of the job rather than of one run, so the ini file is usually the better place for it: set it once and every invocation, however it is started, keeps the same window.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">ini</span>
+    <span class="codeblock__cap">pytest.ini</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="ini">[pytest]
+html_report = ./report
+archive_count = 60
+archive_days = 30</code></pre>
+</div>
+
+<h3 id="evidence-limits">The per-test evidence caps</h3>
+
+<p>The other half of the size question is how much each test carries. Four settings decide it, and all four have an <code>all</code> / <code>failed</code> / <code>none</code> narrowing plus a numeric cap where a cap makes sense.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Setting</th><th>Default</th><th>What it costs you</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>--report-logs</code></td><td><code>all</code></td><td>Captured stdout, stderr and logging, per test. <code>failed</code> is the usual choice on a large suite.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-log-limit</code></td><td><code>10000</code></td><td>Characters kept per test. What survives is <strong>the end</strong> of the output — the lines next to the failure — cut back to a whole line, with a note saying how much was dropped. <code>0</code> keeps everything.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-attachments</code></td><td><code>all</code></td><td>Text, JSON and API payloads. Held outside the metrics table, so they are never swept into its search box or its exports.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-attachment-limit</code></td><td><code>20000</code></td><td>Characters per payload. What survives is <strong>the start</strong> — the opposite of the log limit, because a response puts its status, its error field and its first records at the top.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-steps</code></td><td><code>all</code></td><td>Step trees. <code>none</code> still keeps the phases and their timings, which cost nothing.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-step-limit</code></td><td><code>500</code></td><td>Steps per test, so a step inside a loop over ten thousand rows cannot run away with the page.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-screenshots</code></td><td><code>failed</code></td><td>When a live Selenium driver or Playwright page is photographed without the suite asking. Images handed to <code>attach()</code> are always kept.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-coverage-limit</code></td><td><code>500</code></td><td>Rows in the coverage file table, least covered first.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">A long-running pipeline that keeps evidence only where it helps</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ --html-report=./report \
+    --report-logs=failed --report-log-limit=5000 \
+    --report-attachments=failed \
+    --report-steps=failed --report-step-limit=100 \
+    --archive-days=30 --archive-count=60</code></pre>
+</div>
+
+<div class="note note--tip"><span class="note__title">Tip</span>Retention is the setting to think about first, because it is the one that bounds <a href="analytics.html">Analytics</a> as well as the file size. How far back the flaky-test histories, the pass-rate drift and the movement cards can see is exactly what these three limits have kept.</div>
+
+<div class="grid grid--3">
+  <a class="card" href="github-action.html">
+    <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+    <h3>The GitHub Action</h3>
+    <p>Job summary, a self-editing pull request comment, an artifact and Pages — in one step.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="analytics.html">
+    <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
+    <h3>Analytics and history</h3>
+    <p>What the retained builds turn into: flaky tests, standing failures, drift and movement.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="cli-reference.html">
+    <div class="card__icon is-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 4 4-4 4M13 16h6"/><rect x="2" y="3" width="20" height="18" rx="2"/></svg></div>
+    <h3>Every flag</h3>
+    <p>The complete surface of the pytest plugin and the standalone command, with defaults.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+</div>

@@ -1,0 +1,558 @@
+<!--META {"title": "Configuration", "eyebrow": "Reference", "description": "Every command-line flag and every ini key pytest-html-reporter reads, with types, effective defaults, and the rule for what wins when the two disagree.", "lede": "Every setting has two homes: the command line and an ini file. This page lists all 25 flags and all 24 ini keys, says which one wins, names the values that fail the run rather than falling back, and ends with three configurations you can copy."} -->
+
+<h2 id="where-configuration-lives">Where configuration lives</h2>
+
+<p>The plugin adds 25 command-line options to <code>pytest</code>, under the option group <em>report generator</em>, and registers 24 ini keys. The ini keys are read wherever pytest reads ini options:</p>
+
+<ul>
+  <li><code>[pytest]</code> in <code>pytest.ini</code></li>
+  <li><code>[pytest]</code> in <code>tox.ini</code></li>
+  <li><code>[tool:pytest]</code> in <code>setup.cfg</code></li>
+  <li><code>[tool.pytest.ini_options]</code> in <code>pyproject.toml</code></li>
+</ul>
+
+<p>There is no third file and no configuration of its own — the plugin has nothing pytest does not already read. The four blocks below are the same configuration written four ways.</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="One configuration in four formats">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">Command line</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pytest.ini</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pyproject.toml</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">setup.cfg</button>
+  </div>
+
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Everything on one command</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/ \
+    --html-report=./report \
+    --environment=staging \
+    --build-info branch=main \
+    --build-info team=payments \
+    --archive-count=20 \
+    --archive-days=30 \
+    --report-logs=failed \
+    --report-open=none \
+    --report-link &#039;Coverage=htmlcov/index.html&#039;</code></pre>
+    </div>
+  </div>
+
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <span class="codeblock__cap">pytest.ini — tox.ini takes the same [pytest] section</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="ini">[pytest]
+html_report = ./report
+environment = staging
+archive_count = 20
+archive_days = 30
+report_logs = failed
+report_open = none
+build_info =
+    branch=main
+    team=payments
+report_link =
+    Coverage=htmlcov/index.html</code></pre>
+    </div>
+  </div>
+
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">toml</span>
+        <span class="codeblock__cap">pyproject.toml — the two list keys become TOML arrays</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="toml">[tool.pytest.ini_options]
+html_report = &quot;./report&quot;
+environment = &quot;staging&quot;
+archive_count = &quot;20&quot;
+archive_days = &quot;30&quot;
+report_logs = &quot;failed&quot;
+report_open = &quot;none&quot;
+build_info = [&quot;branch=main&quot;, &quot;team=payments&quot;]
+report_link = [&quot;Coverage=htmlcov/index.html&quot;]</code></pre>
+    </div>
+  </div>
+
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <span class="codeblock__cap">setup.cfg — the section is [tool:pytest]</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="ini">[tool:pytest]
+html_report = ./report
+environment = staging
+archive_count = 20
+archive_days = 30
+report_logs = failed
+report_open = none
+build_info =
+    branch=main
+    team=payments
+report_link =
+    Coverage=htmlcov/index.html</code></pre>
+    </div>
+  </div>
+</div>
+
+<p>Every ini key is a plain string key with an empty default, except <code>build_info</code> and <code>report_link</code>, which are declared as pytest linelists: one entry per line in an ini file, a list of strings in TOML. Numbers are quoted in TOML because the keys are strings, not integers.</p>
+
+<h3 id="addopts-and-title">addopts, and the one flag with no ini key</h3>
+
+<p><code>--title</code> is the only option in the group without an ini key. To set it in a file, put it in pytest's own <code>addopts</code>.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">ini</span>
+    <span class="codeblock__cap">The file route for --title</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="ini">[pytest]
+addopts = -v -rf --title=&#039;Payments regression&#039;
+html_report = ./report</code></pre>
+</div>
+
+<div class="note note--warn"><span class="note__title">Careful</span><code>addopts</code> is prepended to the command line, so anything written there is a <em>command-line</em> value. <code>addopts = --report-logs=all</code> beats <code>report_logs = failed</code> in the very same file. Pick one route per setting.</div>
+
+<h2 id="precedence">Precedence — what wins</h2>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The flag wins</b>For every setting, the command-line option is used and the ini key is consulted only when the option was not passed, or was passed as an empty or whitespace-only string.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Two settings add instead</b><code>--build-info</code> and <code>--report-link</code> are the exception. The command-line entries come first and the ini lines are appended, so both sources appear in the report. Nothing is replaced.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>An unset ini key is not a value</b>An absent key and an empty key are the same thing, and both fall through to the option's own default — which is why the tables below give the <em>effective</em> default rather than the literal <code>&quot;&quot;</code>.</span>
+  </li>
+</ul>
+
+<h3 id="when-settings-are-resolved">When settings are resolved</h3>
+
+<p>Everything is settled in <code>pytest_configure</code>, before the first test runs. A bad value therefore fails the run at the start rather than after an hour of tests. Two answers are resolved once and written back onto the config, because a <code>pytest-xdist</code> worker is a separate process handed a copy of the options and has to agree with the controller:</p>
+
+<ul>
+  <li>the report path, after date placeholders have been expanded — so a run that crosses a minute boundary still writes one report, not two;</li>
+  <li>the shard name, the merge flag and the run token, so every worker of an <code>-n 8</code> leg files into the same shard directory.</li>
+</ul>
+
+<h3 id="invalid-values">Invalid values: what fails and what falls back</h3>
+
+<p>The two routes are not validated the same way. An out-of-range value on the <em>command line</em> is rejected by pytest's own argument parser, because those options declare their choices. An out-of-range value in an <em>ini file</em> is handled per setting, and the split is deliberate: a setting whose default is the answer you were trying to avoid raises, and a setting whose default is harmless falls back.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Bad ini value in</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td><code>report_logs</code>, <code>report_attachments</code>, <code>report_screenshots</code>, <code>report_steps</code>, <code>report_coverage</code></td><td>Silently falls back to the effective default (<code>all</code>, <code>all</code>, <code>failed</code>, <code>all</code>, <code>auto</code>).</td></tr>
+      <tr><td><code>report_log_limit</code>, <code>report_attachment_limit</code>, <code>report_step_limit</code>, <code>report_coverage_limit</code></td><td>A non-numeric value silently falls back to 10000, 20000, 500 and 500.</td></tr>
+      <tr><td><code>report_open</code></td><td><code>pytest.UsageError</code>. Somebody who wrote <code>report_open = off</code> has said they do not want a browser; opening one anyway is the single outcome they were avoiding.</td></tr>
+      <tr><td><code>report_junit_xpass</code></td><td><code>pytest.UsageError</code>, for the same reason: the point of setting it is disagreeing with <code>pass</code>.</td></tr>
+      <tr><td><code>archive_count</code>, <code>archive_days</code>, <code>archive_since</code></td><td><code>pytest.UsageError</code>, naming the value it could not read. A retention limit that silently did nothing would grow the report for months before anyone noticed.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<figure class="imgslot" data-shot="terminal-report-open-usage-error.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/terminal-report-open-usage-error.png</b>
+  <span>A terminal, dark theme, ~900px wide, showing a <code>pytest</code> run started with <code>report_open = off</code> in pytest.ini and exiting immediately with <code>ERROR: --report-open takes auto, always or none, not 'off'</code> — no test output above it, which is the point: the run stopped before collection.</span>
+</figure>
+
+<h3 id="limits-and-zero">Limits, zero, and negative numbers</h3>
+
+<p>All four numeric limits — <code>report_log_limit</code>, <code>report_attachment_limit</code>, <code>report_step_limit</code>, <code>report_coverage_limit</code> — mean <strong>no limit</strong> at <code>0</code>, not "keep nothing". A negative number is clamped to zero, so it also means unlimited. To keep nothing, use the mode beside the limit: <code>report_logs = none</code>, <code>report_attachments = none</code>, <code>report_steps = none</code>.</p>
+
+<h3 id="placeholders-and-variables">Date placeholders and shell variables</h3>
+
+<p>Two settings run through <code>strftime</code>: <code>html_report</code> and <code>report_junit</code>. Only the directives <code>strftime</code> documents are substituted (<code>%Y %m %d %H %M</code> and the rest of that set); <code>%%</code> becomes a literal percent, and any other <code>%X</code> is left alone, so a folder named <code>100% pass</code> survives being expanded. Expansion happens once, at configure time.</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Date placeholders on the command line and in an ini file">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">Command line</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pytest.ini</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">One folder a day, one file a minute</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/ --html-report=./reports/%Y%m%d/report_%H%M.html</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <span class="codeblock__cap">The same value as an ini key</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="ini">[pytest]
+html_report = ./reports/%Y%m%d/report_%H%M.html</code></pre>
+    </div>
+  </div>
+</div>
+
+<p><code>~</code> and <code>$VARS</code> are expanded in the report folder and in <code>report_coverage_file</code>. Nothing else in an ini file is expanded — a <code>build_info</code> line reading <code>commit=$GITHUB_SHA</code> reaches the report as those eleven characters, not as the commit. Pass a variable through the flag instead, where the shell expands it before pytest sees it:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The shell expands it; the ini file would not</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ --build-info commit=&quot;$GITHUB_SHA&quot; --build-info run=&quot;$GITHUB_RUN_ID&quot;</code></pre>
+</div>
+
+<p>Because the two sources add rather than replace, the fixed rows can stay in the ini file and only the moving ones need to be on the command line.</p>
+
+<figure class="imgslot" data-shot="report-environment-panel-settings.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/report-environment-panel-settings.png</b>
+  <span>The Environment panel on the Dashboard tab, light theme, ~700px wide, cropped to the panel. It must show the Environment row reading <code>staging</code>, at least three build_info rows (branch, team, commit) and the <em>Captured output</em> row reading something like <code>all tests: stdout, stderr and logging, logging from WARNING</code> — this panel is how a reader checks what the run actually resolved.</span>
+</figure>
+
+<h2 id="ini-keys">Every ini key</h2>
+
+<p>All 24, with the value you get when the key is absent. Each one mirrors the flag of the same name with underscores for dashes; the long-form explanation of what each does lives in <a href="cli-reference.html">the CLI reference</a>.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Key</th><th>Type</th><th>Effective default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>html_report</code></td><td>path</td><td><code>.</code> &rarr; <code>./pytest_html_report.html</code></td><td>Where the build is written. A value containing <code>.html</code> names the file; anything else names a folder and the file is <code>pytest_html_report.html</code>. Date placeholders expanded.</td></tr>
+      <tr><td class="t-nowrap"><code>archive_count</code></td><td>integer as text</td><td>empty — every build kept</td><td>Builds kept in Archives. Empty and <code>0</code> are different answers: empty keeps everything, <code>0</code> deletes <code>archive/</code> and drops the Archives section entirely, and <code>N</code> keeps <code>N-1</code> files plus the build being written.</td></tr>
+      <tr><td class="t-nowrap"><code>archive_days</code></td><td>number</td><td>no age limit</td><td>Keep only builds run in the last N days; fractions allowed, <code>0.5</code> is twelve hours.</td></tr>
+      <tr><td class="t-nowrap"><code>archive_since</code></td><td>date or datetime</td><td>no cut</td><td>Delete every archived build older than this. Read as <code>YYYY-MM-DD</code> or <code>YYYY-MM-DD HH:MM</code>, in local time.</td></tr>
+      <tr><td class="t-nowrap"><code>environment</code></td><td>string</td><td>empty</td><td>Names the environment under test. Adds an Environment row and a badge cut at 10 characters.</td></tr>
+      <tr><td class="t-nowrap"><code>build_info</code></td><td>linelist</td><td>empty</td><td>Extra <code>KEY=VALUE</code> rows for the Environment panel, one per line. <strong>Added to</strong> whatever <code>--build-info</code> gave. Split on the first <code>=</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>report_logs</code></td><td><code>all</code> | <code>failed</code> | <code>none</code></td><td><code>all</code></td><td>Whose captured stdout, stderr and logging is kept.</td></tr>
+      <tr><td class="t-nowrap"><code>report_log_limit</code></td><td>integer</td><td><code>10000</code></td><td>Characters of output kept per test. The <em>end</em> survives, cut back to a whole line, with a note saying how much was dropped. <code>0</code> keeps everything.</td></tr>
+      <tr><td class="t-nowrap"><code>report_attachments</code></td><td><code>all</code> | <code>failed</code> | <code>none</code></td><td><code>all</code></td><td>Whose attachments — the payloads handed to <a href="python-api.html"><code>attach_text</code>, <code>attach_json</code>, <code>attach_file</code> and <code>attach_api</code></a> — are kept.</td></tr>
+      <tr><td class="t-nowrap"><code>report_attachment_limit</code></td><td>integer</td><td><code>20000</code></td><td>Characters kept per payload. The <em>start</em> survives, which is where a response puts its status and its error field. <code>0</code> keeps everything.</td></tr>
+      <tr><td class="t-nowrap"><code>report_screenshots</code></td><td><code>failed</code> | <code>all</code> | <code>none</code></td><td><code>failed</code></td><td>When a live Selenium driver or Playwright page is photographed without the suite asking. An image handed to <code>attach()</code> is kept whatever this says. See <a href="screenshots.html">Screenshots</a>.</td></tr>
+      <tr><td class="t-nowrap"><code>report_steps</code></td><td><code>all</code> | <code>failed</code> | <code>none</code></td><td><code>all</code></td><td>Whose step trees are kept — both <code>step()</code> and a pytest-bdd scenario's Given/When/Then. See <a href="steps-and-bdd.html">Steps and BDD</a>.</td></tr>
+      <tr><td class="t-nowrap"><code>report_step_limit</code></td><td>integer</td><td><code>500</code></td><td>Steps recorded per test, so a step inside a ten-thousand-row loop cannot write ten thousand lines into the page. <code>0</code> keeps every one.</td></tr>
+      <tr><td class="t-nowrap"><code>report_coverage</code></td><td><code>auto</code> | <code>none</code></td><td><code>auto</code></td><td>Whether the Coverage tab is built from whatever coverage this run produced.</td></tr>
+      <tr><td class="t-nowrap"><code>report_coverage_file</code></td><td>path</td><td>empty — go looking</td><td>Read coverage from this file — a <code>coverage.json</code>, a Cobertura <code>coverage.xml</code> or a <code>.coverage</code> data file — instead of discovering one.</td></tr>
+      <tr><td class="t-nowrap"><code>report_coverage_limit</code></td><td>integer</td><td><code>500</code></td><td>Files listed on the Coverage tab, least-covered first. <code>0</code> lists every one.</td></tr>
+      <tr><td class="t-nowrap"><code>report_link</code></td><td>linelist</td><td>empty</td><td>Side-nav entries, one <code>LABEL=URL</code> per line. <strong>Added to</strong> whatever <code>--report-link</code> gave. Relative paths are kept; a scheme that is not <code>http://</code>, <code>https://</code> or <code>mailto:</code> is dropped.</td></tr>
+      <tr><td class="t-nowrap"><code>report_open</code></td><td><code>auto</code> | <code>always</code> | <code>none</code></td><td><code>auto</code></td><td>Whether the finished report is handed to a browser. <code>auto</code> needs an interactive terminal, no CI variable and a graphical session. A fourth value fails the run.</td></tr>
+      <tr><td class="t-nowrap"><code>report_shard</code></td><td>string</td><td>empty — not a shard</td><td>Names this run as one leg of a sharded matrix, e.g. <code>1/4</code>. The leg writes a bundle under <code>&lt;report&gt;/shards/</code> and no report of its own.</td></tr>
+      <tr><td class="t-nowrap"><code>report_shard_merge</code></td><td>boolean text</td><td>false</td><td>Whether this leg also merges every bundle beside it and renders one report. Truthy values are <code>1</code>, <code>true</code>, <code>yes</code>, <code>on</code>; anything else is false. Needs <code>report_shard</code> too.</td></tr>
+      <tr><td class="t-nowrap"><code>report_shard_run</code></td><td>string</td><td>empty &rarr; detected from CI</td><td>Names the CI run this leg belongs to, so a merging leg merges only this run's bundles.</td></tr>
+      <tr><td class="t-nowrap"><code>report_shard_reset</code></td><td>boolean text</td><td>false</td><td>Whether this leg deletes <code>&lt;report&gt;/shards</code> before writing into it. Same truthy values. It deletes the other legs' work, so it is never implied.</td></tr>
+      <tr><td class="t-nowrap"><code>report_junit</code></td><td>path</td><td>empty — no XML</td><td>Also write a JUnit XML of this run to this path. Date placeholders expanded. Ignored on a shard that is not also the merge leg.</td></tr>
+      <tr><td class="t-nowrap"><code>report_junit_xpass</code></td><td><code>pass</code> | <code>fail</code> | <code>skip</code></td><td><code>pass</code></td><td>How an xpassed test is written to the XML. <code>pass</code> is what pytest's own <code>--junitxml</code> does. A fourth value fails the run.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="note"><span class="note__title">Note</span>Ini values are read defensively: a pytest build where a key was never registered, and the standalone <code>pytest-html-reporter merge</code> command, which has no ini file at all, both fall through to the option defaults instead of raising.</div>
+
+<figure class="imgslot" data-shot="report-sidenav-custom-links.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/report-sidenav-custom-links.png</b>
+  <span>The report's left side nav, dark theme, ~320px wide, cropped to the nav column, showing the built-in tabs and two entries added by <code>report_link</code> — "Coverage" pointing at <code>htmlcov/index.html</code> and "CI job" pointing at an external URL — so the reader can see where a <code>LABEL=URL</code> line lands.</span>
+</figure>
+
+<h2 id="cli-flags">Every command-line flag</h2>
+
+<p>All 25, with the ini key each one overrides. <a href="cli-reference.html">The CLI reference</a> has the long-form entry for each, including the standalone <code>pytest-html-reporter merge</code>, <code>junit</code> and <code>inspect</code> commands, which are a separate surface.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Flag</th><th>Value</th><th>Default</th><th>Ini key</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>--html-report</code></td><td>folder or <code>.html</code> path</td><td><code>./pytest_html_report.html</code></td><td class="t-nowrap"><code>html_report</code></td></tr>
+      <tr><td class="t-nowrap"><code>--title</code></td><td>string</td><td><code>PYTEST REPORT</code></td><td class="t-nowrap">none — use <code>addopts</code></td></tr>
+      <tr><td class="t-nowrap"><code>--environment</code></td><td>string</td><td>unset</td><td class="t-nowrap"><code>environment</code></td></tr>
+      <tr><td class="t-nowrap"><code>--build-info</code></td><td><code>KEY=VALUE</code>, repeatable</td><td>none</td><td class="t-nowrap"><code>build_info</code> — added to</td></tr>
+      <tr><td class="t-nowrap"><code>--report-link</code></td><td><code>LABEL=URL</code>, repeatable</td><td>none</td><td class="t-nowrap"><code>report_link</code> — added to</td></tr>
+      <tr><td class="t-nowrap"><code>--report-open</code></td><td><code>auto</code> | <code>always</code> | <code>none</code></td><td><code>auto</code></td><td class="t-nowrap"><code>report_open</code></td></tr>
+      <tr><td class="t-nowrap"><code>--archive-count</code></td><td>integer</td><td>every build kept</td><td class="t-nowrap"><code>archive_count</code></td></tr>
+      <tr><td class="t-nowrap"><code>--archive-days</code></td><td>number of days</td><td>no age limit</td><td class="t-nowrap"><code>archive_days</code></td></tr>
+      <tr><td class="t-nowrap"><code>--archive-since</code></td><td>date or datetime</td><td>no cut</td><td class="t-nowrap"><code>archive_since</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-logs</code></td><td><code>all</code> | <code>failed</code> | <code>none</code></td><td><code>all</code></td><td class="t-nowrap"><code>report_logs</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-log-limit</code></td><td>integer, <code>0</code> = no limit</td><td><code>10000</code></td><td class="t-nowrap"><code>report_log_limit</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-attachments</code></td><td><code>all</code> | <code>failed</code> | <code>none</code></td><td><code>all</code></td><td class="t-nowrap"><code>report_attachments</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-attachment-limit</code></td><td>integer, <code>0</code> = no limit</td><td><code>20000</code></td><td class="t-nowrap"><code>report_attachment_limit</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-screenshots</code></td><td><code>failed</code> | <code>all</code> | <code>none</code></td><td><code>failed</code></td><td class="t-nowrap"><code>report_screenshots</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-steps</code></td><td><code>all</code> | <code>failed</code> | <code>none</code></td><td><code>all</code></td><td class="t-nowrap"><code>report_steps</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-step-limit</code></td><td>integer, <code>0</code> = no limit</td><td><code>500</code></td><td class="t-nowrap"><code>report_step_limit</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-coverage</code></td><td><code>auto</code> | <code>none</code></td><td><code>auto</code></td><td class="t-nowrap"><code>report_coverage</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-coverage-file</code></td><td>path</td><td>discover one</td><td class="t-nowrap"><code>report_coverage_file</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-coverage-limit</code></td><td>integer, <code>0</code> = all files</td><td><code>500</code></td><td class="t-nowrap"><code>report_coverage_limit</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-shard</code></td><td>id, e.g. <code>1/4</code></td><td>not a shard</td><td class="t-nowrap"><code>report_shard</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-shard-merge</code></td><td>flag</td><td>off</td><td class="t-nowrap"><code>report_shard_merge</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-shard-run</code></td><td>token</td><td>detected from CI</td><td class="t-nowrap"><code>report_shard_run</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-shard-reset</code></td><td>flag</td><td>off</td><td class="t-nowrap"><code>report_shard_reset</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-junit</code></td><td>path</td><td>no XML</td><td class="t-nowrap"><code>report_junit</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-junit-xpass</code></td><td><code>pass</code> | <code>fail</code> | <code>skip</code></td><td><code>pass</code></td><td class="t-nowrap"><code>report_junit_xpass</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="note"><span class="note__title">Note</span>The plugin registers itself on every run and <code>--html-report</code> defaults to <code>.</code>, so a plain <code>pytest</code> with the package installed writes <code>./pytest_html_report.html</code> without being asked. Point <code>html_report</code> at a folder to keep it out of the repository root.</div>
+
+<h2 id="pytest-options">pytest's own options that change the report</h2>
+
+<p>These belong to <code>pytest</code> and <code>pytest-cov</code>, not to this plugin, but the reporter can only show what those hand it. Four of the five most common "why is this empty" answers are here.</p>
+
+<h3 id="capture">Capture — the usual cause of an empty Logs column</h3>
+
+<p>The plugin reads pytest's own <code>capture</code> option and says what it found in the Environment panel. Under <code>-s</code> there is nothing any reporter can do: pytest never takes stdout and stderr in, they go straight to the terminal.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th><code>--capture</code></th><th>What reaches the Logs column</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>fd</code> <span class="pill">default</span></td><td>Everything, including output written by subprocesses and C extensions.</td></tr>
+      <tr><td class="t-nowrap"><code>sys</code></td><td>Everything Python itself writes; a subprocess's output is not captured.</td></tr>
+      <tr><td class="t-nowrap"><code>tee-sys</code></td><td>As <code>sys</code>, and it still prints live to the terminal while the run goes.</td></tr>
+      <tr><td class="t-nowrap"><code>no</code> (same as <code>-s</code>)</td><td>Logging only. stdout and stderr are gone, and the report says so in a banner above the Test Metrics table.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>If you were running with <code>-s</code> to watch output go past, <code>--capture=tee-sys</code> is the replacement that gives you both. Stay on <code>-s</code> if you drop into <code>pdb</code>.</p>
+
+<figure class="imgslot" data-shot="report-logs-notice-capture-off.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/report-logs-notice-capture-off.png</b>
+  <span>The top of the Test Metrics tab after a run with <code>-s</code>, light theme, ~1000px wide, cropped to the notice and the first three table rows. The banner must be legible — "stdout and stderr are not captured while pytest runs with -s / --capture=no, so only logging output reaches this column" — with the Logs column showing dashes beneath it.</span>
+</figure>
+
+<h3 id="log-level">Log level</h3>
+
+<p>Logging is captured from <code>WARNING</code> up until something lowers it, so <code>log.info(...)</code> and <code>log.debug(...)</code> are not in the report until you say so. The plugin reads both the flag and pytest's <code>log_level</code> ini key, and prints whichever it found in the Environment panel's <em>Captured output</em> row.</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Lowering the log level">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">Command line</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pytest.ini</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/ --html-report=./report --log-level=INFO</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="ini">[pytest]
+log_level = INFO
+html_report = ./report</code></pre>
+    </div>
+  </div>
+</div>
+
+<h3 id="coverage-options">pytest-cov, and what the Coverage tab reads</h3>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Option</th><th>Effect on the report</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>--cov=my_package</code></td><td>Without it nothing measures coverage and the tab shows its setup guide. Point it at the code under test, not at the tests — a <code>--cov=src</code> against a project with no <code>src</code> directory measures nothing, and the tab says so, naming the <code>--cov</code> that matched nothing.</td></tr>
+      <tr><td class="t-nowrap"><code>--cov-branch</code></td><td>Branch coverage is folded into the percentage exactly as pytest-cov folds it in, Branches and Partial tiles join the summary, and the table's Branches column fills in with counts instead of dashes.</td></tr>
+      <tr><td class="t-nowrap"><code>--cov-fail-under=80</code></td><td>Becomes the line the coverage ring is coloured at, replacing the default 90/75 bands, and the tab says so.</td></tr>
+      <tr><td class="t-nowrap"><code>--cov-report=html</code></td><td>Writes <code>htmlcov/</code>, and the tab then offers a relative link to the annotated source — never an embed, so the report stays one file. The link appears only when the folder was written after this run started, so a stale <code>htmlcov</code> from last week cannot masquerade as fresh.</td></tr>
+      <tr><td class="t-nowrap"><code>--cov-report=json</code></td><td>Writes <code>coverage.json</code>, which is the first thing discovery looks for. Name a file explicitly with <code>--report-coverage-file</code> when it lives somewhere else.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="xdist-options">pytest-xdist</h3>
+
+<p><code>-n</code> and <code>--dist</code> change nothing about the configuration above. Every worker sends its records back to the controller, which writes one report, one build in Archives and one row per test, in collection order. The report path and the shard settings are resolved once and handed to the workers so all of them agree. See <a href="ci-integrations.html">CI integrations</a> for the sharded case, where separate <em>machines</em> each write a bundle and one job merges them.</p>
+
+<h2 id="recipes">Three configurations worth copying</h2>
+
+<h3 id="recipe-ci">A CI build</h3>
+
+<p>Failures are what anybody opens a CI report for, so the passing tests give up their logs, attachments and steps. The XML is there for the build system's own test view; the HTML is the artifact people read.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">ini</span>
+    <span class="codeblock__cap">pytest.ini, committed to the repository</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="ini">[pytest]
+addopts = -q -rf --capture=tee-sys --title=&#039;Payments regression&#039;
+html_report = ./report
+report_open = none
+report_logs = failed
+report_attachments = failed
+report_steps = failed
+report_screenshots = failed
+report_junit = ./report/junit.xml
+archive_days = 30
+report_link =
+    Coverage=htmlcov/index.html</code></pre>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The command — only the values that move are on it</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ -n auto \
+    --cov=my_package --cov-report=html --cov-fail-under=80 \
+    --environment=staging \
+    --build-info branch=&quot;$GITHUB_REF_NAME&quot; \
+    --build-info commit=&quot;$GITHUB_SHA&quot; \
+    --build-info run=&quot;$GITHUB_RUN_ID&quot;</code></pre>
+</div>
+
+<p>Notes on the choices, in the order they appear:</p>
+
+<ul>
+  <li><code>--capture=tee-sys</code> keeps the output for the report and still streams it into the job log, which is where you look while the build is running.</li>
+  <li><code>report_open = none</code> is belt and braces — <code>auto</code> already refuses on a build agent — but a runner that sets none of the usual CI variables and allocates a tty would otherwise try.</li>
+  <li><code>archive_days = 30</code> only does anything when the report folder survives between runs, from a cache or a checked-in artifact. On a fresh workspace every run is the first one.</li>
+  <li>The <code>build_info</code> values come through the flag because the shell expands them; the same text in the ini file would arrive literally.</li>
+</ul>
+
+<p><a href="ci-integrations.html">CI integrations</a> has the full workflow files, and <a href="github-action.html">the GitHub Action</a> wraps this into a step.</p>
+
+<h3 id="recipe-local">A local suite</h3>
+
+<p>The opposite trade: keep everything, and let the report open itself when the run ends.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">ini</span>
+    <span class="codeblock__cap">pytest.ini for a suite you run all day</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="ini">[pytest]
+addopts = -v -rf --capture=tee-sys --title=&#039;Checkout suite&#039;
+log_level = INFO
+html_report = ./report
+report_open = auto
+report_logs = all
+report_screenshots = all
+report_steps = all
+archive_count = 20</code></pre>
+</div>
+
+<div class="note note--tip"><span class="note__title">Tip</span>Keep <code>html_report</code> pointed at one stable folder. Archives, trends and each test's history live in the folder the report is written to, so a dated path like <code>./reports/%Y%m%d/report_%H%M.html</code> starts a fresh history every day — right for a nightly job that publishes each run on its own, wrong for a suite whose trend line you want to watch.</div>
+
+<h3 id="recipe-small">Keeping the HTML file small</h3>
+
+<p>The report is one self-contained file, so everything it keeps is weight. Four things drive the size: retained builds, captured output, attachments and step trees. A retained build costs roughly 5KB of the page, so an hourly run with no retention limit reaches a multi-megabyte report inside a couple of months.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">ini</span>
+    <span class="codeblock__cap">Every size lever, turned down but not off</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="ini">[pytest]
+html_report = ./report
+archive_count = 10
+report_logs = failed
+report_log_limit = 2000
+report_attachments = failed
+report_attachment_limit = 5000
+report_steps = failed
+report_step_limit = 100
+report_screenshots = failed
+report_coverage_limit = 100</code></pre>
+</div>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>If it is still too big</th><th>Set</th><th>What you lose</th></tr></thead>
+    <tbody>
+      <tr><td>History is the bulk of it</td><td class="t-nowrap"><code>archive_count = 0</code></td><td>The Archives section goes entirely, <code>archive/</code> is deleted, and <a href="analytics.html">Analytics</a> and the trend chart have nothing to read.</td></tr>
+      <tr><td>A few chatty tests dominate</td><td class="t-nowrap"><code>report_log_limit = 500</code></td><td>Only the last 500 characters of each test's output, cut to a whole line, with a note saying how much went.</td></tr>
+      <tr><td>Screenshots are the weight</td><td class="t-nowrap"><code>report_screenshots = none</code></td><td>No automatic photographs. Images you handed to <code>attach()</code> yourself are still kept — this only governs the ones nobody asked for.</td></tr>
+      <tr><td>Nothing reads the output</td><td class="t-nowrap"><code>report_logs = none</code></td><td>The Logs column entirely, and no size cost at all. The Environment panel says <code>disabled (--report-logs=none)</code> so a reader is not left guessing.</td></tr>
+      <tr><td>The coverage table is long</td><td class="t-nowrap"><code>report_coverage = none</code></td><td>The Coverage tab, and the coverage entry in <code>output.json</code>, so no coverage delta on the next build either.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>Attachments and step trees are held outside the metrics table, so trimming them does not change the search box or the CSV, Excel and print exports — those read the table only.</p>

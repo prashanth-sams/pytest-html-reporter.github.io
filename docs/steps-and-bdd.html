@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test steps, Gherkin and markers · pytest-html-reporter</title>
+<meta name="description" content="Name the pieces a test is made of and they are timed, nested and shown on a tab of their own — with pytest-bdd scenarios and every marker arriving there for free.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../assets/img/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="../assets/img/icon-256.png">
+<meta property="og:title" content="Test steps, Gherkin and markers · pytest-html-reporter">
+<meta property="og:description" content="Name the pieces a test is made of and they are timed, nested and shown on a tab of their own — with pytest-bdd scenarios and every marker arriving there for free.">
+<meta property="og:type" content="article">
+<meta property="og:image" content="../assets/img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script>
+/* Set the theme before first paint so a dark reader never sees a white flash. */
+(function(){try{var t=localStorage.getItem('phr-theme');
+if(!t)t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}
+document.documentElement.classList.add('js');})();
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="topbar__inner">
+    <button class="iconbtn navburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <a class="brand" href="../index.html" aria-label="pytest-html-reporter home">
+      <svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="3.9" height="18" rx="1" fill="#3571a3"/><rect x="7.4" y="7.85" width="3.9" height="13.15" rx="1" fill="#ffd143"/><rect x="12.8" y="12.7" width="3.9" height="8.3" rx="1" fill="#8b8b8b"/><rect x="18.2" y="17.3" width="3.9" height="3.7" rx="1" fill="#3571a3"/></svg>
+      <span class="brand__text"><span class="brand__a">pytest</span><span class="brand__b">HTML Reporter</span></span>
+    </a>
+    <nav class="navlinks" aria-label="Main"><a href="../docs/getting-started.html">Docs</a><a href="../docs/report-tour.html">Report tour</a><a href="../docs/cli-reference.html">Reference</a><a href="../docs/github-action.html">Action</a><a href="../docs/vscode.html">VS&nbsp;Code</a><a href="../docs/changelog.html">Changelog</a></nav>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <a class="iconbtn" href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener" title="PyPI" aria-label="pytest-html-reporter on PyPI">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+      </a>
+      <a class="iconbtn" href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener" title="GitHub" aria-label="Source on GitHub"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.5 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.26 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg></a>
+      <button class="iconbtn theme-toggle" type="button" aria-label="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div class="navscrim" aria-hidden="true"></div>
+<div class="docs">
+<aside class="sidebar" id="sidebar"><nav aria-label="Documentation">
+<div class="sidebar__group">
+<span class="sidebar__label">Introduction</span>
+<a class="sidebar__link" href="../docs/getting-started.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2 2 0 0 0-2.9 0z"/><path d="M12 15 9 12a11 11 0 0 1 2-6c2.2-3 5.5-3.5 8-3.5 0 2.5-.5 5.8-3.5 8a11 11 0 0 1-6 2z"/><path d="M9 12H5s.4-2.5 2-3.5c1.7-1 3.5-.5 3.5-.5M12 15v4s2.5-.4 3.5-2c1-1.7.5-3.5.5-3.5"/></svg>Getting started</a>
+<a class="sidebar__link" href="../docs/features.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"/><path d="M19 3v4M17 5h4M5 17v2M4 18h2"/></svg>Features</a>
+<a class="sidebar__link" href="../docs/report-tour.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Report tour</a>
+<a class="sidebar__link" href="../docs/comparison.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M7 21h10M3 8l4-5 4 5M3 8a4 4 0 0 0 8 0M13 12l4-5 4 5M13 12a4 4 0 0 0 8 0"/></svg>Compared to others</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Reference</span>
+<a class="sidebar__link" href="../docs/cli-reference.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 4 4-4 4M13 16h6"/><rect x="2" y="3" width="20" height="18" rx="2"/></svg>CLI reference</a>
+<a class="sidebar__link" href="../docs/configuration.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Configuration</a>
+<a class="sidebar__link" href="../docs/python-api.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg>Python API</a>
+<a class="sidebar__link" href="../docs/compatibility.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>Compatibility &amp; files</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Guides</span>
+<a class="sidebar__link" href="../docs/screenshots.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="m8 6 1.5-2.5h5L16 6"/><circle cx="12" cy="13" r="3.4"/></svg>Screenshots</a>
+<a class="sidebar__link is-active" href="../docs/steps-and-bdd.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Steps &amp; BDD</a>
+<a class="sidebar__link" href="../docs/analytics.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>Analytics &amp; history</a>
+<a class="sidebar__link" href="../docs/ci-integrations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><path d="M6 6.5h.01M6 17.5h.01"/></svg>CI, xdist &amp; scale</a>
+<a class="sidebar__link" href="../docs/security-privacy.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>Security &amp; privacy</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Ecosystem</span>
+<a class="sidebar__link" href="../docs/github-action.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>GitHub Action</a>
+<a class="sidebar__link" href="../docs/vscode.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 3-9 7-4-3-2 1.5v7L4 17l4-3 9 7 4-2V5z"/></svg>VS Code extension</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Project</span>
+<a class="sidebar__link" href="../docs/changelog.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Changelog</a>
+<a class="sidebar__link" href="../docs/faq.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a2.9 2.9 0 0 1 5.6 1c0 2-2.8 2.8-2.8 2.8M12 17h.01"/></svg>FAQ</a>
+<a class="sidebar__link" href="../docs/contributing.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>Contributing</a>
+</div>
+</nav></aside>
+<main class="docmain" id="main">
+<div class="crumbs">
+  <a href="../index.html">Home</a>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+  <a href="../docs/getting-started.html">Docs</a>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+  <span>Test steps, Gherkin and markers</span>
+</div>
+<header class="doc-hero">
+  <span class="eyebrow">Guides</span>
+  <h1>Test steps, Gherkin and markers</h1>
+  <p class="lede">A status column tells you a test failed. Steps tell you where, and how long it had been running when it got there. This is the whole of the Test Steps tab: the API you write, the Gherkin you already have, and the markers you never wrote down.</p>
+</header>
+<h2 id="what-a-step-is">What a step is</h2>
+
+<p>A step is a named, timed piece of a test. You name it; the reporter times it, files it under the phase it ran in, and nests it inside whatever step was already open. The result is a drill-down: the suite, then a test in it, then what that test actually did, with the slow part drawn as a bar you can see from across the room.</p>
+
+<p>It is a tab of its own rather than a panel inside <strong>Test Suites</strong>, which is where Allure keeps the same information. The cost of folding it in is a high-level page you can no longer skim, and the high-level page is the one most people open first.</p>
+
+<h3 id="the-tab-is-never-empty">The tab is never empty</h3>
+
+<p>Every test has a set up, a body and a tear down. Each of the three is timed from pytest's own report and drawn whether or not anything was named inside it — a phase with no steps still answers <em>where did the time go</em> for a test whose setup is the slow part, and that is exactly the test least likely to have named a step. Alongside the phases, every test carries its markers, its parameters, the fixtures it named and its docstring.</p>
+
+<p>So a suite that has never heard of <code>step()</code> still gets a tree. Naming steps makes that tree deeper; it does not bring it into existence.</p>
+
+<div class="note note--tip"><span class="note__title">Tip</span>A <strong>How it works</strong> button at the top of the tab opens the same cheatsheet the tab shows on a run where nobody named a step — so it is there when you go looking for it, not only before you needed it.</div>
+
+<h3 id="seeing-it-first">Seeing it first</h3>
+
+<p>There is a demo suite in the repository that exists for this. It needs no browser and no network — a page object whose methods are the steps, a fixture that sets up and tears down, a parametrized case and a failure buried three steps deep, with sleeps where the work would be.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The bundled demo</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/functional/test_steps.py --html-report=./report</code></pre>
+</div>
+
+<figure class="imgslot" data-shot="steps-tab-tree.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/steps-tab-tree.png</b>
+  <span>The Test Steps tab at 1440px wide, light theme, after running the bundled demo. The rail on the left expanded on one suite with a passing test selected; the pane on the right showing the Set up, Test body and Tear down blocks, the named steps indented under Test body, and the duration bar and millisecond figure on each row.</span>
+</figure>
+
+<h3 id="getting-there-from-a-row">Getting there from a row</h3>
+
+<p>The <strong>Test Metrics</strong> table has a <code>Steps</code> column counting the steps each test recorded. Clicking it crosses to this tab with that one test already open; a test that recorded none shows a dash. The <code>Suite</code> and <code>Test Case</code> cells of the same row are clickable for the same reason — one opens the suite here, the other the test.</p>
+
+<p>The rail has its own search box, matching on the suite, the test, every step title, every marker and — for a Gherkin test — the feature and the scenario. Parameters and error text are deliberately not indexed: they already run to several thousand characters across a run and would roughly double the size of the file for nothing. A test named <code>test_a_declined_card</code> is indexed under that spelling <em>and</em> under <code>test a declined card</code>, because the second is what people type.</p>
+
+<p>See <a href="report-tour.html">the report tour</a> for how this tab sits beside the others.</p>
+
+<h2 id="naming-steps">Naming a step</h2>
+
+<p>One import, one name.</p>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">step(title, **params)</span>
+    <div class="def__meta">
+      <span class="pill">context manager</span>
+      <span class="pill">decorator</span>
+      <span class="pill pill--brand">from pytest_html_reporter import step</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p><code>title</code> is the line the tab shows. Every keyword argument is kept beside the step as a parameter, so the report shows the call that was actually made rather than the sentence it was written from. The same object is both forms: used with <code>with</code> it times the block, used as a decorator it times the function.</p>
+  </div>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">The context manager form</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">from pytest_html_reporter import step
+
+def test_checkout():
+    with step(&quot;Add to cart&quot;, sku=&quot;A-12&quot;):
+        cart.add(&quot;A-12&quot;)
+
+    with step(&quot;Charge the card&quot;):
+        assert gateway.charge(cart).ok</code></pre>
+</div>
+
+<p>That test reports two steps under <strong>Test body</strong>, the first carrying <code>sku=A-12</code>. Nothing else changes: <code>step</code> does not swallow exceptions, does not alter the test's outcome and needs no fixture.</p>
+
+<div class="note"><span class="note__title">Note</span>A title is kept to 160 characters and a parameter value to 120, each cut with an ellipsis. Steps indent up to twelve levels deep; past that a step is still recorded and still timed, only its indentation stops growing — nothing legible happens at column forty.</div>
+
+<h2 id="decorating-helpers">Decorating the code your tests share</h2>
+
+<p>The methods of a page object or an API client <strong>are already the steps of every test that calls them</strong>. Decorating them once names all of those tests, and the arguments of the call fill in the <code>{placeholders}</code> of the title. This is the recipe worth reaching for first, because nothing in the tests themselves has to know that steps exist.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">The decorator form — a page object whose methods are the steps</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">from pytest_html_reporter import attach_json, step
+
+
+class Cart:
+    def __init__(self):
+        self.items = []
+
+    @step(&quot;Log in as {user}&quot;)
+    def login(self, user):
+        with step(&quot;Open the login page&quot;):
+            page.goto(&quot;/login&quot;)
+
+        with step(&quot;Submit credentials&quot;):
+            attach_json({&quot;user&quot;: user, &quot;remember&quot;: True}, name=&quot;Credentials&quot;)
+            page.click(&quot;#submit&quot;)
+
+    @step(&quot;Add {sku} to the cart&quot;)
+    def add(self, sku, quantity=1):
+        self.items += [sku] * quantity
+
+
+def test_a_shopper_can_buy_one_item():
+    cart = Cart()
+    cart.login(&quot;amy&quot;)          # the tab shows: Log in as amy, with user=amy beside it
+    cart.add(&quot;A-12&quot;)</code></pre>
+</div>
+
+<p>The arguments are read off the call by name, so <code>{user}</code> is filled from <code>user</code> however it was passed — positionally, by keyword or from a default. <code>self</code> and <code>cls</code> are never shown. A signature that will not bind, because of a decorator stacked in a way <code>inspect</code> cannot follow, costs the title its placeholders and nothing else; and a title naming something the call did not pass keeps its braces rather than losing its name.</p>
+
+<h2 id="nesting-and-phases">Nesting, phases and failures</h2>
+
+<h3 id="how-nesting-works">Steps nest by being called from inside one another</h3>
+
+<p>Nothing is passed between steps. A step opened while another is open is a step of it, which is why decorating a helper that itself uses <code>with step(...)</code> gives you a tree rather than a flat list.</p>
+
+<h3 id="fixture-steps">A step opened in a fixture stays in its own phase</h3>
+
+<p>Steps are filed under <strong>Set up</strong>, <strong>Test body</strong> or <strong>Tear down</strong> depending on when they were opened, and nesting is counted from each phase's own floor. That matters for a fixture that holds a step open across its <code>yield</code>: without the phase floor every step the test body ran would be reported as a step <em>of the fixture</em> — one <code>Open a session</code> swallowing the test that used it.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">Setup and teardown steps land under their own phases</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">import pytest
+
+from pytest_html_reporter import step
+
+
+@pytest.fixture
+def cart():
+    with step(&quot;Open a session&quot;):
+        session.connect()
+
+    yield Cart()
+
+    with step(&quot;Close the session&quot;):
+        session.close()</code></pre>
+</div>
+
+<h3 id="failures-on-steps">A step that raises is recorded, and the exception carries on out</h3>
+
+<p>The step is marked failed and keeps the message, up to 2,000 characters. The exception is then re-raised untouched — a report that swallowed a failure in order to describe it would be worse than no report.</p>
+
+<p>The message is kept on the step that <strong>actually raised</strong>. The steps it was raised inside are marked failed without repeating it, so one exception walking out through four levels is printed once, on the innermost step — the only one that says where — rather than four times with the useful copy furthest down the page.</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A <code>pytest.skip()</code> inside a step closes it as SKIP, not FAIL</b>It is not a failure of that step; it is the test saying it should not have run.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A <code>with</code> block that never exited is closed as failed</b>The test died inside it, and a step that simply stops being mentioned reads as a step that never ran.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The failing test's screenshot is filed on the step that threw</b>The automatic capture runs from the teardown hook with no step open, so it is attributed to the step the failure came out of — a photograph of the browser at the end of a failing test is a photograph of the state that step left behind. See <a href="screenshots.html">Screenshots</a>.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Bars are scaled to the slowest step of that test</b>Not of the run. The question this tab is opened with is always &ldquo;which part of <em>this</em> test was slow&rdquo;.</span>
+  </li>
+</ul>
+
+<figure class="imgslot" data-shot="steps-failure.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/steps-failure.png</b>
+  <span>The Test Steps pane for one failed browser test, light theme, cropped to the Test body block. Two outer steps marked failed with no message, the innermost failed step carrying its exception text underneath, and the automatically captured screenshot thumbnail sitting on that same step.</span>
+</figure>
+
+<h3 id="threads">Threads</h3>
+
+<p>Steps are recorded on the thread that ran the test, and each thread nests within itself. A test that fans work out to a pool would otherwise have every thread pushing onto one stack, and the steps would come back nested inside each other in whatever order the threads happened to interleave — a tree that never existed. A background thread's steps land at the top level, where they belong.</p>
+
+<h2 id="attachments-on-steps">Anything attached lands on the step</h2>
+
+<p><code>attach_json</code>, <code>attach_api</code>, <code>attach_text</code>, <code>attach_file</code> and <code>attach</code> need <strong>no extra argument</strong> to say which step they belong to. Whatever step is open when they are called is what they are filed under, and that step shows a paperclip with the count.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">The open step claims the attachment</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">with step(&quot;Submit credentials&quot;):
+    attach_api(requests.post(url, json=payload))</code></pre>
+</div>
+
+<p>This is read rather than passed, because <code>attach_json</code> is called by code that has no idea a report exists. An image attached inside a step is shown on that step as a thumbnail; a picture belonging to no step is shown against the test body, which is where a test with no named steps ran. The helpers themselves are documented in <a href="python-api.html">the Python API</a>.</p>
+
+<h2 id="gherkin">Cucumber and Gherkin, with pytest-bdd</h2>
+
+<p><strong>Nothing to do.</strong> A <code>pytest-bdd</code> scenario is already a list of named steps — it is the one style of test that arrives already broken into named pieces — so its Given / When / Then reach the tab on their own. Each is timed, each carries what its parser pulled out of the line, and each is badged with its Gherkin keyword so a specification never reads as somebody's plumbing.</p>
+
+<div class="note"><span class="note__title">Note</span><code>pytest-bdd</code> does not have to be installed. Every one of the hooks is declared <code>optionalhook</code>, because pytest does not warn about a hook nobody registered and does not skip it — it refuses to start, with <code>PluginValidationError: unknown hook &#039;pytest_bdd_after_step&#039;</code>. A run without pytest-bdd is untouched.</div>
+
+<h3 id="the-feature-file">The feature file</h3>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">gherkin</span>
+    <span class="codeblock__cap">tests/functional/features/checkout.feature</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="gherkin">@smoke @checkout
+Feature: Checking out a basket
+
+  Scenario Outline: A shopper buys &lt;count&gt; of an item
+    Given a logged in shopper
+    When they add &lt;count&gt; of &quot;A-12&quot; to the basket
+    Then the basket holds &lt;count&gt; items
+
+    Examples:
+      | count |
+      | 1     |
+      | 3     |
+
+  @declined
+  Scenario: A declined card names the step that failed
+    Given a logged in shopper
+    When they add 1 of &quot;DECLINE&quot; to the basket
+    And they check out
+    Then the basket holds 0 items</code></pre>
+</div>
+
+<h3 id="the-step-definitions">The step definitions</h3>
+
+<p>Nothing here mentions the reporter.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">tests/functional/test_gherkin.py</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">from pytest_bdd import given, parsers, scenarios, then, when
+
+scenarios(&quot;features&quot;)
+
+
+@given(&quot;a logged in shopper&quot;, target_fixture=&quot;basket&quot;)
+def _shopper():
+    return []
+
+
+@when(parsers.parse(&#039;they add {count:d} of &quot;{sku}&quot; to the basket&#039;))
+def _add(basket, count, sku):
+    basket += [sku] * count
+
+
+@when(&quot;they check out&quot;)
+def _check_out(basket):
+    if &quot;DECLINE&quot; in basket:
+        raise AssertionError(&quot;card declined by the gateway&quot;)
+
+
+@then(parsers.parse(&quot;the basket holds {count:d} items&quot;))
+def _holds(basket, count):
+    assert len(basket) == count</code></pre>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The Gherkin demo — needs pytest-bdd installed, and nothing else</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/functional/test_gherkin.py --html-report=./report</code></pre>
+</div>
+
+<h3 id="what-the-tab-shows-for-a-scenario">What the tab then shows</h3>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>On the page</th><th>Where it comes from</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap">A strip above the tree</td><td>The feature name, the scenario name and the feature file's path as the run saw it — a pytest-bdd test function is generated, so its own name and module say far less about it than the feature does.</td></tr>
+      <tr><td class="t-nowrap"><code>Given</code> / <code>When</code> / <code>Then</code> badge</td><td>The keyword <em>as it was written</em> — <code>And</code> and <code>But</code> keep their own word rather than being resolved to the one before them.</td></tr>
+      <tr><td class="t-nowrap">The step line</td><td>The keyword and the line from the feature file, timed like any other step.</td></tr>
+      <tr><td class="t-nowrap">Parameters on the step</td><td>What the parser pulled out: <code>count=3</code>, <code>sku=A-12</code>. The fixtures pytest-bdd injects alongside them — one for every <code>target_fixture</code> the scenario has built up — are left out, or <code>Then the basket holds 3 items</code> would arrive with the whole basket printed beside it.</td></tr>
+      <tr><td class="t-nowrap">An Outline's placeholders</td><td>Already filled in with the row that actually ran, so <code>When they add &lt;count&gt; of &quot;A-12&quot;</code> arrives as <code>When they add 3 of &quot;A-12&quot;</code>.</td></tr>
+      <tr><td class="t-nowrap">The Examples row</td><td>Shown as the test's parameters — <code>count = 3</code> — unwrapped from the single dict pytest-bdd passes it in.</td></tr>
+      <tr><td class="t-nowrap">Tags</td><td>The scenario's own and the feature's, merged and sorted, arriving as markers. Both <code>@smoke</code> and <code>@declined</code> show against the second scenario above.</td></tr>
+      <tr><td class="t-nowrap">A step nobody implemented</td><td>Recorded and marked failed, so the tab names the line of the feature that has no step function rather than simply stopping short of it.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>The rail lists a BDD test under its scenario name rather than a step count, and the search box matches the feature and the scenario as well as the step lines — so typing a feature name finds every test in it.</p>
+
+<figure class="imgslot" data-shot="steps-gherkin.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/steps-gherkin.png</b>
+  <span>The Test Steps tab at 1440px wide, light theme, with the &ldquo;A declined card names the step that failed&rdquo; scenario selected. The feature / scenario / feature-file strip visible above the tree, and the Given, When, And, Then rows each carrying a coloured Gherkin badge, their parsed parameters and their timings, with the And row failed.</span>
+</figure>
+
+<h2 id="markers">Markers, and where they were written</h2>
+
+<p>Markers are shown <strong>in full</strong> — including the ones a test never mentions. A module-level <code>pytestmark</code>, a marker on the class, one added by <code>request.node.add_marker</code> while the test was running: all of them, each saying which scope it came from, which is the answer when nobody remembers applying it.</p>
+
+<p>They are read off the item at teardown, the only moment that sees the whole picture: a marker added during the test is not there at collection, and a parametrized case does not know its own values until it has one.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">Three scopes and a marker added mid-run</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">import sys
+
+import pytest
+
+pytestmark = pytest.mark.regression          # every test in this module
+
+
+@pytest.mark.smoke                           # every test in this class
+class TestCheckout:
+
+    @pytest.mark.skipif(sys.platform == &quot;win32&quot;, reason=&quot;POSIX paths only&quot;)
+    @pytest.mark.parametrize(&quot;quantity&quot;, [2, 5])
+    def test_a_shopper_can_buy_several(self, cart, request, quantity):
+        &quot;&quot;&quot;A parametrized case keeps its own row and its own steps.&quot;&quot;&quot;
+        request.node.add_marker(pytest.mark.flaky(reruns=3))   # added while it ran
+
+        cart.add(&quot;B-7&quot;, quantity=quantity)
+
+        assert len(cart.items) == quantity</code></pre>
+</div>
+
+<p>The <code>quantity=2</code> case of that test reads like this on the tab:</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Fact</th><th>Badge</th><th>Scope reported</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap">Description</td><td>A parametrized case keeps its own row and its own steps.</td><td>&mdash;</td></tr>
+      <tr><td class="t-nowrap">5 markers</td><td><code>parametrize(quantity)</code></td><td><code>function</code></td></tr>
+      <tr><td class="t-nowrap"></td><td><code>skipif(reason=POSIX paths only)</code></td><td><code>function</code></td></tr>
+      <tr><td class="t-nowrap"></td><td><code>flaky(reruns=3)</code></td><td><code>function</code></td></tr>
+      <tr><td class="t-nowrap"></td><td><code>smoke</code></td><td><code>class</code></td></tr>
+      <tr><td class="t-nowrap"></td><td><code>regression</code></td><td><code>module</code></td></tr>
+      <tr><td class="t-nowrap">1 parameter</td><td><code>quantity = 2</code></td><td>&mdash;</td></tr>
+      <tr><td class="t-nowrap">1 fixture</td><td><code>cart</code></td><td>&mdash;</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>The scope is whichever node the marker was found on, walking out from the test: <code>function</code>, <code>class</code>, <code>module</code>, <code>package</code> or <code>session</code>. A marker written at more than one level is said once — <code>pytestmark = pytest.mark.slow</code> on a module whose class repeats it is one badge, not two — but <code>tier(&quot;unit&quot;)</code> and <code>tier(&quot;slow&quot;)</code> both stay, because they are two different things to say.</p>
+
+<h3 id="pytest-markers-are-coloured-apart">pytest's own markers are coloured apart from yours</h3>
+
+<p><code>skip</code>, <code>skipif</code>, <code>xfail</code>, <code>parametrize</code>, <code>usefixtures</code> and <code>filterwarnings</code> get a badge of their own colour. That is not a style choice: those six change how a test is run, while <code>@smoke</code> only names it, and the two read very differently on a badge.</p>
+
+<h3 id="two-markers-are-cut-down">Two are cut down deliberately</h3>
+
+<ul>
+  <li><strong><code>parametrize</code> shows its argument names, not its rows.</strong> The marker carries every row the test will ever run with — a hundred of them for one badge — and this case's own row is already shown as its parameters. So you get <code>parametrize(quantity)</code> and a <code>quantity = 2</code> beside it.</li>
+  <li><strong>A <code>skipif</code> condition is evaluated at import.</strong> <code>sys.platform == &quot;win32&quot;</code> reaches any reporter as a bare <code>False</code>, which says nothing, so the reason is shown instead: <code>skipif(reason=POSIX paths only)</code>. A <code>skipif</code> written with a string condition keeps that string.</li>
+</ul>
+
+<h3 id="parameters-fixtures-and-the-docstring">Parameters, fixtures and the docstring</h3>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Parameters come from the case, not the marker</b>Read off the callspec, so what you see is the row this test actually ran with.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Fixtures are the ones the test named</b>Its own signature plus <code>usefixtures</code> — not the whole transitive closure. Asking for <code>tmp_path</code> would otherwise put <code>tmp_path_factory</code> in the list too, and a test that names two fixtures should not read as a test that names nine. <code>request</code> and <code>pytestconfig</code> are left out, and a parametrized argument is not repeated here because it is already a parameter.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The docstring is the function's own</b>Collapsed to one paragraph and capped at 400 characters. A class docstring describes the class, and repeating it under every method in it says nothing about any of them.</span>
+  </li>
+</ul>
+
+<div class="note"><span class="note__title">Note</span>Markers are badges on this tab rather than a column on <strong>Test Metrics</strong>, and marker text is in this tab's search index — so marker-based filtering works here. Typing <code>regression</code> into the rail's search narrows it to every test carrying that marker, at whatever scope it was written.</div>
+
+<figure class="imgslot" data-shot="steps-facts-row.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/steps-facts-row.png</b>
+  <span>Close crop of the facts block at the top of one test's Test Steps pane, light theme: the Description line, then the labelled rows of badges for markers (pytest's own in one colour and the user's in another), parameters and fixtures.</span>
+</figure>
+
+<h2 id="keeping-the-file-down">Keeping the file down</h2>
+
+<p>Step trees are held <strong>outside the metrics table</strong>, so they are never swept into its search box or into the CSV, Excel and print exports. Two flags decide how much is kept at all.</p>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-steps</span>
+    <div class="def__meta">
+      <span class="pill">all | failed | none</span>
+      <span class="pill pill--brand">default: all</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Whose steps survive into the report. <code>all</code> rather than <code>failed</code>, unlike a log: the steps of a test that passed are what a later failure is read against, and they cost a line each.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Value</th><th>What is kept</th></tr></thead>
+        <tbody>
+          <tr><td class="t-nowrap"><code>all</code></td><td>Every test's steps. The default.</td></tr>
+          <tr><td class="t-nowrap"><code>failed</code></td><td>Only FAIL and ERROR tests'.</td></tr>
+          <tr><td class="t-nowrap"><code>none</code></td><td>No steps &mdash; the phases and their timings stay, as they cost nothing.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-step-limit</span>
+    <div class="def__meta">
+      <span class="pill">integer</span>
+      <span class="pill pill--brand">default: 500</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>How many steps one test can record. A step inside a loop over ten thousand rows would otherwise write ten thousand lines into the page, and the tree stops being readable long before it stops being generated.</p>
+    <p>The cap is followed by a line of its own saying the rest were dropped — <code>more steps not recorded - raise --report-step-limit to keep them</code> — rather than the tree simply ending, because a tree that stops halfway reads as a test that stopped there.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Value</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="t-nowrap"><code>500</code></td><td>500 steps per test. The default.</td></tr>
+          <tr><td class="t-nowrap"><code>&lt;positive integer&gt;</code></td><td>Steps per test.</td></tr>
+          <tr><td class="t-nowrap"><code>0</code></td><td>Every one.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Both step caps together</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest --html-report=./report --report-steps=failed --report-step-limit=100</code></pre>
+</div>
+
+<div class="note"><span class="note__title">Note</span>A retry reports the steps of <strong>the attempt that stuck</strong> — the failing attempt's tree beside a green test would describe a run that did not happen. An attempt that recorded none keeps what was already there, which is what <code>--report-steps=failed</code> leaves behind on a retry.</div>
+
+<h2 id="where-next">Where next</h2>
+
+<div class="grid grid--3">
+  <a class="card" href="screenshots.html">
+    <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3.2"/></svg></div>
+    <h3>Screenshots</h3>
+    <p>A failing browser test is photographed with no hook and no import, and the picture is filed on the step that threw.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="python-api.html">
+    <div class="card__icon is-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg></div>
+    <h3>Python API</h3>
+    <p>The six functions in full: <code>attach</code>, <code>attach_text</code>, <code>attach_json</code>, <code>attach_api</code>, <code>attach_file</code> and <code>step</code>.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="report-tour.html">
+    <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 9v12"/></svg></div>
+    <h3>Report tour</h3>
+    <p>Every tab of the report, what it answers and how it gets you to the next one.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+</div>
+<nav class="pagenav" aria-label="Pagination">
+<a class="prev" href="../docs/screenshots.html"><span>&larr; Previous</span><b>Screenshots</b></a>
+<a class="next" href="../docs/analytics.html"><span>Next &rarr;</span><b>Analytics &amp; history</b></a>
+</nav>
+</main>
+<aside class="toc" aria-label="On this page">
+  <div class="toc__title">On this page</div>
+  <ul>
+<li class="lvl-2"><a href="#what-a-step-is">What a step is</a></li>
+<li class="lvl-2"><a href="#naming-steps">Naming a step</a></li>
+<li class="lvl-2"><a href="#decorating-helpers">Decorating the code your tests share</a></li>
+<li class="lvl-2"><a href="#nesting-and-phases">Nesting, phases and failures</a></li>
+<li class="lvl-2"><a href="#attachments-on-steps">Anything attached lands on the step</a></li>
+<li class="lvl-2"><a href="#gherkin">Cucumber and Gherkin, with pytest-bdd</a></li>
+<li class="lvl-2"><a href="#markers">Markers, and where they were written</a></li>
+<li class="lvl-2"><a href="#keeping-the-file-down">Keeping the file down</a></li>
+<li class="lvl-2"><a href="#where-next">Where next</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div class="footer__about">
+        <a class="brand" href="../index.html"><svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="3.9" height="18" rx="1" fill="#3571a3"/><rect x="7.4" y="7.85" width="3.9" height="13.15" rx="1" fill="#ffd143"/><rect x="12.8" y="12.7" width="3.9" height="8.3" rx="1" fill="#8b8b8b"/><rect x="18.2" y="17.3" width="3.9" height="3.7" rx="1" fill="#3571a3"/></svg>
+          <span class="brand__text"><span class="brand__a">pytest</span><span class="brand__b">HTML Reporter</span></span>
+        </a>
+        <p>A light-weight static HTML report for the pytest framework. MIT licensed, built by Prashanth Sams and contributors.</p>
+      </div>
+      <div>
+        <h2>Documentation</h2>
+        <ul>
+          <li><a href="../docs/getting-started.html">Getting started</a></li>
+          <li><a href="../docs/features.html">Features</a></li>
+          <li><a href="../docs/report-tour.html">Report tour</a></li>
+          <li><a href="../docs/cli-reference.html">CLI reference</a></li>
+          <li><a href="../docs/python-api.html">Python API</a></li>
+          <li><a href="../docs/compatibility.html">Compatibility &amp; files</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Ecosystem</h2>
+        <ul>
+          <li><a href="../docs/github-action.html">GitHub Action</a></li>
+          <li><a href="../docs/vscode.html">VS Code extension</a></li>
+          <li><a href="../docs/ci-integrations.html">CI &amp; scale</a></li>
+          <li><a href="../docs/analytics.html">Analytics &amp; history</a></li>
+          <li><a href="../docs/security-privacy.html">Security &amp; privacy</a></li>
+          <li><a href="../docs/comparison.html">Compared to others</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Project</h2>
+        <ul>
+          <li><a href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener">Source on GitHub</a></li>
+          <li><a href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener">PyPI package</a></li>
+          <li><a href="https://marketplace.visualstudio.com/items?itemName=prashanth-sams.pytest-html-reporter-vscode" target="_blank" rel="noopener">VS Code Marketplace</a></li>
+          <li><a href="https://github.com/prashanth-sams/pytest-html-reporter/issues" target="_blank" rel="noopener">Issue tracker</a></li>
+          <li><a href="../docs/contributing.html">Contributing</a></li>
+          <li><a href="../docs/faq.html">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>MIT licensed &middot; &copy; Prashanth Sams</span>
+      <span>Built for people who read their test reports.</span>
+    </div>
+  </div>
+</footer>
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

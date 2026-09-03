@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Getting started · pytest-html-reporter</title>
+<meta name="description" content="Install pytest-html-reporter, run your suite once, and get a single self-contained HTML report you can send to somebody.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../assets/img/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="../assets/img/icon-256.png">
+<meta property="og:title" content="Getting started · pytest-html-reporter">
+<meta property="og:description" content="Install pytest-html-reporter, run your suite once, and get a single self-contained HTML report you can send to somebody.">
+<meta property="og:type" content="article">
+<meta property="og:image" content="../assets/img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script>
+/* Set the theme before first paint so a dark reader never sees a white flash. */
+(function(){try{var t=localStorage.getItem('phr-theme');
+if(!t)t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}
+document.documentElement.classList.add('js');})();
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="topbar__inner">
+    <button class="iconbtn navburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <a class="brand" href="../index.html" aria-label="pytest-html-reporter home">
+      <svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="3.9" height="18" rx="1" fill="#3571a3"/><rect x="7.4" y="7.85" width="3.9" height="13.15" rx="1" fill="#ffd143"/><rect x="12.8" y="12.7" width="3.9" height="8.3" rx="1" fill="#8b8b8b"/><rect x="18.2" y="17.3" width="3.9" height="3.7" rx="1" fill="#3571a3"/></svg>
+      <span class="brand__text"><span class="brand__a">pytest</span><span class="brand__b">HTML Reporter</span></span>
+    </a>
+    <nav class="navlinks" aria-label="Main"><a href="../docs/getting-started.html" class="is-active">Docs</a><a href="../docs/report-tour.html">Report tour</a><a href="../docs/cli-reference.html">Reference</a><a href="../docs/github-action.html">Action</a><a href="../docs/vscode.html">VS&nbsp;Code</a><a href="../docs/changelog.html">Changelog</a></nav>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <a class="iconbtn" href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener" title="PyPI" aria-label="pytest-html-reporter on PyPI">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+      </a>
+      <a class="iconbtn" href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener" title="GitHub" aria-label="Source on GitHub"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.5 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.26 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg></a>
+      <button class="iconbtn theme-toggle" type="button" aria-label="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div class="navscrim" aria-hidden="true"></div>
+<div class="docs">
+<aside class="sidebar" id="sidebar"><nav aria-label="Documentation">
+<div class="sidebar__group">
+<span class="sidebar__label">Introduction</span>
+<a class="sidebar__link is-active" href="../docs/getting-started.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2 2 0 0 0-2.9 0z"/><path d="M12 15 9 12a11 11 0 0 1 2-6c2.2-3 5.5-3.5 8-3.5 0 2.5-.5 5.8-3.5 8a11 11 0 0 1-6 2z"/><path d="M9 12H5s.4-2.5 2-3.5c1.7-1 3.5-.5 3.5-.5M12 15v4s2.5-.4 3.5-2c1-1.7.5-3.5.5-3.5"/></svg>Getting started</a>
+<a class="sidebar__link" href="../docs/features.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"/><path d="M19 3v4M17 5h4M5 17v2M4 18h2"/></svg>Features</a>
+<a class="sidebar__link" href="../docs/report-tour.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Report tour</a>
+<a class="sidebar__link" href="../docs/comparison.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M7 21h10M3 8l4-5 4 5M3 8a4 4 0 0 0 8 0M13 12l4-5 4 5M13 12a4 4 0 0 0 8 0"/></svg>Compared to others</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Reference</span>
+<a class="sidebar__link" href="../docs/cli-reference.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 4 4-4 4M13 16h6"/><rect x="2" y="3" width="20" height="18" rx="2"/></svg>CLI reference</a>
+<a class="sidebar__link" href="../docs/configuration.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Configuration</a>
+<a class="sidebar__link" href="../docs/python-api.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg>Python API</a>
+<a class="sidebar__link" href="../docs/compatibility.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>Compatibility &amp; files</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Guides</span>
+<a class="sidebar__link" href="../docs/screenshots.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="m8 6 1.5-2.5h5L16 6"/><circle cx="12" cy="13" r="3.4"/></svg>Screenshots</a>
+<a class="sidebar__link" href="../docs/steps-and-bdd.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Steps &amp; BDD</a>
+<a class="sidebar__link" href="../docs/analytics.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>Analytics &amp; history</a>
+<a class="sidebar__link" href="../docs/ci-integrations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><path d="M6 6.5h.01M6 17.5h.01"/></svg>CI, xdist &amp; scale</a>
+<a class="sidebar__link" href="../docs/security-privacy.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>Security &amp; privacy</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Ecosystem</span>
+<a class="sidebar__link" href="../docs/github-action.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>GitHub Action</a>
+<a class="sidebar__link" href="../docs/vscode.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 3-9 7-4-3-2 1.5v7L4 17l4-3 9 7 4-2V5z"/></svg>VS Code extension</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Project</span>
+<a class="sidebar__link" href="../docs/changelog.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Changelog</a>
+<a class="sidebar__link" href="../docs/faq.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a2.9 2.9 0 0 1 5.6 1c0 2-2.8 2.8-2.8 2.8M12 17h.01"/></svg>FAQ</a>
+<a class="sidebar__link" href="../docs/contributing.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>Contributing</a>
+</div>
+</nav></aside>
+<main class="docmain" id="main">
+<div class="crumbs">
+  <a href="../index.html">Home</a>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+  <a href="../docs/getting-started.html">Docs</a>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+  <span>Getting started</span>
+</div>
+<header class="doc-hero">
+  <span class="eyebrow">Introduction</span>
+  <h1>Getting started</h1>
+  <p class="lede">One pip install, one pytest run, one HTML file. This is the whole path from nothing to a report, plus the four options worth knowing about on the first day: where it goes, what it is called, whether it opens itself, and how long the history is kept.</p>
+</header>
+<h2 id="install">Install it</h2>
+
+<p>pytest-html-reporter is a pytest plugin, so it installs like any other package and needs no
+wiring. <code>setup.py</code> asks for Python 3.5 or newer and pulls in two dependencies:
+<code>pytest</code> itself, with no version ceiling on it, and <code>Pillow</code>, which the
+plugin uses to handle the screenshots it captures.</p>
+
+<p>There is no import to add and no configuration file to write. The package registers itself
+through pytest's <code>pytest11</code> entry point, which means the next <code>pytest</code> you
+run already has the reporter attached to it.</p>
+
+<ol class="steps">
+  <li>
+    <h3>Install the plugin</h3>
+    <p>From PyPI, into whatever environment your tests already run in.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Install from PyPI</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pip3 install pytest-html-reporter</code></pre>
+    </div>
+  </li>
+  <li>
+    <h3>Run the suite you already have</h3>
+    <p>Exactly the command you ran yesterday. No flag is required for a report to be written.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">A folder for the report is the one thing worth adding</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/ --html-report=./report</code></pre>
+    </div>
+  </li>
+  <li>
+    <h3>Read it</h3>
+    <p>The report opens in your browser on its own when the run finishes, because you are sat
+    there watching the run. Nothing needs to be passed to get that, and nothing opens on a build
+    agent. If you would rather open it yourself, it is a plain file on disk: double-click it, mail
+    it, or publish it as a CI artifact. It carries its own CSS and JavaScript, so it needs no
+    server and no network to render.</p>
+  </li>
+</ol>
+
+<div class="note note--tip"><span class="note__title">Tip</span>Everything below is optional. If
+the three steps above gave you a report you are happy with, the only other page worth your time
+today is the <a href="report-tour.html">report tour</a>.</div>
+
+<h2 id="the-default-run">The default run</h2>
+
+<p>With no flags at all, the plugin writes two files into your project's home directory — the
+directory you started <code>pytest</code> from:</p>
+
+<ul>
+  <li><code>pytest_html_report.html</code> — the report.</li>
+  <li><code>output.json</code> — the machine-readable record of this build. The
+  <code>Archives</code> and <code>Analytics</code> tabs are built by reading these back, so it is
+  not a by-product you can delete.</li>
+</ul>
+
+<p>Give <code>--html-report</code> a folder and both files move into it, which is what most
+people do on the first run so that the report is not sitting in the repository root:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">A directory for the report and its record</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ --html-report=./report</code></pre>
+</div>
+
+<p>After a second run the folder looks like this. Each previous build's record is moved into
+<code>archive/</code> and named after the moment its run started, which is what lets an age limit
+still measure the right thing after the folder has been copied into a fresh CI workspace.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The report folder after two runs</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">report/
+├── pytest_html_report.html
+├── output.json
+└── archive/
+    └── output_1788428663.202345.json</code></pre>
+</div>
+
+<div class="note"><span class="note__title">Note</span>Without <code>--html-report</code>, the
+plugin takes your project's home directory as the base. Nothing is created for you above it — a
+path you pass is created if it does not exist.</div>
+
+<figure class="imgslot" data-shot="first-report-dashboard.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/first-report-dashboard.png</b>
+  <span>The report as it opens after a first run — the Dashboard tab at 1440px wide, light theme,
+  showing the pass/fail summary tiles, the donut and the suite table, on a small suite of a dozen
+  tests with one failure.</span>
+</figure>
+
+<h2 id="whats-in-the-file">What is in that file</h2>
+
+<p>The single file you get is a small application. The side nav down the left switches between
+these, and every one of them is populated by the ordinary run you just did — no extra flag, no
+hook, no import:</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Dashboard</b>The overview, the environment the run was made in, the trend across
+    previous builds, the highlights — the most failed suite, and the failure delta since the last
+    build — and the suite-by-suite detail.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Test Suites</b>One row per suite, with its passes, failures, skips, xpasses, xfails,
+    errors and reruns counted side by side.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Test Metrics</b>Every test as a row, with its status, its duration, its error
+    message, and columns for the logs, the screenshots and the data it attached.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Archives</b>The previous builds this folder still holds, which is also what the
+    trend and the analytics are computed from.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Screenshots</b>A test that fails while holding a Selenium driver or a Playwright page
+    is photographed for you, with nothing to write in the test.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>API Logs</b>The payloads a test hands over — a response, some JSON, a file, free
+    text — kept against the test that produced them.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Test Steps</b>Never empty: every test has a set up, a body and a tear down, each
+    timed, before you name a single step of your own.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Test Coverage</b>The percentage, the split by file and the trend across builds, read
+    from whatever measured it.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Analytics</b>Flaky tests, standing failures, failures grouped by exception and
+    pass-rate drift, read across every archived build.</span>
+  </li>
+</ul>
+
+<p>Two things you get without asking are worth knowing about on day one, because they explain
+columns you will notice immediately. Everything <code>pytest</code> captures while a test runs —
+<code>stdout</code>, <code>stderr</code> and <code>logging</code> — is kept against that test and
+opened from the <code>Logs</code> column. And a failing browser test is photographed at the very
+end of the test, before the fixture that quits the browser has run.</p>
+
+<figure class="imgslot" data-shot="report-side-nav.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/report-side-nav.png</b>
+  <span>The report's side nav column on its own, cropped to about 300px wide, light theme, showing
+  every tab from Dashboard down to Test Coverage and the light/dark switch at the foot of it.</span>
+</figure>
+
+<p>The full walk through each of those tabs, with what every column and chart means, is the
+<a href="report-tour.html">report tour</a>.</p>
+
+<h2 id="path-filename-title">Where the report goes, and what it is called</h2>
+
+<p>One flag decides both. <code>--html-report</code> takes a directory, or a directory and a
+filename — the filename is the part ending in <code>.html</code>.</p>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--html-report</span>
+    <div class="def__meta">
+      <span class="pill">path</span>
+      <span class="pill pill--brand">ini: html_report</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Give it a folder and the report keeps its default name inside that folder. Give it a path
+    ending in <code>.html</code> and it uses both. Skip it and your project's home directory is
+    the base.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">A directory, or a directory and a filename</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/ --html-report=./report
+$ pytest tests/ --html-report=./report/report.html</code></pre>
+    </div>
+  </div>
+</div>
+
+<h3 id="strftime-placeholders">A folder, or a filename, per run</h3>
+
+<p>The path is run through <code>strftime</code>, so date and time placeholders —
+<code>%Y</code>, <code>%m</code>, <code>%d</code>, <code>%H</code>, <code>%M</code> and the
+rest — give each run a folder or a filename of its own instead of overwriting the last one.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">A folder per day, a file per minute</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ --html-report=./reports/%Y%m%d/report_%H%M.html</code></pre>
+</div>
+
+<p>They are expanded <strong>once, when the run starts</strong>. That is what stops a
+<code>pytest-xdist</code> run — four processes, four clocks — from writing four reports, and what
+stops a run that crosses a minute boundary from starting a second file halfway through.</p>
+
+<div class="note"><span class="note__title">Note</span>Write <code>%%</code> for a literal percent
+sign in front of a letter. A <code>%</code> that is not a placeholder, as in
+<code>100% pass</code>, is left exactly as it is.</div>
+
+<h3 id="report-title">The title</h3>
+
+<p><code>--title</code> sets the heading at the top of the report. It is capped at 20 characters;
+the cut tail fades out rather than being chopped, and the full title is kept as the heading's
+tooltip, so a long name is still readable on hover.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Report title</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ --html-report=./report --title=&#039;PYTEST REPORT&#039;</code></pre>
+</div>
+
+<figure class="imgslot" data-shot="report-title-heading.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/report-title-heading.png</b>
+  <span>The top strip of the report only, light theme, with a title longer than 20 characters so
+  the fade on the cut tail is visible, and the tooltip showing the full title.</span>
+</figure>
+
+<h2 id="pytest-ini">Putting it in pytest.ini instead</h2>
+
+<p>Anything you would type on every run belongs in the ini file, where it applies however the
+suite is started — from your shell, from an IDE, from a CI job. Nearly every flag on this page has
+an ini key of the same name with underscores.</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="The same settings two ways">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">Command line</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pytest.ini</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Typed out on every run</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/ --html-report=./reports/%Y%m%d/report_%H%M.html --archive-days 30</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <span class="codeblock__cap">Written once, in pytest.ini</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="ini">[pytest]
+addopts = -v -rf --title=&#039;PYTEST REPORT&#039;
+html_report = ./reports/%Y%m%d/report_%H%M.html
+archive_days = 30</code></pre>
+    </div>
+  </div>
+</div>
+
+<p><code>html_report</code> takes the same value as the flag, placeholders included, and is the
+way to set the report location <strong>without going through</strong> <code>addopts</code>.
+<code>--title</code> has no ini key of its own, so it goes in <code>addopts</code> — which is
+where the project's own snippet puts it.</p>
+
+<p>The rule when both are set is uniform: <strong>the flag overrides the ini key</strong>. The two
+exceptions are <code>--build-info</code> and <code>--report-link</code>, whose entries are
+<em>added to</em> the ini file's rather than replacing them.</p>
+
+<div class="note note--tip"><span class="note__title">Tip</span>The full ini block — every key in
+one place, with the value each one takes — is on the
+<a href="configuration.html">configuration</a> page, and the flags are listed side by side on the
+<a href="cli-reference.html">CLI reference</a>.</div>
+
+<h2 id="opening-the-report">Opening the report</h2>
+
+<p>When the run finishes, the report is opened in your browser. Nothing is needed to get this —
+it is what the command you already run now does.</p>
+
+<p>It only happens on a run somebody is sat in front of. Three things all have to be true, and a
+build agent fails every one of them:</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Checked</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>The run's output is a terminal</td>
+        <td>Output piped into a file or a log collector — <code>cron</code>, <code>nohup</code>, a
+        build system nobody has heard of — means nobody is watching it go past.</td>
+      </tr>
+      <tr>
+        <td>No CI variable is set</td>
+        <td><code>CI</code>, <code>GITHUB_ACTIONS</code>, <code>GITLAB_CI</code>,
+        <code>JENKINS_URL</code> and the rest of the usual set. <code>CI=false</code> counts as
+        &quot;not CI&quot;.</td>
+      </tr>
+      <tr>
+        <td>There is a desktop to open into</td>
+        <td><code>DISPLAY</code> or <code>WAYLAND_DISPLAY</code>, on anything that is not macOS or
+        Windows. Without this, a headless box opens the report in a <em>console</em> browser, on
+        top of the summary the run just printed.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p><code>--report-open</code> sets which of that applies.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The three modes</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ --report-open=none      # never open it
+$ pytest tests/ --report-open=always    # open it whatever the run looks like
+$ pytest tests/ --report-open=auto      # the default, as described above</code></pre>
+</div>
+
+<p>Turning it off for good belongs in the ini file rather than in every command:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">ini</span>
+    <span class="codeblock__cap">Turning it off once, for everybody</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="ini">[pytest]
+report_open = none</code></pre>
+</div>
+
+<p>The browser is asked for a <strong>tab rather than a window</strong>, so a suite run over and
+over does not bury the desktop. And a machine with no browser on it is not an error: the report is
+written either way, and a run that could not open it still passes or fails on its tests alone.</p>
+
+<h2 id="archive-retention">Keeping the history from growing</h2>
+
+<p>Every run leaves its record behind, and those records are the trend line, the
+<code>Archives</code> tab and everything the <code>Analytics</code> tab knows. Set no limit and
+every build is kept for ever, which is what eventually makes a report slow to open — a retained
+build costs roughly <strong>5KB of the page</strong>, so an hourly run reaches a multi-megabyte
+report inside a couple of months.</p>
+
+<p>Three flags cut it back. <strong>They intersect:</strong> a build has to satisfy every one you
+set to be kept.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Flag</th><th>Takes</th><th>What it keeps</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>--archive-count</code></td>
+        <td>an integer</td>
+        <td>The last N builds shown in the <code>Archives</code> section.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>--archive-days</code></td>
+        <td>a number of days</td>
+        <td>Only the builds from the last N days; the rest are deleted. Fractions are allowed —
+        <code>0.5</code> is half a day.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>--archive-since</code></td>
+        <td>a date, or a date and time</td>
+        <td>Everything older than that moment goes. A one-off cut rather than a rolling window.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">One of each</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/ --html-report=./report --archive-count 7
+$ pytest tests/ --html-report=./report --archive-days 30
+$ pytest tests/ --html-report=./report --archive-since &#039;2026-06-01 09:00&#039;</code></pre>
+</div>
+
+<p>A run on a schedule usually wants a stretch of time rather than a build count, so
+<code>--archive-days</code> is the one that needs no retuning when the schedule changes. And a
+build is dated by the <strong>moment its run started</strong>, which is kept in the name of its
+archive file — so an age limit still measures the right thing after the reports have been copied
+into a fresh CI workspace.</p>
+
+<div class="note note--tip"><span class="note__title">Tip</span>Retention is a property of the job
+rather than of one run, so the ini file is usually the better place for it: set
+<code>archive_days</code> once and every invocation, however it is started, keeps the same
+window.</div>
+
+<figure class="imgslot" data-shot="archives-section.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/archives-section.png</b>
+  <span>The Archives tab at 1440px wide, light theme, after about a week of daily runs — seven
+  retained builds listed with their dates and pass/fail counts.</span>
+</figure>
+
+<p>How far back the <code>Analytics</code> tab can read is whatever these three have kept, which
+is the reason to think about the window before you need the history rather than after. The full
+story — what analytics does with those builds, and how much history each view wants — is on the
+<a href="analytics.html">analytics</a> page.</p>
+
+<h2 id="where-to-next">Where to next</h2>
+
+<div class="grid grid--2">
+  <a class="card" href="features.html">
+    <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 15 9.2l6.8 1-4.9 4.8 1.2 6.8L12 18.6 5.9 21.8l1.2-6.8L2.2 10.2l6.8-1z"/></svg></div>
+    <h3>Everything it does</h3>
+    <p>The whole feature list in one place — screenshots, steps, coverage, markers, deep links,
+    themes, xdist — so you know what is worth turning on.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="report-tour.html">
+    <div class="card__icon is-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+    <h3>A tour of the report</h3>
+    <p>Tab by tab and column by column: what the dashboard charts mean, what the metrics table
+    can do, and where each thing you attached ends up.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="python-api.html">
+    <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg></div>
+    <h3>The Python API</h3>
+    <p>Six functions — <code>attach</code>, <code>attach_text</code>, <code>attach_json</code>,
+    <code>attach_api</code>, <code>attach_file</code> and <code>step</code> — for the evidence
+    only the test can hand over.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="github-action.html">
+    <div class="card__icon is-pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.2 2.2M16.9 16.9l2.2 2.2M19.1 4.9l-2.2 2.2M7.1 16.9l-2.2 2.2"/></svg></div>
+    <h3>Run it in CI</h3>
+    <p>The dedicated GitHub Action, and what changes when the run is on a build agent instead of
+    your machine.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+</div>
+<nav class="pagenav" aria-label="Pagination">
+<span></span>
+<a class="next" href="../docs/features.html"><span>Next &rarr;</span><b>Features</b></a>
+</nav>
+</main>
+<aside class="toc" aria-label="On this page">
+  <div class="toc__title">On this page</div>
+  <ul>
+<li class="lvl-2"><a href="#install">Install it</a></li>
+<li class="lvl-2"><a href="#the-default-run">The default run</a></li>
+<li class="lvl-2"><a href="#whats-in-the-file">What is in that file</a></li>
+<li class="lvl-2"><a href="#path-filename-title">Where the report goes, and what it is called</a></li>
+<li class="lvl-3"><a href="#strftime-placeholders">A folder, or a filename, per run</a></li>
+<li class="lvl-3"><a href="#report-title">The title</a></li>
+<li class="lvl-2"><a href="#pytest-ini">Putting it in pytest.ini instead</a></li>
+<li class="lvl-2"><a href="#opening-the-report">Opening the report</a></li>
+<li class="lvl-2"><a href="#archive-retention">Keeping the history from growing</a></li>
+<li class="lvl-2"><a href="#where-to-next">Where to next</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div class="footer__about">
+        <a class="brand" href="../index.html"><svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="3.9" height="18" rx="1" fill="#3571a3"/><rect x="7.4" y="7.85" width="3.9" height="13.15" rx="1" fill="#ffd143"/><rect x="12.8" y="12.7" width="3.9" height="8.3" rx="1" fill="#8b8b8b"/><rect x="18.2" y="17.3" width="3.9" height="3.7" rx="1" fill="#3571a3"/></svg>
+          <span class="brand__text"><span class="brand__a">pytest</span><span class="brand__b">HTML Reporter</span></span>
+        </a>
+        <p>A light-weight static HTML report for the pytest framework. MIT licensed, built by Prashanth Sams and contributors.</p>
+      </div>
+      <div>
+        <h2>Documentation</h2>
+        <ul>
+          <li><a href="../docs/getting-started.html">Getting started</a></li>
+          <li><a href="../docs/features.html">Features</a></li>
+          <li><a href="../docs/report-tour.html">Report tour</a></li>
+          <li><a href="../docs/cli-reference.html">CLI reference</a></li>
+          <li><a href="../docs/python-api.html">Python API</a></li>
+          <li><a href="../docs/compatibility.html">Compatibility &amp; files</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Ecosystem</h2>
+        <ul>
+          <li><a href="../docs/github-action.html">GitHub Action</a></li>
+          <li><a href="../docs/vscode.html">VS Code extension</a></li>
+          <li><a href="../docs/ci-integrations.html">CI &amp; scale</a></li>
+          <li><a href="../docs/analytics.html">Analytics &amp; history</a></li>
+          <li><a href="../docs/security-privacy.html">Security &amp; privacy</a></li>
+          <li><a href="../docs/comparison.html">Compared to others</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Project</h2>
+        <ul>
+          <li><a href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener">Source on GitHub</a></li>
+          <li><a href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener">PyPI package</a></li>
+          <li><a href="https://marketplace.visualstudio.com/items?itemName=prashanth-sams.pytest-html-reporter-vscode" target="_blank" rel="noopener">VS Code Marketplace</a></li>
+          <li><a href="https://github.com/prashanth-sams/pytest-html-reporter/issues" target="_blank" rel="noopener">Issue tracker</a></li>
+          <li><a href="../docs/contributing.html">Contributing</a></li>
+          <li><a href="../docs/faq.html">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>MIT licensed &middot; &copy; Prashanth Sams</span>
+      <span>Built for people who read their test reports.</span>
+    </div>
+  </div>
+</footer>
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

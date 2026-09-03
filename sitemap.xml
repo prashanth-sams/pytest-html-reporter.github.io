@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://pytest-html-reporter.github.io/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/analytics.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/changelog.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/ci-integrations.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/cli-reference.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/comparison.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/compatibility.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/configuration.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/contributing.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/faq.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/features.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/getting-started.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/github-action.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/python-api.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/report-tour.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/screenshots.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/security-privacy.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/steps-and-bdd.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pytest-html-reporter.github.io/docs/vscode.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+</urlset>

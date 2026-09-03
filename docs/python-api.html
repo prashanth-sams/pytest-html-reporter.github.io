@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python API · pytest-html-reporter</title>
+<meta name="description" content="Every name pytest-html-reporter exports for use inside a test: attach, attach_api, attach_text, attach_json, attach_file and step.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../assets/img/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="../assets/img/icon-256.png">
+<meta property="og:title" content="Python API · pytest-html-reporter">
+<meta property="og:description" content="Every name pytest-html-reporter exports for use inside a test: attach, attach_api, attach_text, attach_json, attach_file and step.">
+<meta property="og:type" content="article">
+<meta property="og:image" content="../assets/img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script>
+/* Set the theme before first paint so a dark reader never sees a white flash. */
+(function(){try{var t=localStorage.getItem('phr-theme');
+if(!t)t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}
+document.documentElement.classList.add('js');})();
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="topbar__inner">
+    <button class="iconbtn navburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <a class="brand" href="../index.html" aria-label="pytest-html-reporter home">
+      <svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="3.9" height="18" rx="1" fill="#3571a3"/><rect x="7.4" y="7.85" width="3.9" height="13.15" rx="1" fill="#ffd143"/><rect x="12.8" y="12.7" width="3.9" height="8.3" rx="1" fill="#8b8b8b"/><rect x="18.2" y="17.3" width="3.9" height="3.7" rx="1" fill="#3571a3"/></svg>
+      <span class="brand__text"><span class="brand__a">pytest</span><span class="brand__b">HTML Reporter</span></span>
+    </a>
+    <nav class="navlinks" aria-label="Main"><a href="../docs/getting-started.html">Docs</a><a href="../docs/report-tour.html">Report tour</a><a href="../docs/cli-reference.html">Reference</a><a href="../docs/github-action.html">Action</a><a href="../docs/vscode.html">VS&nbsp;Code</a><a href="../docs/changelog.html">Changelog</a></nav>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <a class="iconbtn" href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener" title="PyPI" aria-label="pytest-html-reporter on PyPI">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+      </a>
+      <a class="iconbtn" href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener" title="GitHub" aria-label="Source on GitHub"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.5 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.26 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg></a>
+      <button class="iconbtn theme-toggle" type="button" aria-label="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div class="navscrim" aria-hidden="true"></div>
+<div class="docs">
+<aside class="sidebar" id="sidebar"><nav aria-label="Documentation">
+<div class="sidebar__group">
+<span class="sidebar__label">Introduction</span>
+<a class="sidebar__link" href="../docs/getting-started.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2 2 0 0 0-2.9 0z"/><path d="M12 15 9 12a11 11 0 0 1 2-6c2.2-3 5.5-3.5 8-3.5 0 2.5-.5 5.8-3.5 8a11 11 0 0 1-6 2z"/><path d="M9 12H5s.4-2.5 2-3.5c1.7-1 3.5-.5 3.5-.5M12 15v4s2.5-.4 3.5-2c1-1.7.5-3.5.5-3.5"/></svg>Getting started</a>
+<a class="sidebar__link" href="../docs/features.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"/><path d="M19 3v4M17 5h4M5 17v2M4 18h2"/></svg>Features</a>
+<a class="sidebar__link" href="../docs/report-tour.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Report tour</a>
+<a class="sidebar__link" href="../docs/comparison.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M7 21h10M3 8l4-5 4 5M3 8a4 4 0 0 0 8 0M13 12l4-5 4 5M13 12a4 4 0 0 0 8 0"/></svg>Compared to others</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Reference</span>
+<a class="sidebar__link" href="../docs/cli-reference.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 4 4-4 4M13 16h6"/><rect x="2" y="3" width="20" height="18" rx="2"/></svg>CLI reference</a>
+<a class="sidebar__link" href="../docs/configuration.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Configuration</a>
+<a class="sidebar__link is-active" href="../docs/python-api.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg>Python API</a>
+<a class="sidebar__link" href="../docs/compatibility.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>Compatibility &amp; files</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Guides</span>
+<a class="sidebar__link" href="../docs/screenshots.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="m8 6 1.5-2.5h5L16 6"/><circle cx="12" cy="13" r="3.4"/></svg>Screenshots</a>
+<a class="sidebar__link" href="../docs/steps-and-bdd.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Steps &amp; BDD</a>
+<a class="sidebar__link" href="../docs/analytics.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>Analytics &amp; history</a>
+<a class="sidebar__link" href="../docs/ci-integrations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><path d="M6 6.5h.01M6 17.5h.01"/></svg>CI, xdist &amp; scale</a>
+<a class="sidebar__link" href="../docs/security-privacy.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>Security &amp; privacy</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Ecosystem</span>
+<a class="sidebar__link" href="../docs/github-action.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>GitHub Action</a>
+<a class="sidebar__link" href="../docs/vscode.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 3-9 7-4-3-2 1.5v7L4 17l4-3 9 7 4-2V5z"/></svg>VS Code extension</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Project</span>
+<a class="sidebar__link" href="../docs/changelog.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Changelog</a>
+<a class="sidebar__link" href="../docs/faq.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a2.9 2.9 0 0 1 5.6 1c0 2-2.8 2.8-2.8 2.8M12 17h.01"/></svg>FAQ</a>
+<a class="sidebar__link" href="../docs/contributing.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>Contributing</a>
+</div>
+</nav></aside>
+<main class="docmain" id="main">
+<div class="crumbs">
+  <a href="../index.html">Home</a>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+  <a href="../docs/getting-started.html">Docs</a>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+  <span>Python API</span>
+</div>
+<header class="doc-hero">
+  <span class="eyebrow">Reference</span>
+  <h1>Python API</h1>
+  <p class="lede">Six names come out of the package root and nothing else in the package is public. This page is what each one takes, what it gives back, and where in a test's life you are allowed to call it.</p>
+</header>
+<h2 id="the-import-surface">The import surface</h2>
+<p>Everything a user writes in a test comes from the package root. <code>pytest_html_reporter/__init__.py</code> is seven lines long, and its <code>__all__</code> is the contract:</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">pytest_html_reporter/__init__.py, in full</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">__version__ = &quot;0.4.0&quot;
+
+from .attachments import attach_api, attach_file, attach_json, attach_text
+from .steps import step
+from .util import screenshot as attach
+
+__all__ = [&quot;__version__&quot;, &quot;attach&quot;, &quot;attach_api&quot;, &quot;attach_file&quot;, &quot;attach_json&quot;, &quot;attach_text&quot;, &quot;step&quot;]</code></pre>
+</div>
+<p>Six names and a version string. Import the ones you need, or all of them at once:</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">The complete set of imports. Nothing else in the package is public.</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">from pytest_html_reporter import attach, attach_api, attach_file, attach_json, attach_text, step</code></pre>
+</div>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Name</th><th>Signature</th><th>What it is for</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>attach</code></td><td><code>attach(data=None)</code></td><td>Hand the report the bytes of an image. See <a href="#attach">attach()</a>.</td></tr>
+      <tr><td class="t-nowrap"><code>attach_api</code></td><td><code>attach_api(response=None, &hellip;)</code></td><td>A whole HTTP call: both bodies, both header sets, and the curl line that repeats it.</td></tr>
+      <tr><td class="t-nowrap"><code>attach_text</code></td><td><code>attach_text(data, name=None, format=None)</code></td><td>Free text &mdash; a query, a diff, a note.</td></tr>
+      <tr><td class="t-nowrap"><code>attach_json</code></td><td><code>attach_json(data, name=None)</code></td><td>A dict, list, tuple or JSON document, pretty-printed with credentials blanked out.</td></tr>
+      <tr><td class="t-nowrap"><code>attach_file</code></td><td><code>attach_file(path, name=None, format=None, redact=True)</code></td><td>The contents of a small text file on disk &mdash; a payload, a config, a HAR.</td></tr>
+      <tr><td class="t-nowrap"><code>step</code></td><td><code>step(title, **params)</code></td><td>Name and time a piece of a test. Documented on <a href="steps-and-bdd.html">Steps &amp; BDD</a>.</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="note note--new"><span class="note__title">New in 0.3.5</span><code>attach_text()</code>, <code>attach_json()</code>, <code>attach_api()</code> and <code>attach_file()</code> arrived together, alongside the screenshots <code>attach()</code> was already taking. <code>step()</code> landed in 0.3.8.</div>
+<h3 id="older-import-paths">Older import paths still work</h3>
+<p><code>attach</code> really lives in <code>pytest_html_reporter.screenshots</code>, and <code>pytest_html_reporter.util</code> re-exports it under its historical name <code>screenshot</code> &mdash; it was defined there before the automatic captures gave it a module of its own. All three spellings are the same function object, and the package’s own test suite asserts it:</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">Three names, one function</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">from pytest_html_reporter import attach
+from pytest_html_reporter.screenshots import attach
+from pytest_html_reporter.util import screenshot
+
+# tests/unit/test_public_api.py
+assert pytest_html_reporter.attach is screenshot</code></pre>
+</div>
+<h3 id="return-values">Return values</h3>
+<p>Every <code>attach_*</code> helper returns the attachment record it queued &mdash; a plain <code>dict</code> of built-in types &mdash; or <code>None</code> when there was nothing to attach: empty text, an empty file, a call with no body, no headers and no curl line. <code>attach()</code> returns <code>None</code>.</p>
+<p>The record holds only strings, numbers, lists and dicts because an xdist worker has to pickle the whole thing back to the controller that renders the report. You are free to read it, but nothing in the report needs you to.</p>
+<div class="note note--tip"><span class="note__title">Nothing here can fail your test</span>The helpers are written so a test never dies inside a reporting call. A response property that raises, a file with undecodable bytes, a value whose <code>__repr__</code> blows up &mdash; each costs the report a field, never the test its run. The single deliberate exception is <code>attach()</code> handed a <code>str</code>.</div>
+<h3 id="what-you-do-not-import">What there is no API for</h3>
+<p>There is <strong>no logging API</strong> and <strong>no marker API</strong> to import. Captured <code>stdout</code>, <code>stderr</code> and <code>logging</code> output reach the report because pytest captures them and the reporter keeps them; markers, parameters, fixtures and docstrings reach it because the reporter reads them off the item at teardown. You write <code>print(...)</code> and <code>@pytest.mark.smoke</code> and nothing else. See <a href="report-tour.html">the report tour</a> for what that produces, and <a href="configuration.html">configuration</a> for the options that narrow it.</p>
+<h2 id="attach">attach() &mdash; handing the report an image</h2>
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">attach(data=None)</span>
+    <div class="def__meta">
+      <span class="pill">bytes</span>
+      <span class="pill pill--brand">returns: None</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p><code>attach</code> is the explicit half of screenshots. It takes <strong>the image, not the browser</strong>, so anything that can produce PNG bytes reaches the report: a Selenium driver, a Playwright page, a headless chart renderer, a rendered PDF page, an image diff.</p>
+    <p>The bytes are decoded with Pillow, buffered with the label <code>attached</code>, and written out as a <code>.png</code> under <code>&lt;report base&gt;/pytest_screenshots/</code> when the test’s record is built.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">The three spellings</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">from pytest_html_reporter import attach
+
+attach(data=self.driver.get_screenshot_as_png())   # Selenium
+attach(data=page.screenshot())                     # Playwright
+attach(data=await page.screenshot())               # Playwright, async API</code></pre>
+</div>
+  </div>
+</div>
+<p>Three things follow from <em>you asked for this picture</em>:</p>
+<ul class="featlist">
+  <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span><b>An image you attach is always kept.</b>Whatever the test did, and whatever <code>--report-screenshots</code> says. That option governs the pictures nobody asked for, and this one was asked for &mdash; a screenshot of a pass is a baseline, and one on a skip says why it was skipped.</span></li>
+  <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span><b>A test that attaches its own image is not photographed again.</b>The automatic capture bails out the moment it sees the running test has already produced an image, so a suite that already has a capture hook keeps exactly the images it always had rather than getting the same page twice.</span></li>
+  <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span><b>It lands wherever it was taken.</b>In the Screenshots gallery, in the <code>Screens</code> column of that test’s Test Metrics row, and &mdash; if a <code>step()</code> was open when you called it &mdash; under that step in the Test Steps tab.</span></li>
+</ul>
+<h3 id="attach-input-forms">What attach() accepts, and what belongs elsewhere</h3>
+<p><code>data</code> is the bytes of an image, as any browser or renderer hands them over. That is the only form. Everything else a test might want to hand over has a helper of its own:</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>What you have</th><th>Call</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap">PNG / JPEG bytes</td><td><code>attach(data=shot)</code></td><td>Decoded through Pillow and written out as a PNG.</td></tr>
+      <tr><td class="t-nowrap">A base64 payload</td><td><code>attach(data=base64.b64decode(shot))</code></td><td>Not an image until it is decoded. Base64 bytes handed straight over reach Pillow and fail there; a base64 <em>string</em> is rejected by the guard below.</td></tr>
+      <tr><td class="t-nowrap">A <code>str</code> of free text</td><td><code>attach_text(data)</code></td><td>See <a href="#attach-text">attach_text()</a>. <code>format</code> picks the syntax highlighting.</td></tr>
+      <tr><td class="t-nowrap">A dict, list, tuple or JSON document</td><td><code>attach_json(data)</code></td><td>Pretty-printed, with credential-looking fields blanked out at any depth.</td></tr>
+      <tr><td class="t-nowrap">A path to a small text file</td><td><code>attach_file(path)</code></td><td>Read as binary and decoded UTF-8 with replacement, so an odd byte cannot raise.</td></tr>
+      <tr><td class="t-nowrap">An HTTP response object</td><td><code>attach_api(response)</code></td><td>Taken apart into both bodies, both header sets and a curl line.</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="note note--warn"><span class="note__title">Careful</span>A <code>str</code> is rejected on purpose, with a message that names the helper you actually wanted: <code>attach() takes the bytes of an image; to attach text use attach_text(), attach_json() or attach_api() instead</code>. Pillow’s own error &mdash; <em>cannot identify image file</em> &mdash; says nothing about the mistake now the package also has helpers that do take text.</div>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">Every form attach() takes</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">import base64
+
+from pytest_html_reporter import attach
+
+# The bytes of an image, from wherever they came
+attach(data=driver.get_screenshot_as_png())
+
+# A base64 payload has to be decoded first
+attach(data=base64.b64decode(encoded_shot))
+
+# A rendered chart, an image diff, a PDF page - anything that produces bytes
+attach(data=figure_to_png(chart))</code></pre>
+</div>
+<h3 id="attach-lifecycle-cases">Two cases that need the explicit call</h3>
+<p>The automatic capture is synchronous and runs on the way out of the test, which leaves two shapes it cannot cover. Both are ordinary <code>attach()</code> calls.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">An async page has nowhere for the automatic capture to await - attach from the test body</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">async def test_home(page):                # Playwright, async API
+    try:
+        assert await page.title() == &quot;Example Domain&quot;
+    except AssertionError:
+        attach(data=await page.screenshot())
+        raise</code></pre>
+</div>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">tests/functional/test_screenshot.py - a unittest suite that quits its driver in tearDown</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">import unittest
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
+from pytest_html_reporter import attach
+
+
+class TestClass(unittest.TestCase):
+    def setUp(self):
+        self.driver = webdriver.Chrome()
+        self.driver.get(&quot;https://example.com&quot;)
+
+    def test_heading_mismatch(self):
+        heading = self.driver.find_element(By.CSS_SELECTOR, &quot;h1&quot;).text
+        self.assertEqual(heading, &quot;Not the heading&quot;)
+
+    def tearDown(self):
+        # Before quitting - a closed driver has nothing left to photograph.
+        attach(data=self.driver.get_screenshot_as_png())
+
+        self.driver.quit()</code></pre>
+</div>
+<h2 id="attach-api">attach_api() &mdash; a whole HTTP call</h2>
+<p>A picture is no use when the thing under test is an API. <code>attach_api</code> attaches <strong>what went out, what came back, and the curl line that reproduces it</strong>, and the entry lands on the report’s <code>API Logs</code> tab with the status code coloured by class and the call’s duration on the badge.</p>
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">attach_api()</span>
+    <div class="def__meta">
+      <span class="pill">response object or fields</span>
+      <span class="pill pill--brand">returns: dict | None</span>
+    </div>
+  </div>
+  <div class="def__body">
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">The full signature</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">def attach_api(response=None, name=None, method=None, url=None, status=None,
+               reason=None, duration=None, request_headers=None, request_body=None,
+               response_headers=None, response_body=None, content_type=None,
+               redact=True):</code></pre>
+</div>
+    <p>Nothing in the package imports <code>requests</code> or <code>httpx</code>. A response is read by duck typing, which is why both work out of the box &mdash; and why a client that resembles neither can still be described field by field.</p>
+  </div>
+</div>
+<h3 id="attach-api-three-ways">Three ways to call it</h3>
+<p><strong>1. Hand it a response object.</strong> The common case, and the whole call comes out of it.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">From a response object</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">from pytest_html_reporter import attach_api
+
+attach_api(requests.get(url))                          # requests
+attach_api(httpx.get(url))                             # httpx
+attach_api(await client.get(url))                      # httpx, async API - the response is passed, not the client
+attach_api(httpx.post(url, json=payload), name=&quot;Create order&quot;)</code></pre>
+</div>
+<p><strong>2. Describe the call by hand.</strong> Every field can be given directly, so a call reconstructed from a log &mdash; or one made by a client that resembles nothing &mdash; still makes a full attachment.</p>
+<p><strong>3. Both.</strong> An explicit argument always beats the response object, so you can override just the one field the client got wrong &mdash; a proxy that rewrote the URL, say.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">By hand, and mixing the two</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">attach_api(method=&quot;POST&quot;, url=&quot;/orders&quot;, status=500,
+           request_body=payload, response_body=body, duration=1.4)
+
+attach_api(response, url=upstream_url)         # override just the one field</code></pre>
+</div>
+<h3 id="attach-api-response-reads">What it reads off a response</h3>
+<p>In this order, first hit wins. Every read is individually guarded &mdash; <code>response.text</code> decodes the body on access, and a streamed httpx response raises rather than returning it &mdash; so an attachment missing one field is worth having where a test failing inside a reporting call is not.</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Field</th><th>Read from</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap">method</td><td><code>response.request.method</code></td></tr>
+      <tr><td class="t-nowrap">url</td><td><code>response.request.url</code>, else <code>response.url</code></td></tr>
+      <tr><td class="t-nowrap">status</td><td><code>response.status_code</code>, else <code>response.status</code></td></tr>
+      <tr><td class="t-nowrap">reason</td><td><code>response.reason</code>, else <code>response.reason_phrase</code> (httpx)</td></tr>
+      <tr><td class="t-nowrap">duration</td><td><code>response.elapsed.total_seconds()</code>, else <code>float(response.elapsed)</code></td></tr>
+      <tr><td class="t-nowrap">request headers / body</td><td><code>response.request.headers</code>; <code>response.request.body</code>, else <code>.content</code></td></tr>
+      <tr><td class="t-nowrap">response headers / body</td><td><code>response.headers</code>; <code>response.text</code>, else <code>.content</code></td></tr>
+    </tbody>
+  </table>
+</div>
+<h3 id="attach-api-parameters">Parameters</h3>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>response</code></td><td>object</td><td><code>None</code></td><td>Any response object with requests-like or httpx-like attributes. Read by duck typing.</td></tr>
+      <tr><td class="t-nowrap"><code>name</code></td><td>str</td><td><code>METHOD /path</code></td><td>Entry title. Defaults to the method and the URL’s <em>path</em> &mdash; the host is dropped because it is the same for every call in most suites and would push the part that differs off the end of the entry. Trimmed to 80 characters.</td></tr>
+      <tr><td class="t-nowrap"><code>method</code></td><td>str</td><td>from response, else <code>GET</code></td><td>HTTP method. Upper-cased.</td></tr>
+      <tr><td class="t-nowrap"><code>url</code></td><td>str</td><td>from response</td><td>Request URL. Credential-looking query parameters are blanked out unless <code>redact=False</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>status</code></td><td>int | str</td><td>from response</td><td>HTTP status code. Drives the entry’s colour class (2xx / 3xx / 4xx / 5xx) and the <code>Status</code> meta row.</td></tr>
+      <tr><td class="t-nowrap"><code>reason</code></td><td>str</td><td>from response</td><td>Status text, shown beside the code as <code>422 Unprocessable Entity</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>duration</code></td><td>float (seconds)</td><td><code>response.elapsed</code></td><td>How long the call took. Rendered as <code>184 ms</code> under a second and <code>1.42 s</code> over it; kept in whole milliseconds alongside so the tab’s summary can add the calls up and find the slowest.</td></tr>
+      <tr><td class="t-nowrap"><code>request_headers</code></td><td>dict | mapping | pairs</td><td>from <code>response.request</code></td><td>Anything with <code>.items()</code> &mdash; a dict, a <code>CaseInsensitiveDict</code>, httpx <code>Headers</code> &mdash; or an iterable of pairs.</td></tr>
+      <tr><td class="t-nowrap"><code>request_body</code></td><td>str | bytes | dict | list</td><td>from <code>response.request</code></td><td>The request payload. A dict or list is pretty-printed directly; text and bytes are re-serialised only when they really parse as JSON.</td></tr>
+      <tr><td class="t-nowrap"><code>response_headers</code></td><td>dict | mapping | pairs</td><td>from response</td><td>As <code>request_headers</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>response_body</code></td><td>str | bytes | dict | list</td><td>from <code>.text</code> / <code>.content</code></td><td>The response payload, pretty-printed when JSON.</td></tr>
+      <tr><td class="t-nowrap"><code>content_type</code></td><td>str</td><td>from the headers</td><td>Overrides the Content-Type used to pick each body’s syntax, for the request and the response alike.</td></tr>
+      <tr><td class="t-nowrap"><code>redact</code></td><td>bool</td><td><code>True</code></td><td>Whether credential-looking headers, query parameters and JSON fields are replaced with <code>&lt;redacted&gt;</code>. See <a href="#credential-blanking">credential blanking</a>.</td></tr>
+    </tbody>
+  </table>
+</div>
+<h3 id="attach-api-contents">What one attachment holds</h3>
+<p>Five parts, in this order: <strong>Response body</strong>, <strong>Request body</strong>, <strong>Request headers</strong>, <strong>Response headers</strong>, <strong>cURL</strong>. Parts with no text are dropped, so a GET with no request body simply has no <em>Request body</em> part, and an attachment with no parts at all is never queued &mdash; that is the <code>None</code> return.</p>
+<p>A meta strip above them carries <code>Method</code>, <code>URL</code>, <code>Status</code>, <code>Time</code>, <code>Size</code> and <code>Content-Type</code>, each when it is known.</p>
+<p><strong>Bodies are pretty-printed when they are JSON</strong>, however they arrived: a dict skips the round trip, bytes are decoded, and text is re-serialised only when it really parses. Text that does not open with <code>{</code> or <code>[</code> is not treated as JSON &mdash; a body of <code>123</code> is technically valid JSON and re-serialising it would be a pointless way of saying nothing. A body that does not parse is kept exactly as it came, so half a response is still readable. Otherwise the syntax is implied by the Content-Type: <code>json</code>, <code>xml</code>, <code>html</code>, <code>yaml</code>, and <code>csv</code> falls back to <code>text</code>.</p>
+<figure class="imgslot" data-shot="api-logs-attachment.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/api-logs-attachment.png</b>
+  <span>The API Logs tab at 1440px wide, light theme, with a 422 entry selected: the rail on the left showing several calls with their status codes and durations, and the open payload on the right showing the meta strip and the Response body part.</span>
+</figure>
+<p><strong>The curl line is the point.</strong> Pasting it into a terminal is the first thing anyone does with a failed API call, and rebuilding it by hand from a report is the tedious part. It is built from the already-redacted headers and body, and single quotes inside the body are escaped.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The cURL part of an attachment, with the redactions already applied</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="shell">curl -X POST &#039;https://api.example.com/v2/orders?api_key=&lt;redacted&gt;&#039; \
+  -H &#039;Authorization: &lt;redacted&gt;&#039; \
+  -H &#039;Content-Type: application/json&#039; \
+  --data &#039;{&quot;sku&quot;: &quot;A-1&quot;, &quot;qty&quot;: 2}&#039;</code></pre>
+</div>
+<h3 id="attach-api-worked-example">A worked example</h3>
+<p>From <code>tests/functional/test_attachments.py</code>, the demo run that fills the tab with no browser and no network. Three attachments explaining one failure, and a call described entirely by hand:</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">tests/functional/test_attachments.py</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">import json
+
+from pytest_html_reporter import attach_api, attach_json, attach_text
+
+ORDER = {&quot;sku&quot;: &quot;A-1&quot;, &quot;qty&quot;: 2, &quot;customer&quot;: {&quot;id&quot;: 91, &quot;password&quot;: &quot;hunter2&quot;}}
+
+
+def test_an_order_is_created(api):
+    &quot;&quot;&quot;A call that went fine. Attached anyway - a 201 is a baseline worth having.&quot;&quot;&quot;
+    response = api.call(&quot;POST&quot;, &quot;/orders&quot;, ORDER, 201, &quot;Created&quot;,
+                        &#039;{&quot;id&quot;: 4711, &quot;status&quot;: &quot;created&quot;, &quot;access_token&quot;: &quot;tok_live_31f8&quot;}&#039;)
+    attach_api(response)
+
+    assert response.status_code == 201
+
+
+def test_the_api_rejects_the_order(api):
+    &quot;&quot;&quot;The case the tab exists for: three attachments explaining one failure.&quot;&quot;&quot;
+    response = api.call(&quot;POST&quot;, &quot;/orders&quot;, ORDER, 422, &quot;Unprocessable Entity&quot;,
+                        &#039;{&quot;error&quot;: &quot;sku unknown&quot;, &quot;field&quot;: &quot;sku&quot;, &quot;trace&quot;: &quot;e91c-44a&quot;}&#039;,
+                        seconds=1.42)
+    attach_api(response, name=&quot;Create order&quot;)
+
+    attach_json({&quot;expected&quot;: {&quot;id&quot;: 4711, &quot;status&quot;: &quot;created&quot;},
+                 &quot;got&quot;: json.loads(response.text)}, name=&quot;Diff&quot;)
+
+    attach_text(&quot;SELECT id, status FROM orders WHERE sku = &#039;A-1&#039;;&quot;,
+                name=&quot;What the assertion checked&quot;, format=&quot;sql&quot;)
+
+    assert response.status_code == 201, &quot;the order was rejected&quot;
+
+
+def test_upstream_is_down():
+    &quot;&quot;&quot;A call described by hand - no response object anywhere in sight.&quot;&quot;&quot;
+    attach_api(method=&quot;GET&quot;, url=&quot;https://api.example.com/v2/health&quot;, status=503,
+               reason=&quot;Service Unavailable&quot;, duration=3.2,
+               response_body=&quot;upstream timed out after 3s&quot;)</code></pre>
+</div>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Run the bundled demo - no browser, no network</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="shell">$ pytest tests/functional/test_attachments.py --html-report=./report</code></pre>
+</div>
+<h3 id="credential-blanking">Credential blanking</h3>
+<p><strong>A report is a build artifact.</strong> It gets published by CI, attached to tickets and pasted into chat, so <code>attach_api</code>, <code>attach_json</code> and <code>attach_file</code> replace anything that looks like a credential with the literal string <code>&lt;redacted&gt;</code> before it is ever written.</p>
+<p><strong>A name is a secret if any of these appears anywhere in its lower-cased form:</strong></p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">The whole list</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python"># pytest_html_reporter/attachments.py
+SECRET_HINTS = (
+    &quot;authorization&quot;, &quot;cookie&quot;, &quot;token&quot;, &quot;secret&quot;, &quot;password&quot;, &quot;passwd&quot;,
+    &quot;api-key&quot;, &quot;apikey&quot;, &quot;api_key&quot;, &quot;x-auth&quot;, &quot;credential&quot;, &quot;private-key&quot;,
+)</code></pre>
+</div>
+<p>Matching as a substring is what makes the list this short: <code>X-Api-Key</code>, <code>Proxy-Authorization</code>, <code>Set-Cookie</code> and <code>refresh_token</code> are all covered without listing every spelling anyone has ever used.</p>
+<p>Five places it is applied, and the reason for each:</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Where</th><th>What is blanked</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap">Headers</td><td>The value of any header whose <em>name</em> matches, request and response alike.</td><td>The ordinary home of a bearer token.</td></tr>
+      <tr><td class="t-nowrap">The URL query string</td><td><code>?api_key=&hellip;</code> becomes <code>?api_key=&lt;redacted&gt;</code>, rewritten in place. A bare flag with no <code>=</code> is left alone.</td><td>A key in the query string is as ordinary in an API suite as an Authorization header, and it would otherwise reach the report three times over &mdash; in the entry’s title, in the URL on the meta strip and in the curl line. Rewriting it in place is what makes all three agree.</td></tr>
+      <tr><td class="t-nowrap">Decoded JSON bodies</td><td>Any matching field, <strong>at any depth</strong>. Lists and nested dicts are walked.</td><td>A bearer token is at least as likely to be in the body of a login response as in a header &mdash; and that response is exactly the one someone attaches while working out why the login failed.</td></tr>
+      <tr><td class="t-nowrap">HAR-shaped entries</td><td><code>{"name": "Authorization", "value": "Bearer &hellip;"}</code> keeps its <code>name</code> and loses its <code>value</code>.</td><td>That is how a HAR, and most API specs, write a header. Keying off the dict’s own keys would look at <code>name</code> and <code>value</code> and find nothing to redact.</td></tr>
+      <tr><td class="t-nowrap">The generated curl line</td><td>Inherits every redaction above.</td><td>It is built from the already-redacted headers, URL and body, so a pasted command cannot leak what the payload above it hid.</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="note note--warn"><span class="note__title">What is <em>not</em> blanked</span>Unstructured text. <code>attach_text()</code> never redacts, and a file whose format does not resolve to <code>json</code> is kept verbatim &mdash; there is nothing to key a redaction off, and mangling a config file would be worse than not trying.</div>
+<p><strong>Turning it off.</strong> <code>attach_api(&hellip;, redact=False)</code> and <code>attach_file(&hellip;, redact=False)</code> keep the real values. <code>attach_json()</code> has no <code>redact</code> parameter and always redacts.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">Opting out</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">attach_api(response, redact=False)     # a local report, and you need the real token
+attach_file(har_path, redact=False)</code></pre>
+</div>
+<figure class="imgslot" data-shot="attachment-curl-redacted.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/attachment-curl-redacted.png</b>
+  <span>The cURL part of an API Logs attachment, light theme, cropped to about 900px wide, showing an Authorization header and an ?api_key= query parameter both reading &lt;redacted&gt; while the Content-Type header and the JSON body are intact.</span>
+</figure>
+<p>The bundled demo carries a fake bearer token in a header, an <code>?api_key=</code> in the query string and a password nested in a payload, precisely so you can run it and see that none of the three reach the report.</p>
+<h2 id="text-json-and-file-attachments">Text, JSON and file attachments</h2>
+<p>The other three helpers take a payload rather than a call. All three queue an entry on the same <code>API Logs</code> tab, which filters by the <em>kind</em> each helper sets: <code>api</code>, <code>json</code>, <code>text</code> or <code>file</code>.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">The three at a glance</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">from pytest_html_reporter import attach_file, attach_json, attach_text
+
+attach_text(query, name=&quot;Query&quot;, format=&quot;sql&quot;)        # any text at all
+attach_json({&quot;expected&quot;: order, &quot;got&quot;: response})     # pretty-printed, secrets blanked
+attach_file(&quot;payloads/order.json&quot;)                    # a small file from disk</code></pre>
+</div>
+<h3 id="attach-text">attach_text()</h3>
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">attach_text(data, name=None, format=None)</span>
+    <div class="def__meta">
+      <span class="pill">str | bytes</span>
+      <span class="pill pill--teal">kind: text</span>
+      <span class="pill pill--brand">returns: dict | None</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Attaches free text to the running test &mdash; a query, a diff, a note. <code>data</code> may be a <code>str</code> or <code>bytes</code>; bytes are decoded as UTF-8 with undecodable sequences replaced, never raising. Empty text attaches nothing and returns <code>None</code>.</p>
+    <p><strong><code>format</code> only picks how the viewer lays the text out.</strong> It is never used to reinterpret what you passed, and anything outside the known set falls back to <code>text</code>.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">Named and formatted, named, and a bare note</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">from pytest_html_reporter import attach_text
+
+attach_text(response.text, name=&quot;Response body&quot;, format=&quot;json&quot;)
+attach_text(cursor.query, name=&quot;Query&quot;, format=&quot;sql&quot;)
+attach_text(&quot;The third retry is the one that worked; the first two timed out.&quot;)</code></pre>
+</div>
+  </div>
+</div>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>data</code></td><td>str | bytes</td><td>&mdash;</td><td>The text to attach. Bytes are decoded UTF-8 with replacement. Empty text attaches nothing.</td></tr>
+      <tr><td class="t-nowrap"><code>name</code></td><td>str</td><td><code>"Text"</code></td><td>Title on the rail entry and on the part inside it. Trimmed to 80 characters.</td></tr>
+      <tr><td class="t-nowrap"><code>format</code></td><td>str</td><td><code>"text"</code></td><td>One of <code>text</code>, <code>json</code>, <code>xml</code>, <code>html</code>, <code>yaml</code>, <code>sql</code>, <code>curl</code>, <code>headers</code>. Anything else falls back to <code>text</code>. Purely presentational.</td></tr>
+    </tbody>
+  </table>
+</div>
+<p>The rail entry’s badge shows the size &mdash; <code>842 B</code>, <code>1.4 KB</code>, <code>2.1 MB</code>.</p>
+<h3 id="attach-json">attach_json()</h3>
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">attach_json(data, name=None)</span>
+    <div class="def__meta">
+      <span class="pill">dict | list | tuple | str | bytes</span>
+      <span class="pill pill--purple">kind: json</span>
+      <span class="pill pill--brand">returns: dict | None</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Takes a <code>dict</code>, <code>list</code>, <code>tuple</code>, a JSON string or JSON bytes, and attaches it pretty-printed with two-space indentation, <code>ensure_ascii=False</code>, and non-serialisable values rendered through <code>str</code> rather than raising.</p>
+    <p>Fields that look like credentials are blanked out at any depth, exactly as they are in an attached API call &mdash; and unlike the other two helpers there is no way to switch that off. A dict handed over already decoded skips the parse and serialise round trip. Empty input attaches nothing and returns <code>None</code>.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">A hand-built diff, a decoded body, and a raw JSON string</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">from pytest_html_reporter import attach_json
+
+attach_json({&quot;expected&quot;: {&quot;id&quot;: 4711}, &quot;got&quot;: {&quot;error&quot;: &quot;sku unknown&quot;}}, name=&quot;Diff&quot;)
+attach_json(requests.get(&quot;https://reqres.in/api/users/2&quot;).json())
+attach_json(response.text)          # a JSON string, parsed and re-serialised</code></pre>
+</div>
+  </div>
+</div>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>data</code></td><td>dict | list | tuple | str | bytes</td><td>&mdash;</td><td>The object or JSON document to attach. Objects are serialised with <code>indent=2</code>; strings and bytes are parsed and re-serialised only when they really are JSON, which means text not opening with <code>{</code> or <code>[</code> is left alone.</td></tr>
+      <tr><td class="t-nowrap"><code>name</code></td><td>str</td><td><code>"JSON"</code></td><td>Title on the rail entry. Trimmed to 80 characters.</td></tr>
+    </tbody>
+  </table>
+</div>
+<h3 id="attach-file">attach_file()</h3>
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">attach_file(path, name=None, format=None, redact=True)</span>
+    <div class="def__meta">
+      <span class="pill">str | os.PathLike</span>
+      <span class="pill pill--accent">kind: file</span>
+      <span class="pill pill--brand">returns: dict | None</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Reads a small text file &mdash; a payload, a config, a HAR &mdash; and attaches its contents, named after the file. The file is read as binary and decoded UTF-8 with replacement, so undecodable bytes never raise: a report that says which file could not be read beats a test that fails while reporting. An empty file attaches nothing.</p>
+    <p>The rail entry carries <code>File</code> (the path) and <code>Size</code> on its meta strip; the part inside always keeps the file’s own basename whatever <code>name</code> says.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">Naming, forcing a syntax, and switching redaction off</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">from pytest_html_reporter import attach_file
+
+attach_file(&quot;payloads/order.json&quot;)
+attach_file(har_path, name=&quot;Network trace&quot;)
+attach_file(&quot;config/staging.env&quot;, format=&quot;text&quot;)
+attach_file(&quot;dump.json&quot;, redact=False)     # keep the real values</code></pre>
+</div>
+  </div>
+</div>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>path</code></td><td>str | os.PathLike</td><td>&mdash;</td><td>Path to a small text file. Read as binary, decoded UTF-8 with replacement.</td></tr>
+      <tr><td class="t-nowrap"><code>name</code></td><td>str</td><td><code>os.path.basename(path)</code></td><td>Title on the rail entry. Trimmed to 80 characters.</td></tr>
+      <tr><td class="t-nowrap"><code>format</code></td><td>str</td><td>from the extension</td><td>Force a syntax instead of guessing it from the extension.</td></tr>
+      <tr><td class="t-nowrap"><code>redact</code></td><td>bool</td><td><code>True</code></td><td>Whether credential-looking fields inside the file are replaced with <code>&lt;redacted&gt;</code>. Only applies to a file whose format resolves to <code>json</code>.</td></tr>
+    </tbody>
+  </table>
+</div>
+<p><strong>The syntax is taken from the extension</strong> unless <code>format</code> says otherwise:</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">Anything else is text</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python"># pytest_html_reporter/attachments.py
+EXTENSION_FORMATS = {
+    &quot;.json&quot;: &quot;json&quot;, &quot;.xml&quot;: &quot;xml&quot;, &quot;.html&quot;: &quot;html&quot;, &quot;.htm&quot;: &quot;html&quot;,
+    &quot;.yaml&quot;: &quot;yaml&quot;, &quot;.yml&quot;: &quot;yaml&quot;, &quot;.sql&quot;: &quot;sql&quot;, &quot;.har&quot;: &quot;json&quot;,
+}</code></pre>
+</div>
+<p><strong>A file that holds JSON is redacted and pretty-printed like any other body.</strong> Of everything you can attach this is the likeliest to be carrying a credential &mdash; a HAR is a recording of your auth headers, which is why <code>.har</code> resolves to <code>json</code> and why HAR-shaped <code>{"name": "Authorization", "value": &hellip;}</code> header entries are redacted by their name/value pair rather than by dict key.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">tests/functional/test_attachments.py</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">import json
+
+from pytest_html_reporter import attach_file
+
+
+def test_a_file_from_disk(tmp_path):
+    &quot;&quot;&quot;Any small text file - a payload, a config, a HAR - can be attached.&quot;&quot;&quot;
+    payload = tmp_path / &quot;order.json&quot;
+    payload.write_text(json.dumps(ORDER, indent=2))
+
+    attach_file(str(payload), name=&quot;The payload we sent&quot;)</code></pre>
+</div>
+<h2 id="when-to-call-them">When to call them</h2>
+<p>Any time during setup, the test body, or teardown. That is not a courtesy &mdash; it falls out of where the reporter stands. Its <code>pytest_runtest_teardown</code> is a hookwrapper, and the test’s record is built <strong>after</strong> the <code>yield</code>, which is after the fixture finalizers have run:</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">Why attaching from a fixture teardown works at all</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python"># pytest_html_reporter/html_reporter.py
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_teardown(self, item, nextitem):
+    ...
+    # Before the yield: the last moment a driver or page is still open.
+    self.auto_screenshot(item)
+
+    yield                          # the fixture finalizers run in here
+
+    self.append_test_record(item)  # ...so anything they attached has arrived</code></pre>
+</div>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Where you call from</th><th>Works</th><th>What to know</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap">The test body</td><td>Yes</td><td>Filed against the test, and under the innermost open <code>step()</code> if there is one.</td></tr>
+      <tr><td class="t-nowrap">A fixture, before its <code>yield</code></td><td>Yes</td><td>Filed against the test, the same as one made from the body.</td></tr>
+      <tr><td class="t-nowrap">A fixture’s teardown, after its <code>yield</code></td><td>Yes</td><td>The recipe most people reach for first, and the reason the record is built after the finalizers.</td></tr>
+      <tr><td class="t-nowrap">A <code>unittest</code> <code>tearDown</code></td><td>Yes</td><td>For an image, call <code>attach()</code> <em>before</em> <code>driver.quit()</code> &mdash; a closed driver has nothing left to photograph.</td></tr>
+      <tr><td class="t-nowrap">A <code>pytest_runtest_makereport</code> hook</td><td>Yes</td><td>Put the hook in <code>conftest.py</code>. pytest does pick one up from a test module, but only for that module’s own tests.</td></tr>
+      <tr><td class="t-nowrap">An <code>async</code> test</td><td>Yes</td><td><code>attach(data=await page.screenshot())</code> from the body. Nothing in the teardown can await a coroutine.</td></tr>
+    </tbody>
+  </table>
+</div>
+<h3 id="attach-on-failure-only">Attach on failure, not on every call</h3>
+<p>Keeping every response buries the one that matters and grows the report for no reason. The payload worth having is the one behind a failure, so attach from a fixture’s teardown and let the outcome decide. This is the whole wiring, and it belongs in <code>conftest.py</code> where it covers every test under it:</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">The canonical conftest.py wiring</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python"># conftest.py
+import pytest
+
+from pytest_html_reporter import attach_api
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    &quot;&quot;&quot;Lets the fixture below see how the test ended.&quot;&quot;&quot;
+    outcome = yield
+    rep = outcome.get_result()
+    setattr(item, &quot;rep_&quot; + rep.when, rep)
+
+
+@pytest.fixture
+def api(request):
+    client = ApiClient()
+    yield client
+
+    if getattr(request.node, &quot;rep_call&quot;, None) is not None and request.node.rep_call.failed:
+        if client.last_response is not None:
+            attach_api(client.last_response, name=&quot;Last call before the failure&quot;)</code></pre>
+</div>
+<div class="note note--tip"><span class="note__title">Tip</span>The same guidance is printed on the <code>API Logs</code> tab itself whenever a run attaches nothing, so it is there when you go looking for it.</div>
+<h3 id="where-attachments-land">Where an attachment lands</h3>
+<ul class="featlist">
+  <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span><b>Against the test that was running.</b>The Test Metrics table gains a <code>Data</code> column counting what each test attached; clicking it crosses to the API Logs tab with the list already narrowed to that one test. A test that attached nothing shows a dash.</span></li>
+  <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span><b>On the step that was open.</b>No argument says which step an attachment belongs to &mdash; the buffer reads the innermost open step itself, because <code>attach_json</code> is called by code that has no idea a report exists, let alone which step it is inside. The step then shows a paperclip with the count.</span></li>
+  <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span><b>Outside the metrics table.</b>Attachment payloads are rendered outside it, so they are never swept into its search box or into the CSV, Excel and print exports.</span></li>
+  <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span><b>Kept across a retry.</b>A test retried by <code>pytest-rerunfailures</code> that attaches nothing on the attempt that finally passed keeps what the failing attempt attached, rather than losing the evidence by succeeding.</span></li>
+  <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span><b>Home from an xdist worker.</b>Each worker runs the same buffers and ships its records to the controller at <code>pytest_sessionfinish</code>, which merges and renders once. That is why every record holds built-in types only &mdash; it has to pickle.</span></li>
+</ul>
+<p>Buffers are drained by every finished test whatever the mode says, so an attachment nobody claims cannot be left lying around for the next test to pick up and present as its own.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">An attachment needs no argument to say which step it belongs to</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python">from pytest_html_reporter import attach_api, step
+
+with step(&quot;Submit credentials&quot;):
+    attach_api(requests.post(url, json=payload))
+    # the step shows a paperclip; the call opens under it</code></pre>
+</div>
+<h2 id="keeping-the-report-file-down">Keeping the report file down</h2>
+<p>The report is one HTML file you can mail, publish as a CI artifact or open off a stick, so everything a test attaches costs page weight. Two options decide how much of it survives, and both have an ini key of the same name.</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Option / ini key</th><th>Values</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>--report-attachments</code><br><code>report_attachments</code></td><td><code>all</code> | <code>failed</code> | <code>none</code></td><td><code>all</code></td><td>Whose attachments &mdash; text, JSON, files and API calls &mdash; are kept. <code>none</code> costs nothing at all: the tab and the <code>Data</code> column go quiet.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-attachment-limit</code><br><code>report_attachment_limit</code></td><td>int, <code>0</code> keeps everything</td><td><code>20000</code></td><td>Characters kept per attached <em>part</em>. What survives is the <strong>start</strong>, followed by <code>... N more characters - raise --report-attachment-limit to keep them</code>.</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="note"><span class="note__title">Note</span>The head is what survives an attachment, which is the opposite of a log: logs read chronologically and the lines by the failure are at the end, while a payload puts its status, its error field and its first records at the top. <code>--report-log-limit</code> keeps the tail for exactly that reason.</div>
+<p>Two of the caps below are fixed rather than configurable. They exist so one long value cannot break the layout of a rail entry:</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Cap</th><th>Value</th><th>Applies to</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>TITLE_MAX</code></td><td>80 characters</td><td>An attachment’s title &mdash; whatever <code>name</code> you passed.</td></tr>
+      <tr><td class="t-nowrap"><code>META_VALUE_MAX</code></td><td>300 characters</td><td>One value on the meta strip: the URL, the Content-Type, and the rest.</td></tr>
+      <tr><td class="t-nowrap">Part text</td><td><code>--report-attachment-limit</code></td><td>Each part’s body, trimmed as above.</td></tr>
+    </tbody>
+  </table>
+</div>
+<p><code>--report-screenshots</code> belongs to this family too, but it governs <strong>only the pictures nobody asked for</strong> &mdash; an image handed to <code>attach()</code> is kept under every mode.</p>
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Where to set the attachment options">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">CLI</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pytest.ini</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="shell"># keep every test&#039;s attachments (the default)
+$ pytest tests/ --html-report=./report
+
+# only failures keep theirs
+$ pytest tests/ --html-report=./report --report-attachments=failed
+
+# keep nothing, at no size cost
+$ pytest tests/ --html-report=./report --report-attachments=none
+
+# raise or lift the per-part cap
+$ pytest tests/ --html-report=./report --report-attachment-limit=100000
+$ pytest tests/ --html-report=./report --report-attachment-limit=0</code></pre>
+</div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">ini</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="ini">[pytest]
+report_attachments = all
+report_attachment_limit = 20000</code></pre>
+</div>
+  </div>
+</div>
+<figure class="imgslot" data-shot="metrics-data-column.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/metrics-data-column.png</b>
+  <span>The Test Metrics table at 1440px wide, light theme, cropped to the Logs, Data and Screens columns, showing one row with a Data count of 3, one with a single screenshot, and one showing a dash in all three.</span>
+</figure>
+<p>Every flag on this page, and the ones that govern logs, steps and screenshots, are listed in full on <a href="cli-reference.html">the CLI reference</a>; <a href="configuration.html">configuration</a> covers setting them in <code>pytest.ini</code>, <code>tox.ini</code> or <code>pyproject.toml</code>.</p>
+<h2 id="the-rest-of-the-api">The rest of the API</h2>
+<p>Two things a test can reach for are documented in full elsewhere, because both are as much about the tab they fill as about the call you make.</p>
+<div class="grid grid--2">
+  <a class="card" href="steps-and-bdd.html">
+    <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
+    <h3>step()</h3>
+    <p>The sixth export. A <code>with</code> block or a decorator that names and times a piece of a test, plus the Gherkin steps a pytest-bdd scenario contributes on its own.</p>
+    <span class="card__more">Steps &amp; BDD <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="screenshots.html">
+    <div class="card__icon is-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3.2"/></svg></div>
+    <h3>Automatic screenshots</h3>
+    <p>A test that fails holding a Selenium driver or a Playwright page is photographed with no hook, no fixture, no conftest and no import. <code>attach()</code> is only for the pictures that need taking at a particular moment.</p>
+    <span class="card__more">Screenshots <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+</div>
+<p>What a test can use them together for is worth seeing once: steps live on the page object, so the tests never mention them; <code>attach_api</code> is called once from a fixture teardown, on failure only; and the screenshot is nobody’s business at all.</p>
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">The whole API, adopted - and almost none of it visible in the test</span>
+    <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
+  </div>
+  <pre><code data-lang="python"># test_checkout.py
+import pytest
+
+from pytest_html_reporter import step
+
+
+@pytest.mark.smoke
+def test_a_shopper_can_buy_one_item(page, api, checkout):
+    &quot;&quot;&quot;The happy path, as three named steps.&quot;&quot;&quot;
+    checkout.login(&quot;amy&quot;)
+    checkout.add(&quot;A-12&quot;)
+
+    with step(&quot;Check the basket&quot;):
+        assert page.locator(&quot;.cart-count&quot;).inner_text() == &quot;1&quot;
+    # If this fails: the step says where, the API call is attached by the fixture,
+    # and the page is photographed on the way out. None of that is written here.</code></pre>
+</div>
+<nav class="pagenav" aria-label="Pagination">
+<a class="prev" href="../docs/configuration.html"><span>&larr; Previous</span><b>Configuration</b></a>
+<a class="next" href="../docs/compatibility.html"><span>Next &rarr;</span><b>Compatibility &amp; files</b></a>
+</nav>
+</main>
+<aside class="toc" aria-label="On this page">
+  <div class="toc__title">On this page</div>
+  <ul>
+<li class="lvl-2"><a href="#the-import-surface">The import surface</a></li>
+<li class="lvl-2"><a href="#attach">attach() &mdash; handing the report an image</a></li>
+<li class="lvl-2"><a href="#attach-api">attach_api() &mdash; a whole HTTP call</a></li>
+<li class="lvl-2"><a href="#text-json-and-file-attachments">Text, JSON and file attachments</a></li>
+<li class="lvl-2"><a href="#when-to-call-them">When to call them</a></li>
+<li class="lvl-2"><a href="#keeping-the-report-file-down">Keeping the report file down</a></li>
+<li class="lvl-2"><a href="#the-rest-of-the-api">The rest of the API</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div class="footer__about">
+        <a class="brand" href="../index.html"><svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="3.9" height="18" rx="1" fill="#3571a3"/><rect x="7.4" y="7.85" width="3.9" height="13.15" rx="1" fill="#ffd143"/><rect x="12.8" y="12.7" width="3.9" height="8.3" rx="1" fill="#8b8b8b"/><rect x="18.2" y="17.3" width="3.9" height="3.7" rx="1" fill="#3571a3"/></svg>
+          <span class="brand__text"><span class="brand__a">pytest</span><span class="brand__b">HTML Reporter</span></span>
+        </a>
+        <p>A light-weight static HTML report for the pytest framework. MIT licensed, built by Prashanth Sams and contributors.</p>
+      </div>
+      <div>
+        <h2>Documentation</h2>
+        <ul>
+          <li><a href="../docs/getting-started.html">Getting started</a></li>
+          <li><a href="../docs/features.html">Features</a></li>
+          <li><a href="../docs/report-tour.html">Report tour</a></li>
+          <li><a href="../docs/cli-reference.html">CLI reference</a></li>
+          <li><a href="../docs/python-api.html">Python API</a></li>
+          <li><a href="../docs/compatibility.html">Compatibility &amp; files</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Ecosystem</h2>
+        <ul>
+          <li><a href="../docs/github-action.html">GitHub Action</a></li>
+          <li><a href="../docs/vscode.html">VS Code extension</a></li>
+          <li><a href="../docs/ci-integrations.html">CI &amp; scale</a></li>
+          <li><a href="../docs/analytics.html">Analytics &amp; history</a></li>
+          <li><a href="../docs/security-privacy.html">Security &amp; privacy</a></li>
+          <li><a href="../docs/comparison.html">Compared to others</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Project</h2>
+        <ul>
+          <li><a href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener">Source on GitHub</a></li>
+          <li><a href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener">PyPI package</a></li>
+          <li><a href="https://marketplace.visualstudio.com/items?itemName=prashanth-sams.pytest-html-reporter-vscode" target="_blank" rel="noopener">VS Code Marketplace</a></li>
+          <li><a href="https://github.com/prashanth-sams/pytest-html-reporter/issues" target="_blank" rel="noopener">Issue tracker</a></li>
+          <li><a href="../docs/contributing.html">Contributing</a></li>
+          <li><a href="../docs/faq.html">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>MIT licensed &middot; &copy; Prashanth Sams</span>
+      <span>Built for people who read their test reports.</span>
+    </div>
+  </div>
+</footer>
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

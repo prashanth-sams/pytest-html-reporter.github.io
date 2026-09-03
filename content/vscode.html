@@ -1,0 +1,912 @@
+<!--META {"title": "VS Code extension", "eyebrow": "Integrations", "description": "Install and use Pytest HTML Reporter for VS Code, the sidebar viewer for the output.json your pytest run writes.", "lede": "The extension reads the same output.json the plugin already writes and renders it beside your code: failures grouped by suite, a readable error on every card, and one click from a failure to the def that produced it."} -->
+
+<h2 id="what-it-is">What it is</h2>
+
+<p><strong>Pytest HTML Reporter for VS Code</strong> is a read-only viewer for reports produced by the
+<code>pytest-html-reporter</code> pytest plugin. Its single data source is the plugin's
+<code>output.json</code>, plus the rotated copies the plugin keeps in <code>archive/</code>. It never runs
+pytest, and it never scrapes the generated HTML for data.</p>
+
+<p>The problem it solves is the walk between the report and the code. A generated report lives in a
+browser tab: you read a failure there, remember the suite and the test name, switch windows, open the
+file, and search for the function. The extension collapses that into a click. The same run summary,
+the same failures, the same error text — in the activity bar, one click from the <code>def</code>.</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Failures at a glance</b>Every failing test grouped under its suite, with a truncated error line on each card.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Jump to the test</b>Click a failure to open the suite file with the cursor on the matching <code>def</code>.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Copy the real error</b>The card shows the ANSI-stripped text; the clipboard gets the original, terminal colouring intact.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Flaky versus broken</b>Past builds in <code>archive/</code> separate a test that <em>sometimes</em> fails from one that has never passed.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Live refresh</b>The sidebar reloads when a run finishes and rewrites the report file.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The full report, in the editor</b>Open the generated HTML — Steps, Attachments, Analytics, Coverage, screenshots — in a tab instead of a browser.</span>
+  </li>
+</ul>
+
+<h3 id="what-it-does-not-do">What it deliberately does not do</h3>
+
+<p>It does not run your tests. The Python extension's Test Explorer already does that, and
+this extension never shells out to pytest. It does not reproduce Steps, Attachments, logs, BDD
+scenarios or per-file coverage either — those are the HTML report's job, and the sidebar links out to
+it rather than rebuilding it. Every number in the sidebar comes from <code>output.json</code>; the
+HTML panel is display only and feeds nothing back.</p>
+
+<div class="note"><span class="note__title">Note</span>The extension is a viewer, not a runner. If the sidebar is out of date, it is because no new <code>output.json</code> has been written — run pytest again.</div>
+
+<h2 id="install">Installing</h2>
+
+<p>The extension is published as <code>prashanth-sams.pytest-html-reporter-vscode</code> — publisher
+<code>prashanth-sams</code>, display name <strong>Pytest HTML Reporter</strong>, category Testing. It
+requires VS Code <code>^1.90.0</code> and activates on <code>onStartupFinished</code>, so nothing else
+is needed after install: open a folder that contains a report and the view populates itself.</p>
+
+<h3 id="install-extensions-view">From the Extensions view</h3>
+
+<ol class="steps">
+  <li>
+    <h3>Open the Extensions view</h3>
+    <p><code>Ctrl+Shift+X</code> on Windows and Linux, <code>Cmd+Shift+X</code> on macOS.</p>
+  </li>
+  <li>
+    <h3>Search for <code>Pytest HTML Reporter</code></h3>
+    <p>Install the entry published by <strong>prashanth-sams</strong>. The icon is the reporter's own bar-chart mark.</p>
+  </li>
+  <li>
+    <h3>Open the view</h3>
+    <p>Click the <strong>Pytest HTML Reporter</strong> icon in the activity bar. The view inside it is titled <strong>Test Results</strong>.</p>
+  </li>
+</ol>
+
+<h3 id="install-command-line">From the command line, Quick Open, or a VSIX</h3>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Ways to install the extension">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">code CLI</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">Quick Open</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">VSIX</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">From source</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Install from the Marketplace without leaving the terminal</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ code --install-extension prashanth-sams.pytest-html-reporter-vscode</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Paste into Quick Open (Ctrl+P / Cmd+P)</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">ext install prashanth-sams.pytest-html-reporter-vscode</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">The extension repo ships a packaged VSIX in its root</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ code --install-extension pytest-html-reporter-vscode-0.1.2.vsix</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Then press F5 for an Extension Development Host</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ npm install
+$ npm run build</code></pre>
+    </div>
+  </div>
+</div>
+
+<p>The shipped artifact is a single esbuild bundle (<code>dist/extension.js</code>) plus the icons and
+docs; <code>src/</code>, <code>tests/</code>, <code>tools/</code> and <code>.preview/</code> are kept
+out of the package.</p>
+
+<h2 id="requirements">Requirements: a report to read</h2>
+
+<p>The extension displays what the plugin writes, so the plugin has to have run. Install
+<code>pytest-html-reporter</code> into the environment your tests run in and pass
+<code>--html-report</code>. The full path from nothing to a report is on
+<a href="getting-started.html">Getting started</a>, and every flag is on the
+<a href="cli-reference.html">CLI reference</a>.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Produce a report the extension can read</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pip install pytest-html-reporter
+$ pytest --html-report=./report</code></pre>
+</div>
+
+<p>Around the <code>output.json</code> it resolves, the extension expects — and reads — exactly this
+layout. <code>&lt;report dir&gt;</code> is simply the directory containing that file; nothing about the
+location is hard-coded beyond the discovery order below.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">What sits next to output.json</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">&lt;report dir&gt;/output.json                       the current run
+&lt;report dir&gt;/archive/output_&lt;timestamp&gt;.json   past runs, the history window
+&lt;report dir&gt;/pytest_html_report.html           the full HTML report
+&lt;report dir&gt;/pytest_screenshots/               screenshots referenced by the HTML</code></pre>
+</div>
+
+<div class="note note--tip"><span class="note__title">Tip</span>Only <code>output.json</code> is required. A missing <code>archive/</code> just means the history window is one build long, and a missing HTML report only removes the footer button.</div>
+
+<h2 id="sidebar-tour">The sidebar, top to bottom</h2>
+
+<p>The view is a webview called <strong>Test Results</strong>, inside the <strong>Pytest HTML
+Reporter</strong> activity bar container. It keeps its context when hidden, so switching away and back
+does not re-parse the report.</p>
+
+<figure class="imgslot" data-shot="vscode-sidebar-results-dark.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/vscode-sidebar-results-dark.png</b>
+  <span>The <code>results</code> state, dark theme — open <code>.preview/preview-results-dark.html</code> from the extension repo and capture it at sidebar width (roughly 340px). It must show the summary panel with the 98% pass-rate ring, the proportional distribution bar, the tinted count chips (664 passed, 14 failed, 1 skipped, 1 xpassed, 1 xfailed), the "14 failing tests" heading, and at least the first two suite groups with their failure cards and error snippets.</span>
+</figure>
+
+<h3 id="report-switcher">1. Report switcher</h3>
+
+<p>A <code>&lt;select&gt;</code> at the very top, rendered only when two or more reports are
+available. Each option is labelled with the last two path segments — <code>report/output.json</code> —
+so <code>report/</code> and <code>reports/</code> stay distinguishable; the value is the full path.
+Choosing one sets it as the active report and reloads.</p>
+
+<h3 id="summary-panel">2. Summary panel</h3>
+
+<p>A bordered card holding five things.</p>
+
+<ul>
+  <li><strong>Header.</strong> The label "Test Summary", and on the right the run's date exactly as the
+  plugin wrote it — <code>September 02, 2026</code>.</li>
+  <li><strong>Pass-rate ring.</strong> A 64px SVG donut. The rate is
+  <code>(passed + xpassed + xfailed) / (passed + xpassed + xfailed + failed + error)</code> — skips are
+  excluded from both sides, because a skipped test never earned a verdict. The tone is green when
+  <code>failed + error</code> is zero, yellow at a rate of 0.9 or better, red otherwise. Its
+  <code>aria-label</code> reads "N percent of tests passed".</li>
+  <li><strong>Hero facts.</strong> The total test count in large type, then a muted sub-line carrying
+  the summed duration (only when at least one test in the build was timed) and "N builds tracked" (only
+  when more than one build of history loaded).</li>
+  <li><strong>Distribution bar.</strong> One 6px proportional bar; segment order pass, xpass, xfail,
+  skip, error, fail, with zero-count statuses omitted. Any segment under 2.5% is lifted to that
+  minimum and the whole row rescaled to 100%, so a single failure in seven hundred tests stays visible
+  instead of rendering at 0.14% of the width. Each segment's tooltip reads like <code>14 failed</code>.</li>
+  <li><strong>Count chips.</strong> One tinted pill per status — passed, failed, error, skipped,
+  xpassed, xfailed, reruns. <code>passed</code> and <code>failed</code> are always drawn even at zero;
+  the other five are omitted when zero. Each chip carries its own background, border and text colour
+  mixed from the matching theme variable, so the status reads from the colour and not only from the
+  word.</li>
+</ul>
+
+<p>The ring rounds plainly, so a run one test short of perfect reads 100% on the dial, with the tone
+and the count chips carrying the rest of the truth beside it. The percentage that <em>is</em> guarded in
+both directions is the pass rate on a <code>flaky · P%</code> badge: it renders
+<strong>99%</strong> rather than a 100% the badge itself contradicts, and <strong>1%</strong> rather than
+a 0% a test that has passed never earned.</p>
+
+<h3 id="failing-tests">3. Failing tests, grouped by suite</h3>
+
+<p>A section title reads <code>N failing tests</code>, with a muted <code>N builds of history</code> on
+the right when more than one build loaded. Below it, only suites containing at least one FAIL or ERROR
+are rendered, in report order. Each group header is clickable, shows the suite path and a red pill with
+the count of failing tests in it, and toggles the group body. Long suite paths elide at the
+<em>front</em>, because the filename is what identifies a suite.</p>
+
+<h3 id="test-cards">4. Test cards</h3>
+
+<p>One card per failing test — FAIL and ERROR only; an expected failure is not a failure. The whole
+card is the jump target. It carries the test name as pytest wrote it, parametrization suffix included
+(<code>test_heading[chromium]</code>), a status badge, a meta row of badges, and the error snippet on a
+neutral plate with a red left edge.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Badge</th><th>When it appears</th><th>What it says</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><strong>Duration</strong></td><td>Always</td><td><code>not measured</code> when the record carries no duration, <code>&lt;1ms</code> under a millisecond, <code>10ms</code> under a second, <code>3.42s</code> under a minute, <code>1m 0s</code> above.</td></tr>
+      <tr><td class="t-nowrap"><strong>Retries</strong></td><td>Rerun count above zero</td><td><code>N retries</code> on an orange plate.</td></tr>
+      <tr><td class="t-nowrap"><strong>broken</strong></td><td>Failures and zero passes across at least 2 builds</td><td><code>broken · 0/N</code> on a red plate; tooltip "Never passed in N builds".</td></tr>
+      <tr><td class="t-nowrap"><strong>flaky</strong></td><td>The test both passed and failed in the window, or was retried within a build while also passing</td><td><code>flaky · P%</code> on a yellow plate; tooltip "F flips across N builds".</td></tr>
+      <tr><td class="t-nowrap"><strong>Trend strip</strong></td><td>At least 2 recorded outcomes, and not broken</td><td>The last 12 outcomes as coloured ticks, oldest to newest.</td></tr>
+      <tr><td class="t-nowrap"><strong>copy error</strong></td><td>Always</td><td>A text button; puts the raw message on the clipboard without triggering the card's jump.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="note"><span class="note__title">Note</span><code>not measured</code> is not zero. Archives written before plugin 0.3.7 carry no duration at all, and defaulting those to zero would report a suite of instantaneous tests. A measured zero is real and renders <code>&lt;1ms</code>.</div>
+
+<h3 id="footer-button">5. Footer</h3>
+
+<p>An <strong>Open full HTML report</strong> button, rendered only when an HTML report was actually
+found next to <code>output.json</code>.</p>
+
+<h3 id="theming">Theming</h3>
+
+<p>Every colour in the panel is a VS Code theme variable with a hard-coded fallback, so it follows
+light, dark and high-contrast themes rather than carrying its own palette. Status colours come from the
+<code>--vscode-testing-*</code> family — the same one the built-in Test Explorer uses — plus the chart
+colours for xPASS, xFAIL, reruns and warnings. <code>prefers-reduced-motion</code> disables the loading
+spinner's animation and the donut transition.</p>
+
+<figure class="imgslot" data-shot="vscode-sidebar-results-light.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/vscode-sidebar-results-light.png</b>
+  <span>The same <code>results</code> state in the Light+ theme — <code>.preview/preview-results-light.html</code> at the same sidebar width and the same scroll position as the dark capture, so the two can sit side by side and show the panel following the editor theme.</span>
+</figure>
+
+<h2 id="sidebar-states">The six sidebar states</h2>
+
+<p>Every load picks exactly one of these and renders it whole.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>State</th><th>When it is shown</th><th>What the user sees</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>loading</code></td><td>At the start of every load, auto-refresh included</td><td>A spinner and "Loading test results…".</td></tr>
+      <tr><td class="t-nowrap"><code>no-config</code></td><td>No configured path exists and detection found nothing</td><td>Clipboard icon, "No report found", the hint <code>pytest --html-report=./report</code> in a code chip, and the buttons <strong>Configure report path</strong> and <strong>Refresh</strong>.</td></tr>
+      <tr><td class="t-nowrap"><code>error</code></td><td>Reading or parsing the resolved <code>output.json</code> threw</td><td>Red alert icon, "Unable to load report", the exception message, and the buttons <strong>Retry</strong> and <strong>Configure report path</strong>.</td></tr>
+      <tr><td class="t-nowrap"><code>empty</code></td><td>The report parsed but records zero tests</td><td>Report switcher, clipboard icon, "No tests in this report", and a <strong>Refresh</strong> button.</td></tr>
+      <tr><td class="t-nowrap"><code>all-passed</code></td><td>Parsed, has tests, no FAIL or ERROR</td><td>Report switcher, the full summary panel, a green check, "All tests passed", "N tests completed with no failures.", and the footer.</td></tr>
+      <tr><td class="t-nowrap"><code>results</code></td><td>Parsed, has tests, at least one FAIL or ERROR</td><td>Report switcher, summary panel, failing-test count, collapsible suite groups of failure cards, and the footer.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<figure class="imgslot" data-shot="vscode-sidebar-all-passed-dark.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/vscode-sidebar-all-passed-dark.png</b>
+  <span>The <code>all-passed</code> state, dark theme, at sidebar width: the summary panel above a green check icon, "All tests passed" and "N tests completed with no failures.", with the "Open full HTML report" footer button visible. Regenerate it first with <code>PREVIEW_REPORT</code> pointed at a genuinely green run — the checked-in <code>.preview/preview-all-passed-dark.html</code> renders the green panel over the failure fixture's summary, which reads 14 failed.</span>
+</figure>
+
+<h2 id="jump-to-test">Jump to the test</h2>
+
+<p>This is the one feature the report format makes hard, and it is worth knowing why.
+<code>output.json</code> records <strong>no line numbers and no nodeid</strong>. Each result carries
+only <code>suite_name</code> — a workspace-relative <code>.py</code> path — and <code>test_name</code>,
+which is pytest's <code>item.name</code>: the function name plus any <code>[param]</code> suffix, with
+the class segment of the nodeid already discarded. So the file comes from the suite name, and the line
+is <em>recovered</em> by scanning that file.</p>
+
+<ol class="steps">
+  <li>
+    <h3>Click anywhere on a failure card</h3>
+    <p>The card posts its index back to the extension host, which runs the jump command with the suite
+    name and test name.</p>
+  </li>
+  <li>
+    <h3>The suite path resolves against each workspace folder</h3>
+    <p>Absolute paths and Windows drive paths are used as-is; a leading <code>./</code> is stripped. If
+    none of them stat, the basename is looked up with a bounded workspace search and the first hit is
+    used. If nothing is found: <code>Could not find &lt;suite&gt; in this workspace.</code></p>
+  </li>
+  <li>
+    <h3>The file is scanned for the matching def</h3>
+    <p>The test name is cut at the <strong>first</strong> <code>[</code>, because a parametrized id can
+    itself contain brackets — <code>test_a_status_is_grouped_by_its_class[200-2xx]</code>. Every
+    <code>def name(</code> and <code>async def name(</code> at any indentation is collected in source
+    order.</p>
+  </li>
+  <li>
+    <h3>One match jumps; several offer a pick list</h3>
+    <p>Two or more definitions open a Quick Pick titled <code>&lt;name&gt; is defined N times in this
+    file</code>, placeholder "The report does not record which one ran — pick a definition", each entry
+    labelled <code>Line N</code> with the trimmed source line beside it. Cancelling cancels the jump.</p>
+  </li>
+  <li>
+    <h3>The editor opens and the line flashes</h3>
+    <p>Non-preview, cursor at column 0, revealed in the centre if it was outside the viewport, and the
+    whole line highlighted with the find-match colour for 1800&nbsp;ms.</p>
+  </li>
+</ol>
+
+<p>Matching is exact on the name, so <code>test_heading</code> never picks up
+<code>test_heading_mismatch</code>. Decorators are handled for free: only a line whose first non-whitespace
+token is <code>def</code> or <code>async</code> can match, so a <code>@pytest.mark.parametrize(...)</code>
+above the function is skipped and the <code>def</code> is what comes back.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span>The scan is a line scan, not a Python parse, so a <code>def</code> written inside a triple-quoted string can match. That is an accepted trade against shipping a Python parser: a mis-jump into a string literal costs one keystroke.</div>
+
+<p>If the test has been renamed or deleted since the run, you get
+<code>Could not find &lt;test&gt; in &lt;suite&gt; — it may have been renamed since this run.</code> and
+the file still opens at line 1, because the file is still the right place to land.</p>
+
+<h2 id="copy-error">Copy the real error</h2>
+
+<p>The plugin stores <code>message</code> exactly as pytest rendered it for a terminal, ANSI escape
+codes included — a real record contains runs like <code>[91m</code> and <code>[39;49;00m</code> in the
+middle of an assertion diff. So each parsed result keeps both forms: the raw message and a stripped
+one.</p>
+
+<p>The card shows the stripped text, because a sidebar full of literal escape codes is unreadable. The
+<strong>copy error</strong> button puts the <em>original</em> on the clipboard, so pasting it into a
+terminal reproduces pytest's own red-and-green colouring. A toast confirms with "Error copied to
+clipboard." A test with no message copies nothing.</p>
+
+<p>The snippet on the card is chosen, not truncated blindly: whitespace is condensed to single spaces,
+then the first <code>SomeError:</code> / <code>SomeException:</code> / <code>SomeFailure:</code> line is
+preferred, falling back to the head of the message for a bare <code>assert False</code> or a collection
+error. Anything longer than <code>maxErrorLength</code> is hard-cut with a trailing ellipsis.</p>
+
+<h2 id="build-history">Build history, flaky and broken</h2>
+
+<p>This is the part no single report can give, and the reason the extension reads <code>archive/</code>
+at all. Every <code>*.json</code> in <code>&lt;report dir&gt;/archive</code> is read, plus the current
+<code>output.json</code>, through a cheap parse that keeps only counters and per-test outcomes —
+messages and snippets, by far the biggest part of a record, are dropped so a window of builds is cheap
+to hold. Files that cannot be read, or are not reports, are counted and skipped; they never fail the
+load. A missing <code>archive/</code> directory is fine: a first run has a history of exactly itself.</p>
+
+<p><strong>Ordering is by each file's inner <code>start_time</code>, never by its filename.</strong> The
+plugin names an archived file for the run that <em>displaced</em> it, not the run inside it, so sorting
+on the name shifts the whole history by one build and scrambles any trend read off it. The extension
+has a dedicated regression test for exactly this.</p>
+
+<p>After sorting oldest-first, the newest <code>history.maxBuilds</code> builds are kept and the rest
+are reported as omitted rather than silently dropped. Cross-build identity is
+<code>suite_name::test_name</code> — the only identity the archives carry.</p>
+
+<h3 id="verdict-rules">The verdict rules</h3>
+
+<p>They are ported from the plugin's own analytics, so a verdict in the sidebar and a verdict on the
+<a href="analytics.html">Analytics tab</a> agree.</p>
+
+<ul>
+  <li>Only <code>FAIL</code> and <code>ERROR</code> count as failures. <code>xFAIL</code> and
+  <code>xPASS</code> sit on the pass side — both were declared in advance, and counting an expected
+  failure against a test's pass rate would make every xfail-marked test look like the least reliable
+  thing in the suite.</li>
+  <li>A test that alternates is <strong>flaky</strong>. A test that has never passed is
+  <strong>broken</strong>, not flaky, because there is nothing intermittent about it.</li>
+  <li>A retry inside a single build is enough to be flaky on its own, even if every build ended
+  green.</li>
+  <li>Skips neither flip an outcome nor enter the pass rate — a pass, a skip and a fail is 50%, not 33%.
+  A test that was only ever skipped has no decided outcome at all, so it is neither flaky nor broken and
+  carries no badge.</li>
+</ul>
+
+<p>A flake badge is drawn only when history actually says something: the test appears in at least 2
+builds and is either broken or flaky. A stable test gets no badge, so the ones that do mean something.
+The trend strip needs at least 2 recorded outcomes and is skipped entirely for a broken test, whose
+<code>0/N</code> badge and row of identical red ticks would state the same fact twice.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span>The failures-per-build strip in the summary panel needs at least two builds handed to the renderer. In the shipped extension the sidebar sets the flake verdicts and the per-test trend strips but not that build list, so as of 0.1.2 the strip appears in <code>npm run preview</code> output and not in the sidebar itself. Badges and trend strips are unaffected.</div>
+
+<div class="note note--tip"><span class="note__title">Tip</span>If history loading throws for any reason the sidebar swallows it. History is an enhancement; a report still renders fully without it.</div>
+
+<h2 id="status-bar">The status bar item</h2>
+
+<p>One left-aligned status bar item mirrors the headline count and updates on every load.</p>
+
+<ul>
+  <li>Hidden when no report is loaded, or when the report records zero tests.</li>
+  <li>With failures: <code>$(error) N failing</code>, where N is <code>failed + error</code>, on the
+  theme's error background.</li>
+  <li>Without failures: <code>$(pass) N passing</code>.</li>
+  <li>Tooltip in both cases: <code>pytest-html-reporter — P passed, B failed of T</code>.</li>
+  <li>Clicking it focuses the Test Results view.</li>
+</ul>
+
+<h2 id="html-report-panel">The full HTML report, in an editor tab</h2>
+
+<p><strong>Pytest HTML Reporter: Open Full HTML Report</strong> — the browser icon in the view title
+bar, or the footer button — opens the plugin's generated report inside VS Code. It exists because the
+generated report has tabs the sidebar deliberately does not reproduce: Steps, Attachments, Analytics,
+Coverage and screenshots. See the <a href="report-tour.html">report tour</a> for what is on each of
+them.</p>
+
+<ul>
+  <li>One panel is created and then reused — titled <strong>pytest HTML Report</strong>. A second
+  invocation reveals the existing panel instead of opening another.</li>
+  <li>The report links screenshots as <code>pytest_screenshots/&lt;file&gt;</code>, which resolves to
+  nothing inside a webview. Those <code>src</code> and <code>href</code> references — and only those —
+  are rewritten to webview URIs, so <a href="screenshots.html">captured screenshots</a> load in the
+  tab. Everything else in the file is already inlined by the plugin.</li>
+  <li>With no HTML report beside <code>output.json</code> you get a warning instead: <em>"No HTML report
+  found next to output.json. Run pytest with --html-report to generate one."</em></li>
+</ul>
+
+<p>Nothing in this panel feeds the sidebar. It is display only.</p>
+
+<h2 id="commands">Command reference</h2>
+
+<p>Five commands, all under the palette category <strong>Pytest HTML Reporter</strong> — so in the
+Command Palette they read as <code>Pytest HTML Reporter: &lt;title&gt;</code>. Three of them are also
+pinned to the view's title bar, in this navigation order: refresh, open HTML report, configure path.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Command id</th><th>Palette title</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>pytestHtmlReporter.refresh</code></td>
+        <td class="t-nowrap">Refresh Test Results</td>
+        <td>Re-resolves the report path and reloads the sidebar. Title-bar icon <code>$(refresh)</code>. Also reachable from the <strong>Refresh</strong> buttons in the <code>no-config</code> and <code>empty</code> states, and from <strong>Retry</strong> in the <code>error</code> state.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytestHtmlReporter.openHtmlReport</code></td>
+        <td class="t-nowrap">Open Full HTML Report</td>
+        <td>Opens the generated HTML report in a reusable editor-tab webview. Warns when no HTML report sits next to <code>output.json</code>. Title-bar icon <code>$(browser)</code>.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytestHtmlReporter.configureReportPath</code></td>
+        <td class="t-nowrap">Configure Report Path</td>
+        <td>Opens a Quick Pick of detected reports plus <em>Browse…</em> and, when paths are already configured, <em>Clear configured paths</em>. Title-bar icon <code>$(gear)</code>.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytestHtmlReporter.jumpToTest</code></td>
+        <td class="t-nowrap">Jump To Test <span class="pill">hidden</span></td>
+        <td>Takes a suite name and a test name, opens the suite file and moves the cursor to the matching <code>def</code>. Invoked by clicking a failure card; hidden from the palette because it needs arguments.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytestHtmlReporter.focusSidebar</code></td>
+        <td class="t-nowrap">Focus Test Results View <span class="pill">hidden</span></td>
+        <td>Focuses the Test Results view. Hidden from the palette; it exists so the status bar item has something to click.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>The three visible commands are gated on there being at least one workspace folder open.</p>
+
+<h2 id="settings">Configuration reference</h2>
+
+<p>Six settings, all under the <code>pytestHtmlReporter</code> section and all scoped to a resource, so
+they can be set per workspace folder. The Settings UI groups them under <strong>Pytest HTML
+Reporter</strong>. Changing any of them reloads the sidebar.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Setting</th><th>Type</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>pytestHtmlReporter.reportJsonPaths</code></td>
+        <td class="t-nowrap">array of string</td>
+        <td class="t-nowrap"><code>[]</code></td>
+        <td>Paths to <code>output.json</code> files written by pytest-html-reporter. Empty means detect them automatically; non-empty makes this list the only source of reports.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytestHtmlReporter.autoRefresh</code></td>
+        <td class="t-nowrap">boolean</td>
+        <td class="t-nowrap"><code>true</code></td>
+        <td>Reload the sidebar when the report file changes on disk. When false no watcher is installed at all; the Refresh command still works.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytestHtmlReporter.showErrorSnippets</code></td>
+        <td class="t-nowrap">boolean</td>
+        <td class="t-nowrap"><code>true</code></td>
+        <td>Show a truncated error message on each failing test. False suppresses both the computation of the snippet during parsing and the block on the card.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytestHtmlReporter.maxErrorLength</code></td>
+        <td class="t-nowrap">number, 50–500</td>
+        <td class="t-nowrap"><code>150</code></td>
+        <td>Maximum length of the error snippet on a failing test. Clamped both by the manifest and again at read time, so a hand-edited <code>settings.json</code> cannot push it out of range.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytestHtmlReporter.history.enabled</code></td>
+        <td class="t-nowrap">boolean</td>
+        <td class="t-nowrap"><code>true</code></td>
+        <td>Read past builds from <code>archive/*.json</code> to flag flaky and consistently broken tests. False means no flake badges, no trend strips and no build-count annotations.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytestHtmlReporter.history.maxBuilds</code></td>
+        <td class="t-nowrap">number, 2–200</td>
+        <td class="t-nowrap"><code>25</code></td>
+        <td>How many recent builds to read from <code>archive/</code> when working out flakiness. The window keeps the newest N after sorting by inner <code>start_time</code>.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">json</span>
+    <span class="codeblock__cap">.vscode/settings.json — every option, set explicitly</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="json">{
+  &quot;pytestHtmlReporter.reportJsonPaths&quot;: [&quot;/Users/you/project/report/output.json&quot;],
+  &quot;pytestHtmlReporter.autoRefresh&quot;: true,
+  &quot;pytestHtmlReporter.showErrorSnippets&quot;: true,
+  &quot;pytestHtmlReporter.maxErrorLength&quot;: 200,
+  &quot;pytestHtmlReporter.history.enabled&quot;: true,
+  &quot;pytestHtmlReporter.history.maxBuilds&quot;: 50
+}</code></pre>
+</div>
+
+<h2 id="finding-the-report">How it finds output.json</h2>
+
+<p>Per workspace folder, best candidate first:</p>
+
+<ol>
+  <li><code>&lt;workspace&gt;/output.json</code> — the plugin's default, because it writes relative to
+  pytest's working directory</li>
+  <li><code>&lt;workspace&gt;/report/output.json</code></li>
+  <li><code>&lt;workspace&gt;/reports/output.json</code></li>
+  <li><code>&lt;workspace&gt;/test-reports/output.json</code></li>
+  <li><code>&lt;workspace&gt;/.reports/output.json</code></li>
+  <li><code>&lt;workspace&gt;/test-results/output.json</code></li>
+  <li>A bounded search for <code>**/output.json</code>, excluding <code>node_modules</code>,
+  <code>.venv</code>, <code>venv</code> and <code>site-packages</code>, capped at 20 results</li>
+</ol>
+
+<p>Duplicates are removed by absolute path and the order above is kept, so conventional locations always
+come before search hits.</p>
+
+<p><strong>Every candidate is shape-checked before it is offered.</strong> The file is read, parsed, and
+required to have a <code>content.suites</code> object. <code>output.json</code> is a common filename and
+a Python repo may hold several with nothing to do with pytest; rendering an unrelated one as test
+results would be worse than finding nothing. A file that fails the check, or fails to parse, is silently
+not offered.</p>
+
+<p>Which report is <em>active</em> is the currently active one if it is still available, otherwise the
+first available one. When two or more are available the switcher dropdown appears at the top of the
+sidebar. When there are none at all, the sidebar shows the <code>no-config</code> state.</p>
+
+<figure class="imgslot" data-shot="vscode-sidebar-no-config-dark.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/vscode-sidebar-no-config-dark.png</b>
+  <span>The <code>no-config</code> state, dark theme, at sidebar width — <code>.preview/preview-no-config-dark.html</code>. It must show the clipboard icon, the "No report found" heading, the <code>pytest --html-report=./report</code> code chip, and both buttons: Configure report path and Refresh.</span>
+</figure>
+
+<h3 id="report-json-paths">Overriding detection</h3>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">pytestHtmlReporter.reportJsonPaths</span>
+    <div class="def__meta">
+      <span class="pill">array of string</span>
+      <span class="pill pill--brand">default: []</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>When this list is non-empty, only these paths are considered — detection is skipped entirely.
+    Each entry is checked for existence, and any that no longer exist are pruned back into workspace
+    settings, so a report deleted between runs stops haunting the switcher. If every configured path is
+    dead, the extension falls back to auto-detection rather than showing nothing. Entries are used exactly
+    as written: nothing expands <code>${workspaceFolder}</code> and nothing resolves a relative path
+    against the workspace folder, so write each one in full — <strong>Configure Report Path</strong>
+    writes them that way itself.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">json</span>
+        <span class="codeblock__cap">Two suites, two reports, one switcher</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="json">{
+  &quot;pytestHtmlReporter.reportJsonPaths&quot;: [
+    &quot;/Users/you/project/report/output.json&quot;,
+    &quot;/Users/you/project/e2e/report/output.json&quot;
+  ]
+}</code></pre>
+    </div>
+  </div>
+</div>
+
+<h3 id="configure-report-path">The Configure Report Path flow</h3>
+
+<p><strong>Pytest HTML Reporter: Configure Report Path</strong> — also the gear icon in the view title
+bar, and the primary button on the no-report and error states — opens a Quick Pick titled
+<strong>pytest-html-reporter: report path</strong> with:</p>
+
+<ul>
+  <li>every auto-detected report, labelled with its last two path segments, described by its full path,
+  and marked <em>Currently configured</em> when it is already in the setting;</li>
+  <li><strong>Browse…</strong>, which opens a file dialog filtered to <code>json</code> with the
+  open-label "Use this report";</li>
+  <li><strong>Clear configured paths</strong>, offered only when paths are currently configured, which
+  goes back to automatic detection.</li>
+</ul>
+
+<p>Whichever branch runs, the setting is written as a single-element array — or an empty one for Clear —
+targeting workspace settings when a folder is open and user settings otherwise, and the sidebar
+refreshes. Dismissing the pick changes nothing.</p>
+
+<h3 id="sibling-artifacts">Finding the HTML report beside it</h3>
+
+<p>The HTML report is located <strong>by looking, never by predicting</strong>:
+<code>pytest_html_report.html</code> in the same directory if it exists, otherwise the single
+<code>*.html</code> file there if there is exactly one. Zero or two-plus candidates mean no HTML report
+and the footer button is not rendered.</p>
+
+<p>The reason is that <code>--html-report</code> can rename the file, and a path holding
+<code>strftime</code> placeholders is expanded inside the pytest process against that process's clock —
+so recomputing the name here would disagree with disk whenever a run crosses a minute boundary.</p>
+
+<h2 id="auto-refresh">Auto-refresh and file watching</h2>
+
+<p>The sidebar reloads when the view is first resolved, when the Refresh command runs, when the active
+report file changes on disk, when you switch reports in the dropdown, when workspace folders change,
+and when any <code>pytestHtmlReporter</code> setting changes.</p>
+
+<p><strong>The watch.</strong> Once a report path resolves, a watcher is installed on that one file,
+replacing any previous one. It is skipped entirely when <code>autoRefresh</code> is false. Each change
+event resets a 300&nbsp;ms debounce; when the timer fires, the sidebar reloads. Watcher errors stop the
+watch silently — watching is a convenience, and the manual refresh still works.</p>
+
+<p><strong>The settle poll.</strong> Before every read, the extension waits for the file to stop growing:
+it stats the file every 120&nbsp;ms, up to 40 times, and reads as soon as two consecutive stats report
+the same non-zero size. The plugin writes <code>output.json</code> in one pass at the very end of a run
+and a real suite's file runs to megabytes, so a watcher that read on the first change event would
+routinely catch a half-written file and report a parse error for a run that was perfectly fine.</p>
+
+<p><strong>Re-entrancy.</strong> A load already in flight makes the next one return immediately, so a
+burst of change events cannot stack up parses of the same file.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Constant</th><th>Value</th><th>What it controls</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>WATCH_DEBOUNCE_MS</code></td><td class="t-nowrap"><code>300</code></td><td>Delay after the last file event before reloading.</td></tr>
+      <tr><td class="t-nowrap"><code>SETTLE_POLL_MS</code></td><td class="t-nowrap"><code>120</code></td><td>Interval between size checks while waiting for the file to stop growing.</td></tr>
+      <tr><td class="t-nowrap"><code>SETTLE_MAX_POLLS</code></td><td class="t-nowrap"><code>40</code></td><td>Maximum size checks — about 4.8&nbsp;s — before reading anyway.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2 id="what-is-read">What the extension reads, and what it recounts</h2>
+
+<p>Tolerance is a stated design goal. The plugin has been through releases that added fields
+(<code>duration</code> in 0.3.7, <code>coverage</code> in 0.3.6), so an archive directory holds records
+of mixed vintage, and a run interrupted partway leaves a file that is valid JSON but internally
+inconsistent. A file that cannot be made sense of is skipped rather than allowed to take the sidebar
+down.</p>
+
+<ul>
+  <li><strong>Required:</strong> <code>content.suites</code>. Its absence is what makes a file "not a
+  pytest-html-reporter report".</li>
+  <li><strong>Read per suite:</strong> <code>suite_name</code>, <code>tests</code>, and the per-suite
+  counter block.</li>
+  <li><strong>Read per test:</strong> <code>test_name</code>, <code>status</code>,
+  <code>message</code>, <code>rerun</code>, <code>duration</code>.</li>
+  <li><strong>Deliberately not trusted:</strong> the file's own <code>status_list</code>,
+  <code>total_tests</code> and <code>total_suite</code>. The first two are serialized as strings, and
+  all three are written from separate accumulators, so an interrupted or xdist run can leave them disagreeing with the
+  records underneath. Summary counters are recounted from the records, which are the ground truth you
+  are about to be shown.</li>
+</ul>
+
+<p>Two coercions worth knowing: suite and test maps are JSON objects keyed by stringified integers, so
+keys are sorted <em>numerically</em> to restore the run's real collection order; and an unrecognised
+status reads as <code>PASS</code>, on the grounds that inventing a failure the run never reported is the
+worse error.</p>
+
+<h3 id="webview-safety">Report text is never executed</h3>
+
+<p>Every string that came out of a report — suite name, test name, error text, file path — is HTML-escaped
+before it reaches the markup, in both quote forms, so it is equally safe inside an attribute. No handler
+is ever written with report data interpolated into it: rows carry a numeric index and listeners are
+attached by delegation, so nothing from the report is ever parsed as code. The webview's content policy
+is <code>default-src &#039;none&#039;</code> plus inline style and script, which are generated in the
+same string and shipped with it, so no report content can pull in a remote resource.</p>
+
+<h2 id="previews">Rendering the sidebar without VS Code</h2>
+
+<p>The extension repo ships a preview harness that renders the exact markup the webview gets into
+standalone HTML under <code>.preview/</code> — one dark file and one light file per scenario. It is how
+the screenshots on this page are produced, and how a style change is checked without launching an
+Extension Development Host.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">All four scenarios, dark and light</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ npm run preview                # results    -&gt; .preview/preview-results-{dark,light}.html
+$ npm run preview -- all-passed  # all-passed -&gt; .preview/preview-all-passed-{dark,light}.html
+$ npm run preview -- no-config   # no-config  -&gt; .preview/preview-no-config-{dark,light}.html
+$ npm run preview -- error       # error      -&gt; .preview/preview-error-{dark,light}.html</code></pre>
+</div>
+
+<p>The real Dark+ and Light+ theme variables are stubbed in, so what the browser shows is what the
+webview renders. Point the harness at one of your own runs to preview that run's real
+<code>archive/</code> too — which is how you get captures that include flake badges, trend strips and the
+failures-per-build chart.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">Preview a real run instead of the bundled fixture</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ PREVIEW_REPORT=/path/to/report/output.json npm run preview</code></pre>
+</div>
+
+<h2 id="troubleshooting">Troubleshooting</h2>
+
+<figure class="imgslot" data-shot="vscode-sidebar-error-dark.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/vscode-sidebar-error-dark.png</b>
+  <span>The <code>error</code> state, dark theme, at sidebar width — <code>.preview/preview-error-dark.html</code>. It must show the red alert icon, the "Unable to load report" heading, the message "Invalid report format: Unexpected token", and both buttons: Retry and Configure report path.</span>
+</figure>
+
+<details class="acc">
+  <summary>The sidebar is empty — it says "No report found"</summary>
+  <div class="acc__body">
+    <p>That state means no configured path exists <em>and</em> detection found nothing, so start by
+    confirming a report exists at all: is there an <code>output.json</code> anywhere under the folder you
+    opened? If not, run <code>pytest --html-report=./report</code> — see
+    <a href="getting-started.html">Getting started</a>.</p>
+    <p>If the file does exist, there are three usual reasons detection missed it. It lives outside the
+    six conventional locations <em>and</em> outside the bounded search, which skips
+    <code>node_modules</code>, <code>.venv</code>, <code>venv</code> and <code>site-packages</code> and
+    stops at 20 hits. Or your report directory sits outside the workspace folder entirely — pytest was run
+    from elsewhere. Or the file is not a pytest-html-reporter report: every candidate is required to have a
+    <code>content.suites</code> object, and anything else is silently not offered.</p>
+    <p>In all three cases the fix is the same: run <strong>Pytest HTML Reporter: Configure Report
+    Path</strong> and browse to the file.</p>
+  </div>
+</details>
+
+<details class="acc">
+  <summary>The sidebar shows "No tests in this report"</summary>
+  <div class="acc__body">
+    <p>The file parsed, but the recounted total is zero — the run collected nothing. That is a pytest
+    collection problem rather than an extension one: check the paths and markers you passed to pytest, and
+    that the run you are looking at is the one you think it is (the summary panel prints the run's date,
+    and the switcher shows which report is active).</p>
+  </div>
+</details>
+
+<details class="acc">
+  <summary>"Unable to load report" with a parse error</summary>
+  <div class="acc__body">
+    <p>Reading or parsing the resolved <code>output.json</code> threw, and the message under the heading is
+    the exception. If it appeared during a run, press <strong>Retry</strong>: the plugin writes the file in
+    one pass at the end of a run, and although the extension waits for the size to stabilise before reading,
+    a file still being written is the most common cause.</p>
+    <p>If it persists, the file itself is truncated or corrupt — an interrupted run, or a partial copy.
+    Re-run pytest to write a fresh one.</p>
+  </div>
+</details>
+
+<details class="acc">
+  <summary>The sidebar does not update when a run finishes</summary>
+  <div class="acc__body">
+    <p>Check <code>pytestHtmlReporter.autoRefresh</code> — when it is false, no watcher is installed at
+    all. Check next that the run wrote to the report the sidebar has <em>active</em>: the watch follows one
+    file, so a second suite writing to a different directory will not trigger it; pick it in the dropdown or
+    with Configure Report Path. Some network and container filesystems do not deliver change events either.
+    In every case <strong>Pytest HTML Reporter: Refresh Test Results</strong>, or the refresh icon in the
+    view title bar, reloads on demand.</p>
+  </div>
+</details>
+
+<details class="acc">
+  <summary>Clicking a failure opens the wrong function, or a pick list</summary>
+  <div class="acc__body">
+    <p>Expected in one case: when a single file defines the same test name twice — two classes with a method
+    of the same name — the record has nothing to tell them apart, so you get a pick list rather than a silent
+    guess at the wrong one. The scan is also a line scan, not a Python parse, so a <code>def</code> written
+    inside a triple-quoted string can match.</p>
+    <p>"Could not find … it may have been renamed since this run" means the report is older than the code.
+    Re-run pytest.</p>
+  </div>
+</details>
+
+<details class="acc">
+  <summary>No flaky or broken badges anywhere</summary>
+  <div class="acc__body">
+    <p>Badges need history, and history needs an <code>archive/</code> directory beside
+    <code>output.json</code> with past runs in it — a first run has a history of exactly itself. A test also
+    has to appear in at least 2 builds before it gets a verdict, and a stable test never gets a badge by
+    design. Finally, check <code>pytestHtmlReporter.history.enabled</code> is not false, and that
+    <code>history.maxBuilds</code> is wide enough to include the runs you care about.</p>
+  </div>
+</details>
+
+<details class="acc">
+  <summary>"No HTML report found next to output.json"</summary>
+  <div class="acc__body">
+    <p>The extension looks for <code>pytest_html_report.html</code> in the report directory, and failing that
+    accepts a single <code>*.html</code> file there. Two or more HTML files in the same directory are
+    ambiguous, so it offers none. Either clear the extras out, or point
+    <code>reportJsonPaths</code> at the <code>output.json</code> that sits beside the report you want.</p>
+  </div>
+</details>
+
+<details class="acc">
+  <summary>The pasted error has strange bracket sequences in it</summary>
+  <div class="acc__body">
+    <p>That is working as intended. The card shows the message with ANSI escape codes stripped for reading;
+    <strong>copy error</strong> deliberately copies the original, colouring intact, so pasting it into a
+    terminal reproduces pytest's own red-and-green assertion diff. Paste it into a terminal rather than a
+    plain-text field.</p>
+  </div>
+</details>
+
+<h2 id="where-next">Where next</h2>
+
+<div class="grid grid--3">
+  <a class="card" href="getting-started.html">
+    <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    <h3>Produce a report</h3>
+    <p>Install the plugin and write the <code>output.json</code> the extension reads.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="report-tour.html">
+    <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+    <h3>The full report</h3>
+    <p>What the sidebar links out to: Steps, Attachments, Analytics, Coverage.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="analytics.html">
+    <div class="card__icon is-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-6M22 20H2"/></svg></div>
+    <h3>Flaky-test analytics</h3>
+    <p>The same verdict rules, computed over the archive in the report itself.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+</div>

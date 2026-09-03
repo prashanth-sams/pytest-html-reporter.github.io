@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page not found · pytest-html-reporter</title>
+<meta name="description" content="That page is not here. The documentation index is.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="/assets/img/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/assets/img/icon-256.png">
+<meta property="og:title" content="Page not found · pytest-html-reporter">
+<meta property="og:description" content="That page is not here. The documentation index is.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/assets/img/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/site.css">
+<script>
+/* Set the theme before first paint so a dark reader never sees a white flash. */
+(function(){try{var t=localStorage.getItem('phr-theme');
+if(!t)t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}
+document.documentElement.classList.add('js');})();
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="brand" href="/" aria-label="pytest-html-reporter home">
+      <svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="2"    y="3"     width="3.9" height="18"   rx="1" fill="#3571a3"/>
+        <rect x="7.4"  y="7.85"  width="3.9" height="13.15" rx="1" fill="#ffd143"/>
+        <rect x="12.8" y="12.7"  width="3.9" height="8.3"  rx="1" fill="#8b8b8b"/>
+        <rect x="18.2" y="17.3"  width="3.9" height="3.7"  rx="1" fill="#3571a3"/>
+      </svg>
+      <span class="brand__text">
+        <span class="brand__a">pytest</span>
+        <span class="brand__b">HTML Reporter</span>
+      </span>
+    </a>
+
+    <nav class="navlinks" aria-label="Main">
+      <a href="/docs/getting-started.html">Docs</a>
+      <a href="/docs/report-tour.html">Report tour</a>
+      <a href="/docs/cli-reference.html">Reference</a>
+      <a href="/docs/github-action.html">Action</a>
+      <a href="/docs/vscode.html">VS&nbsp;Code</a>
+      <a href="/docs/changelog.html">Changelog</a>
+    </nav>
+
+    <div class="topbar__spacer"></div>
+
+    <div class="topbar__right">
+      <a class="iconbtn" href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener" title="PyPI" aria-label="pytest-html-reporter on PyPI">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+      </a>
+      <a class="iconbtn" href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener" title="GitHub" aria-label="Source on GitHub">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.5 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.26 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg>
+      </a>
+      <button class="iconbtn theme-toggle" type="button" aria-label="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+      </button>
+      <a class="btn btn--primary btn--sm" href="/docs/getting-started.html">Get started</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+<section class="section" style="padding-block: clamp(64px,9vw,120px)">
+  <div class="wrap wrap-narrow center">
+    <span class="eyebrow">404</span>
+    <h1 style="margin-bottom:.4em">This page did not run</h1>
+    <p class="lede" style="margin-bottom:2rem">
+      No test failed — the address just does not resolve to a page. The documentation index
+      below has everything the site holds.
+    </p>
+
+    <div class="btnrow" style="margin-bottom:2.6rem">
+      <a class="btn btn--primary btn--lg" href="/docs/getting-started.html">Read the docs</a>
+      <a class="btn btn--ghost btn--lg" href="/">Back to the home page</a>
+    </div>
+
+    <div class="grid grid--3" style="text-align:left">
+      <a class="card" href="/docs/getting-started.html">
+        <h3>Getting started</h3>
+        <p>Install the plugin and generate your first report.</p>
+      </a>
+      <a class="card" href="/docs/cli-reference.html">
+        <h3>CLI reference</h3>
+        <p>Every flag, every ini key, every standalone command.</p>
+      </a>
+      <a class="card" href="/docs/report-tour.html">
+        <h3>Report tour</h3>
+        <p>A walk through every tab of the generated page.</p>
+      </a>
+      <a class="card" href="/docs/github-action.html">
+        <h3>GitHub Action</h3>
+        <p>Run it in CI, keep the history, comment on the PR.</p>
+      </a>
+      <a class="card" href="/docs/vscode.html">
+        <h3>VS Code extension</h3>
+        <p>The same results in your editor sidebar.</p>
+      </a>
+      <a class="card" href="/docs/faq.html">
+        <h3>FAQ</h3>
+        <p>The questions people actually ask, answered.</p>
+      </a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div class="footer__about">
+        <a class="brand" href="/">
+          <svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="2" y="3" width="3.9" height="18" rx="1" fill="#3571a3"/>
+            <rect x="7.4" y="7.85" width="3.9" height="13.15" rx="1" fill="#ffd143"/>
+            <rect x="12.8" y="12.7" width="3.9" height="8.3" rx="1" fill="#8b8b8b"/>
+            <rect x="18.2" y="17.3" width="3.9" height="3.7" rx="1" fill="#3571a3"/>
+          </svg>
+          <span class="brand__text"><span class="brand__a">pytest</span><span class="brand__b">HTML Reporter</span></span>
+        </a>
+        <p>A light-weight static HTML report for the pytest framework. MIT licensed, built by Prashanth Sams and contributors.</p>
+      </div>
+
+      <div>
+        <h2>Documentation</h2>
+        <ul>
+          <li><a href="/docs/getting-started.html">Getting started</a></li>
+          <li><a href="/docs/features.html">Features</a></li>
+          <li><a href="/docs/report-tour.html">Report tour</a></li>
+          <li><a href="/docs/cli-reference.html">CLI reference</a></li>
+          <li><a href="/docs/python-api.html">Python API</a></li>
+          <li><a href="/docs/analytics.html">Analytics &amp; history</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Ecosystem</h2>
+        <ul>
+          <li><a href="/docs/github-action.html">GitHub Action</a></li>
+          <li><a href="/docs/vscode.html">VS Code extension</a></li>
+          <li><a href="/docs/ci-integrations.html">CI &amp; scale</a></li>
+          <li><a href="/docs/changelog.html">Changelog</a></li>
+          <li><a href="/docs/faq.html">FAQ</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Project</h2>
+        <ul>
+          <li><a href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener">Source on GitHub</a></li>
+          <li><a href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener">PyPI package</a></li>
+          <li><a href="https://github.com/prashanth-sams/pytest-html-reporter/issues" target="_blank" rel="noopener">Issue tracker</a></li>
+          <li><a href="https://gitter.im/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener">Chat on Gitter</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__bottom">
+      <span>MIT licensed &middot; &copy; Prashanth Sams</span>
+      <span>Built for people who read their test reports.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/js/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pytest-html-reporter — beautiful static HTML reports for pytest</title>
+<meta name="description" content="A light-weight, self-contained HTML report for pytest: analytics, test steps, screenshots, archives, coverage and deep links. Plus a GitHub Action and a VS Code extension.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="assets/img/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/img/icon-256.png">
+<meta property="og:title" content="pytest-html-reporter">
+<meta property="og:description" content="Beautiful, self-contained HTML reports for pytest — analytics, steps, screenshots, history.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/img/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+<script>
+/* Set the theme before first paint so a dark reader never sees a white flash. */
+(function(){try{var t=localStorage.getItem('phr-theme');
+if(!t)t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}
+document.documentElement.classList.add('js');})();
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="brand" href="index.html" aria-label="pytest-html-reporter home">
+      <svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="2"    y="3"     width="3.9" height="18"   rx="1" fill="#3571a3"/>
+        <rect x="7.4"  y="7.85"  width="3.9" height="13.15" rx="1" fill="#ffd143"/>
+        <rect x="12.8" y="12.7"  width="3.9" height="8.3"  rx="1" fill="#8b8b8b"/>
+        <rect x="18.2" y="17.3"  width="3.9" height="3.7"  rx="1" fill="#3571a3"/>
+      </svg>
+      <span class="brand__text">
+        <span class="brand__a">pytest</span>
+        <span class="brand__b">HTML Reporter</span>
+      </span>
+    </a>
+
+    <nav class="navlinks" aria-label="Main">
+      <a href="docs/getting-started.html">Docs</a>
+      <a href="docs/report-tour.html">Report tour</a>
+      <a href="docs/cli-reference.html">Reference</a>
+      <a href="docs/github-action.html">Action</a>
+      <a href="docs/vscode.html">VS&nbsp;Code</a>
+      <a href="docs/changelog.html">Changelog</a>
+    </nav>
+
+    <div class="topbar__spacer"></div>
+
+    <div class="topbar__right">
+      <a class="iconbtn" href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener" title="PyPI" aria-label="pytest-html-reporter on PyPI">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+      </a>
+      <a class="iconbtn" href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener" title="GitHub" aria-label="Source on GitHub">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.5 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.26 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg>
+      </a>
+      <button class="iconbtn theme-toggle" type="button" aria-label="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+      </button>
+      <a class="btn btn--primary btn--sm" href="docs/getting-started.html">Get started</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============================================================ HERO -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero__grid">
+      <div class="hero__copy">
+        <span class="eyebrow">pytest plugin &middot; v0.4.0</span>
+        <h1>One file.<br><span class="grad">The whole test run</span><span class="dot">.</span></h1>
+        <p class="hero__lede">
+          <strong>pytest-html-reporter</strong> turns a pytest run into a single, self-contained
+          HTML page — no server, no build step, no assets folder. Overview, analytics, per-test
+          steps, screenshots, captured logs, coverage and a full archive of every build before
+          this one, in light or dark.
+        </p>
+
+        <div class="btnrow">
+          <a class="btn btn--primary btn--lg" href="docs/getting-started.html">
+            Get started
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a class="btn btn--ghost btn--lg" href="docs/report-tour.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            Tour the report
+          </a>
+        </div>
+
+        <div class="hero__pills">
+          <span class="pill pill--brand">Zero configuration</span>
+          <span class="pill pill--accent">Light &amp; dark</span>
+          <span class="pill pill--pass">Auto screenshots</span>
+          <span class="pill pill--purple">pytest-bdd ready</span>
+          <span class="pill pill--teal">xdist safe</span>
+        </div>
+
+        <div class="badgerow">
+          <a href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener"><img src="https://badge.fury.io/py/pytest-html-reporter.svg" alt="PyPI version" loading="lazy"></a>
+          <a href="https://pepy.tech/project/pytest-html-reporter" target="_blank" rel="noopener"><img src="https://pepy.tech/badge/pytest-html-reporter" alt="Downloads" loading="lazy"></a>
+          <a href="https://coveralls.io/github/prashanth-sams/pytest-html-reporter?branch=master" target="_blank" rel="noopener"><img src="https://coveralls.io/repos/github/prashanth-sams/pytest-html-reporter/badge.svg?branch=master" alt="Coverage" loading="lazy"></a>
+          <a href="https://github.com/prashanth-sams/pytest-html-reporter/blob/master/LICENSE" target="_blank" rel="noopener"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT licence" loading="lazy"></a>
+        </div>
+      </div>
+
+      <div class="hero__visual">
+        <!-- A schematic of the generated report. Replace with a real screenshot
+             when one is available — see the image checklist in the docs. -->
+        <div class="mock" role="img" aria-label="Schematic of the generated pytest HTML report: side navigation, summary tiles, a trend chart and a table of test rows">
+          <div class="mock__bar">
+            <span class="mock__dot"></span><span class="mock__dot"></span><span class="mock__dot"></span>
+            <span class="mock__title">pytest_html_report.html</span>
+          </div>
+          <div class="mock__body">
+            <div class="mock__nav">
+              <span class="mock__navitem is-on"><i></i>Overview</span>
+              <span class="mock__navitem"><i></i>Metrics</span>
+              <span class="mock__navitem"><i></i>Steps</span>
+              <span class="mock__navitem"><i></i>Analytics</span>
+              <span class="mock__navitem"><i></i>Screens</span>
+              <span class="mock__navitem"><i></i>Archives</span>
+              <span class="mock__navitem"><i></i>Coverage</span>
+            </div>
+            <div class="mock__main">
+              <div class="mock__tiles">
+                <div class="mock__tile"><b>248</b><span>Total</span></div>
+                <div class="mock__tile pass"><b>231</b><span>Passed</span></div>
+                <div class="mock__tile fail"><b>12</b><span>Failed</span></div>
+                <div class="mock__tile skip"><b>5</b><span>Skipped</span></div>
+              </div>
+              <div class="mock__chart" aria-hidden="true">
+                <div class="mock__col"><div class="mock__seg f" style="height:12%;animation-delay:.05s"></div><div class="mock__seg p" style="height:58%;animation-delay:.05s"></div></div>
+                <div class="mock__col"><div class="mock__seg f" style="height:7%;animation-delay:.1s"></div><div class="mock__seg p" style="height:70%;animation-delay:.1s"></div></div>
+                <div class="mock__col"><div class="mock__seg s" style="height:9%;animation-delay:.15s"></div><div class="mock__seg p" style="height:64%;animation-delay:.15s"></div></div>
+                <div class="mock__col"><div class="mock__seg f" style="height:20%;animation-delay:.2s"></div><div class="mock__seg p" style="height:52%;animation-delay:.2s"></div></div>
+                <div class="mock__col"><div class="mock__seg p" style="height:88%;animation-delay:.25s"></div></div>
+                <div class="mock__col"><div class="mock__seg f" style="height:5%;animation-delay:.3s"></div><div class="mock__seg p" style="height:80%;animation-delay:.3s"></div></div>
+                <div class="mock__col"><div class="mock__seg s" style="height:6%;animation-delay:.35s"></div><div class="mock__seg p" style="height:76%;animation-delay:.35s"></div></div>
+              </div>
+              <div class="mock__rows">
+                <div class="mock__row"><span class="st f"></span><span class="nm">test_checkout_totals</span><span class="tm">1.84s</span></div>
+                <div class="mock__row"><span class="st p"></span><span class="nm">test_login_redirect</span><span class="tm">0.42s</span></div>
+                <div class="mock__row"><span class="st p"></span><span class="nm">test_cart_badge_count</span><span class="tm">0.19s</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================================================== INSTALL STRIP -->
+<section class="section section--alt" style="padding-block: clamp(36px,4vw,52px)">
+  <div class="wrap">
+    <div class="split" style="align-items:center;gap:28px">
+      <div>
+        <h2 style="margin-bottom:.35rem;font-size:1.3rem">Install it, run your tests, open the file</h2>
+        <p class="text-muted" style="margin:0;font-size:.94rem">
+          There is no configuration step. The plugin registers itself with pytest and writes
+          <code>pytest_html_report.html</code> into the working directory when the run finishes.
+        </p>
+      </div>
+      <div>
+        <div class="codeblock">
+          <div class="codeblock__head">
+            <span class="codeblock__lang">shell</span>
+            <button class="copybtn" type="button">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+              <span class="copybtn__label">Copy</span>
+            </button>
+          </div>
+          <pre><code data-lang="shell">$ pip3 install pytest-html-reporter
+$ pytest tests/</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================= FEATURES -->
+<section class="section">
+  <div class="wrap">
+    <div class="section__head center">
+      <span class="eyebrow">What is in the page</span>
+      <h2>Everything a failing build makes you ask</h2>
+      <p class="lede">
+        A pass/fail count tells you how much went wrong. The rest of the report tells you
+        <em>what</em> went wrong, whether it has been going wrong for a while, and where to look next.
+      </p>
+    </div>
+
+    <div class="grid grid--3">
+      <article class="card reveal">
+        <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
+        <h3>Overview &amp; trends</h3>
+        <p>Totals, pass rate, run duration, the environment the suite ran in, the most-failed suite, and the failure delta since the last build.</p>
+      </article>
+
+      <article class="card reveal" data-delay="60">
+        <div class="card__icon is-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 20h20L12 2z"/><path d="M12 9v5M12 17h.01"/></svg></div>
+        <h3>Why this run failed</h3>
+        <p>Failures grouped by the exception each came out of, biggest group first — <code>12 failures, 9 are TimeoutException</code> — with the share of the run each group holds and how it has moved since last build.</p>
+      </article>
+
+      <article class="card reveal" data-delay="120">
+        <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
+        <h3>Test steps</h3>
+        <p>The named, timed pieces a test is made of, nested from the suite down to the test to what it actually did — with the failing step carrying the screenshot that explains it.</p>
+      </article>
+
+      <article class="card reveal">
+        <div class="card__icon is-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="m8 6 1.5-2.5h5L16 6"/><circle cx="12" cy="13" r="3.4"/></svg></div>
+        <h3>Automatic screenshots</h3>
+        <p>A test that fails while holding a Selenium driver or a Playwright page is photographed for you. No hook, no fixture, no import, no <code>conftest.py</code>.</p>
+      </article>
+
+      <article class="card reveal" data-delay="60">
+        <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 3v6h6"/><path d="M12 7v5l3.5 2"/></svg></div>
+        <h3>Archives &amp; history</h3>
+        <p>Every previous build kept in the same page, with retention by count, by age or by date. Flaky tests and standing failures are read straight out of that history.</p>
+      </article>
+
+      <article class="card reveal" data-delay="120">
+        <div class="card__icon is-pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></div>
+        <h3>Deep links</h3>
+        <p>Every test row has an address of its own. Copy it from the button beside the failure and it opens the report on that row, whatever page of the table the sort has put it on.</p>
+      </article>
+    </div>
+
+    <div class="btnrow center" style="margin-top:32px">
+      <a class="btn btn--ghost" href="docs/features.html">
+        See all features
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================== NUMBERS -->
+<section class="section section--sunken" style="padding-block: clamp(38px,4.5vw,58px)">
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat"><b>1</b><span>HTML file, no assets</span></div>
+      <div class="stat"><b>0</b><span>lines of configuration</span></div>
+      <div class="stat"><b>7+</b><span>report sections</span></div>
+      <div class="stat"><b>3</b><span>ways to use it</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================== ECOSYSTEM -->
+<section class="section">
+  <div class="wrap">
+    <div class="section__head center">
+      <span class="eyebrow">The ecosystem</span>
+      <h2>Three projects, one report</h2>
+      <p class="lede">
+        The plugin writes the report. The Action publishes it from CI and comments on the pull
+        request. The extension puts the same results in your editor sidebar.
+      </p>
+    </div>
+
+    <div class="grid grid--3">
+      <article class="prod reveal">
+        <div class="prod__top">
+          <span class="prod__kind">pip package</span>
+          <h3>pytest-html-reporter</h3>
+          <p>The pytest plugin that generates the report.</p>
+        </div>
+        <div class="prod__body">
+          <ul class="prod__list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>Self-contained static HTML</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>Analytics across every archived build</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>Screenshots, steps, logs, coverage</li>
+          </ul>
+          <div class="prod__foot">
+            <a class="btn btn--primary btn--sm" href="docs/getting-started.html">Documentation</a>
+            <a class="btn btn--ghost btn--sm" href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener">GitHub</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="prod prod--accent reveal" data-delay="70">
+        <div class="prod__top">
+          <span class="prod__kind">GitHub Action</span>
+          <h3>pytest-html-reporter-action</h3>
+          <p>Run the suite, keep the history, publish the page, comment on the PR.</p>
+        </div>
+        <div class="prod__body">
+          <ul class="prod__list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>Archives that survive across runs</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>Pull-request comments and thresholds</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>Publishes straight to GitHub Pages</li>
+          </ul>
+          <div class="prod__foot">
+            <a class="btn btn--primary btn--sm" href="docs/github-action.html">Documentation</a>
+            <a class="btn btn--ghost btn--sm" href="https://github.com/prashanth-sams/pytest-html-reporter-action" target="_blank" rel="noopener">GitHub</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="prod prod--purple reveal" data-delay="140">
+        <div class="prod__top">
+          <span class="prod__kind">VS Code extension</span>
+          <h3>pytest-html-reporter-vscode</h3>
+          <p>The same results in the editor sidebar, one click from the code.</p>
+        </div>
+        <div class="prod__body">
+          <ul class="prod__list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>Failing tests with error snippets</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>Jump straight to the test that failed</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>Build history and flaky detection</li>
+          </ul>
+          <div class="prod__foot">
+            <a class="btn btn--primary btn--sm" href="docs/vscode.html">Documentation</a>
+            <a class="btn btn--ghost btn--sm" href="https://github.com/prashanth-sams/pytest-html-reporter-vscode" target="_blank" rel="noopener">GitHub</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================== QUICKSTART -->
+<section class="section section--alt">
+  <div class="wrap">
+    <div class="split" style="gap:clamp(32px,4vw,60px);align-items:start">
+      <div>
+        <span class="eyebrow">Quickstart</span>
+        <h2>Three minutes to your first report</h2>
+        <p class="lede" style="margin-bottom:1.6rem">
+          Nothing to register, nothing to import. Add the package, run pytest, and the report is
+          waiting in <code>report/</code> — and on a local run it opens by itself.
+        </p>
+
+        <ol class="steps">
+          <li>
+            <h3>Install</h3>
+            <p class="text-muted" style="font-size:.92rem">One package. It registers itself with pytest through an entry point.</p>
+          </li>
+          <li>
+            <h3>Run your suite</h3>
+            <p class="text-muted" style="font-size:.92rem">No flags needed. Add <code>--html-report</code> only if you want a different path, filename or title.</p>
+          </li>
+          <li>
+            <h3>Open the page</h3>
+            <p class="text-muted" style="font-size:.92rem">A single HTML file you can email, attach to a ticket, or publish to Pages as-is.</p>
+          </li>
+        </ol>
+
+        <div class="btnrow">
+          <a class="btn btn--primary" href="docs/getting-started.html">Full getting-started guide</a>
+        </div>
+      </div>
+
+      <div>
+        <div class="codetabs">
+          <div class="codetabs__bar" role="tablist" aria-label="Quickstart examples">
+            <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">Default</button>
+            <button class="codetabs__tab" type="button" role="tab" aria-selected="false">Custom path</button>
+            <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pytest.ini</button>
+          </div>
+
+          <div class="codetabs__panel" role="tabpanel">
+            <div class="codeblock">
+              <div class="codeblock__head">
+                <span class="codeblock__lang">shell</span>
+                <button class="copybtn" type="button">
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+                  <span class="copybtn__label">Copy</span>
+                </button>
+              </div>
+              <pre><code data-lang="shell">$ pip3 install pytest-html-reporter
+$ pytest tests/
+
+# -> ./pytest_html_report.html</code></pre>
+            </div>
+          </div>
+
+          <div class="codetabs__panel" role="tabpanel" hidden>
+            <div class="codeblock">
+              <div class="codeblock__head">
+                <span class="codeblock__lang">shell</span>
+                <button class="copybtn" type="button">
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+                  <span class="copybtn__label">Copy</span>
+                </button>
+              </div>
+              <pre><code data-lang="shell">$ pytest tests/ --html-report=./report/report.html --title='PYTEST REPORT'
+
+# strftime placeholders give each run a folder of its own
+$ pytest tests/ --html-report=./reports/%Y%m%d/report_%H%M.html</code></pre>
+            </div>
+          </div>
+
+          <div class="codetabs__panel" role="tabpanel" hidden>
+            <div class="codeblock">
+              <div class="codeblock__head">
+                <span class="codeblock__lang">ini</span>
+                <button class="copybtn" type="button">
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+                  <span class="copybtn__label">Copy</span>
+                </button>
+              </div>
+              <pre><code data-lang="ini">[pytest]
+addopts = --html-report=./report --title='Nightly'
+report_screenshots = failed</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="note note--tip">
+          <span class="note__title">It opens itself</span>
+          On a local run the finished report is opened in your browser. On a build agent it stays
+          quiet — CI is detected, not guessed at.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ CTA -->
+<section class="section">
+  <div class="wrap wrap-narrow center">
+    <img src="assets/img/logo.png" alt="pytest HTML Reporter" width="320" style="margin:0 auto 26px;width:min(320px,72%)">
+    <h2>Start with the guide</h2>
+    <p class="lede" style="margin-bottom:1.7rem">
+      Installation, every command-line flag, the Python API, the report tour, the GitHub Action
+      and the VS Code extension — all of it documented here.
+    </p>
+    <div class="btnrow">
+      <a class="btn btn--primary btn--lg" href="docs/getting-started.html">Read the docs</a>
+      <a class="btn btn--ghost btn--lg" href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.5 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.26 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg>
+        Star on GitHub
+      </a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div class="footer__about">
+        <a class="brand" href="index.html">
+          <svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="2" y="3" width="3.9" height="18" rx="1" fill="#3571a3"/>
+            <rect x="7.4" y="7.85" width="3.9" height="13.15" rx="1" fill="#ffd143"/>
+            <rect x="12.8" y="12.7" width="3.9" height="8.3" rx="1" fill="#8b8b8b"/>
+            <rect x="18.2" y="17.3" width="3.9" height="3.7" rx="1" fill="#3571a3"/>
+          </svg>
+          <span class="brand__text"><span class="brand__a">pytest</span><span class="brand__b">HTML Reporter</span></span>
+        </a>
+        <p>A light-weight static HTML report for the pytest framework. MIT licensed, built by Prashanth Sams and contributors.</p>
+      </div>
+
+      <div>
+        <h2>Documentation</h2>
+        <ul>
+          <li><a href="docs/getting-started.html">Getting started</a></li>
+          <li><a href="docs/features.html">Features</a></li>
+          <li><a href="docs/report-tour.html">Report tour</a></li>
+          <li><a href="docs/cli-reference.html">CLI reference</a></li>
+          <li><a href="docs/python-api.html">Python API</a></li>
+          <li><a href="docs/compatibility.html">Compatibility &amp; files</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Ecosystem</h2>
+        <ul>
+          <li><a href="docs/github-action.html">GitHub Action</a></li>
+          <li><a href="docs/vscode.html">VS Code extension</a></li>
+          <li><a href="docs/ci-integrations.html">CI &amp; scale</a></li>
+          <li><a href="docs/analytics.html">Analytics &amp; history</a></li>
+          <li><a href="docs/security-privacy.html">Security &amp; privacy</a></li>
+          <li><a href="docs/comparison.html">Compared to others</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Project</h2>
+        <ul>
+          <li><a href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener">Source on GitHub</a></li>
+          <li><a href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener">PyPI package</a></li>
+          <li><a href="https://github.com/prashanth-sams/pytest-html-reporter/issues" target="_blank" rel="noopener">Issue tracker</a></li>
+          <li><a href="https://gitter.im/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener">Chat on Gitter</a></li>
+          <li><a href="docs/changelog.html">Changelog</a></li>
+          <li><a href="docs/faq.html">FAQ</a></li>
+          <li><a href="docs/contributing.html">Contributing</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__bottom">
+      <span>MIT licensed &middot; &copy; Prashanth Sams</span>
+      <span>Built for people who read their test reports.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,918 @@
+<!--META {"title": "Analytics", "eyebrow": "The report", "description": "How the Analytics tab reads every retained build: failures grouped by exception, flaky tests, standing failures, pass-rate drift, where the time goes, and the movement between builds.", "lede": "The Dashboard answers how did this run go, and reads one build to do it. Analytics answers how does this test behave, which no single build can — so it reads every build the report has kept. Nothing extra is collected for it: the archives have been carrying a status per test all along, and had simply never been read across files before."} -->
+
+<h2 id="history-that-was-already-on-disk">History that was already on disk</h2>
+
+<p>A test that failed once and a test that has failed every night for a fortnight look identical
+on the Dashboard. They are not the same problem, and telling them apart needs more than one build.</p>
+
+<p>Every build this plugin has written left an <code>output.json</code> beside the report, and each
+of those carries a status, a failure message, a rerun count and a duration for every test in it.
+When the next build writes its report, that file is renamed into <code>archive/</code> and a fresh
+one takes its place. So a per-test history has been accumulating on disk since the first run — the
+Analytics tab is what reads it.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">output</span>
+    <span class="codeblock__cap">Everything the tab reads, and nothing else</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="output">report/
+├── pytest_html_report.html
+├── output.json                          the build being reported now
+└── archive/
+    ├── output_1788425529.352927.json     the builds before it, oldest first
+    ├── output_1788426203.302967.json
+    ├── output_1788426293.530508.json
+    └── output_1788426639.262306.json</code></pre>
+</div>
+
+<p><code>generate_analytics()</code> runs once per build, and it runs <strong>after retention has
+pruned the archives</strong>. The history the tab describes is therefore exactly the history the
+report ships with — there is no state in which the page talks about builds the file no longer
+holds.</p>
+
+<h3 id="how-the-builds-are-read">How the builds are read</h3>
+
+<ol class="steps">
+  <li>
+    <h3>Glob and load</h3>
+    <p>Every <code>archive/*.json</code> is read with <code>json.load</code>. A half-written or
+    hand-edited archive is <strong>skipped rather than taking the whole tab down</strong> — the
+    other builds still have something to say, and one unreadable file is not a reason to show
+    nothing.</p>
+  </li>
+  <li>
+    <h3>Stamp and sort</h3>
+    <p>Each build is stamped with the <code>start_time</code> <em>inside</em> the file, falling
+    back to the file's mtime, and sorted on that. The archive's name carries the same kind of
+    number, but as text — where <code>1788194287.2</code> sorts after
+    <code>1788194287.271306</code>.</p>
+  </li>
+  <li>
+    <h3>Append the current run</h3>
+    <p><code>output.json</code> goes on the end as the newest build, stamped with its own
+    <code>start_time</code> or, failing that, the current time.</p>
+  </li>
+  <li>
+    <h3>Make the labels distinct</h3>
+    <p>Axis labels are <code>Sep 03 14:18</code>. A pipeline that runs the suite three times inside
+    a minute produces three builds stamped to the same minute, and three identical ticks on one axis
+    is a chart nobody can read — so repeats are <strong>numbered</strong>,
+    <code>Sep 03 14:18 (2)</code>, rather than given seconds. The seconds are not what anyone is
+    looking for.</p>
+  </li>
+</ol>
+
+<h3 id="what-a-build-is-reduced-to">What a build is reduced to</h3>
+
+<p>Each build is flattened to the handful of things the analytics actually read.</p>
+
+<ul>
+  <li><strong>Tests are keyed <code>&lt;suite_name&gt;::&lt;test_name&gt;</code>.</strong> That is
+  the only identity an archive carries — <code>nodeid</code> is not written into
+  <code>output.json</code> — and it is stable from build to build, which is the whole
+  requirement.</li>
+  <li><strong>Every status is reduced to one of three things:</strong> <code>fail</code> (FAIL and
+  ERROR), <code>skip</code> (SKIP), <code>pass</code> (everything else). <strong>xFAIL and xPASS sit
+  on the pass side</strong>: both are outcomes the suite declared in advance, neither turns a build
+  red, and counting an expected failure against a test's pass rate would make every
+  <code>xfail</code>-marked test look like the least reliable thing in the suite.</li>
+  <li><strong>The raw failure message is kept</strong>, because the failure grouping reads the
+  exception back out of it.</li>
+  <li><strong>Build duration is the sum of the per-test durations</strong>, or <code>None</code> if
+  no test in that build recorded one. Builds archived before per-test durations were written never
+  measured this, and drawing them as instant would invent a cliff in the duration trend that never
+  happened.</li>
+</ul>
+
+<h3 id="what-it-buys-and-what-it-costs">What it buys, and what it costs</h3>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Nothing to install and nothing to configure</b>The tab appears because the archives are
+    there. There is no database, no service, no upload step and no API key.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The history travels with the file</b>Everything the tab draws is baked into the one
+    HTML document at generation time. It answers the same questions off a CI artifact server, out of
+    an email attachment and from <code>file://</code> on a laptop with no network.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>It is honest about a first run</b>One build is a perfectly ordinary first run, not an
+    error. The tab says <em>this run only - history builds up as you run again</em> and shows the
+    panels that are real from run one, rather than drawing four empty axes.</span>
+  </li>
+</ul>
+
+<p>The costs are the other side of the same design, and they are worth knowing before you read a
+number off the tab:</p>
+
+<ul>
+  <li><strong>The history is only as long as retention kept.</strong> Whatever
+  <code>--archive-count</code>, <code>--archive-days</code> and <code>--archive-since</code> deleted
+  is gone from the maths as well as from the Archives section.</li>
+  <li><strong>Identity is the suite plus the test name.</strong> Renaming a test, or moving it to
+  another file, reads as the old one disappearing and a new one arriving — which is exactly what
+  the <em>No longer run</em> and <em>New tests</em> cards will show.</li>
+  <li><strong>Every retained build is weight in the page.</strong> Roughly 5KB of it, and it is
+  cumulative. See <a href="#the-size-arithmetic">the size arithmetic</a>.</li>
+  <li><strong>Archives from an older release are read as far as they go.</strong> A build written
+  before per-test durations were recorded has no duration key, and is read as <em>not
+  measured</em> — never as zero.</li>
+</ul>
+
+<h3 id="the-fixed-numbers">The fixed numbers</h3>
+
+<p>Nothing on the tab is tunable. These are the bounds it is built on, and each of them is a
+readability limit rather than a maths one — the tables behind them still count every build on
+disk.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Constant</th><th>Value</th><th>What it bounds</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>TREND_BUILDS</code></td><td><code>20</code></td><td>Builds the trend charts draw. Forty labels on one axis is unreadable; the tables still read every build kept.</td></tr>
+      <tr><td class="t-nowrap"><code>SPARK_BUILDS</code></td><td><code>12</code></td><td>Outcomes shown in a test row's History strip.</td></tr>
+      <tr><td class="t-nowrap"><code>TOP_SLOWEST</code></td><td><code>10</code></td><td>Rows in the slowest-tests chart.</td></tr>
+      <tr><td class="t-nowrap"><code>MOVEMENT_NAMES</code></td><td><code>6</code></td><td>Test names shown on a movement card before the rest go behind "and N more".</td></tr>
+      <tr><td class="t-nowrap"><code>BROKEN_STREAK</code></td><td><code>2</code></td><td>Consecutive failing builds before a test counts as consistently failing.</td></tr>
+      <tr><td class="t-nowrap"><code>FAULT_TYPES</code></td><td><code>8</code></td><td>Exception groups listed in the failure panel; the tail is counted and one click away.</td></tr>
+      <tr><td class="t-nowrap"><code>FAULT_NAMES</code></td><td><code>4</code></td><td>Test names shown under each exception group.</td></tr>
+      <tr><td class="t-nowrap"><code>DURATION_EDGES</code></td><td><code>0.1, 0.5, 1, 5, 10, 30</code></td><td>Bucket edges for the duration histogram, in seconds.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2 id="the-six-figures">The six figures across the top</h2>
+
+<p>Six tiles, in this order. Each carries a value, a label and a note that says what the value is
+made of, because a number with no note is a number people argue about.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Tile</th><th>What it is</th><th>Its note</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><strong>stability score</strong></td><td>One number, 0&ndash;100, for how much the suite can be trusted. Graded <span class="pill pill--pass">strong &ge; 80</span> <span class="pill pill--accent">fair &ge; 60</span> <span class="pill pill--fail">low</span>.</td><td><em>pass rate, less how often tests flip</em></td></tr>
+      <tr><td class="t-nowrap"><strong>pass rate this run</strong></td><td><code>100 &times; pass / (pass + fail)</code> over the current build's counts, to one decimal. Skips excluded.</td><td>The drift: <em>no earlier build to compare</em>, <em>level with the last build</em>, or <em>+2.3 pts since the last build</em>.</td></tr>
+      <tr><td class="t-nowrap"><strong>flaky tests</strong></td><td>How many tracked tests have flipped, or needed a retry.</td><td><em>flipped or needed a retry</em></td></tr>
+      <tr><td class="t-nowrap"><strong>always failing</strong></td><td>How many tests have never passed and are two builds into a failing streak.</td><td><em>failing 2 builds or more</em></td></tr>
+      <tr><td class="t-nowrap"><strong>builds analysed</strong></td><td>Every retained build, not the 20 the charts draw.</td><td>The oldest build's label, <em>oldest Aug 28 09:12</em>.</td></tr>
+      <tr><td class="t-nowrap"><strong>time in tests</strong></td><td>The current build's total test duration.</td><td><em>median build 4.5s</em> across every build that recorded one, or <em>not recorded in this run</em>.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<figure class="imgslot" data-shot="analytics-headline-tiles.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/analytics-headline-tiles.png</b>
+  <span>The six tiles across the top of the Analytics tab at 1440px, light theme, cropped to the tile row plus the scope line above it. The report must come from a folder with 10+ archived builds and a genuine mix of outcomes, so that: the stability score is somewhere in the 60s or 70s (an amber "fair" grade, not a green 100), the pass rate carries a non-zero drift note such as "-1.8 pts since the last build", flaky tests and always failing are both non-zero, builds analysed names a real oldest label, and time in tests shows a median. Every note line under every tile must be legible.</span>
+</figure>
+
+<h3 id="the-stability-score">The stability score</h3>
+
+<p>Two things make a suite untrustworthy and they are not the same thing: tests that <em>fail</em>,
+and tests that <em>will not say</em>. So the score starts at the mean per-test pass rate and is then
+charged half of the mean flip rate.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">stability_score()</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">rated = [h for h in tracked.values() if h[&#039;pass_rate&#039;] is not None]
+
+mean_pass = sum(h[&#039;pass_rate&#039;] for h in rated) / len(rated)
+mean_flip = sum(h[&#039;flip_rate&#039;] for h in rated) / len(rated)
+
+score = max(0, min(100, int(round(mean_pass - 50.0 * mean_flip))))</code></pre>
+</div>
+
+<p>A test alternating pass, fail, pass has a 50% pass rate <em>and</em> tells you nothing, and should
+not score the same as one that half the team already knows is genuinely broken. Tests with no pass
+rate at all — only ever skipped — are excluded; with none left the score is unknown and shows
+<code>--</code>.</p>
+
+<h2 id="why-this-run-failed">Why this run failed</h2>
+
+<div class="note note--new"><span class="note__title">New in 0.4.0</span>The Analytics tab now opens
+on this panel. A wall of red says how much went wrong; this says <em>what</em> went wrong — the thing
+you would otherwise get by opening failures one at a time until a pattern appeared.</div>
+
+<p>Every failure in the current build is grouped by the exception it came out of, biggest group
+first, with the share of the run it holds, the tests in it <strong>by name</strong>, and how it has
+moved since the last build.</p>
+
+<p>The names matter as much as the count. <em>9 TimeoutException</em> says what broke; the names say
+whether it is one page object nine tests go through or nine unrelated waits, and those are different
+mornings.</p>
+
+<figure class="imgslot" data-shot="analytics-fault-groups.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/analytics-fault-groups.png</b>
+  <span>A close crop of the "Why this run failed" panel at 1440px, light theme, from a red run with at least a dozen failures of four or five different exception types and one earlier build to compare against. The headline must be legible ("12 failures, 9 are TimeoutException"), each group must show its name, count, share bar and movement chip — with at least one reading "new", one "+2" and one "level" — the test names must be visible under two of the groups, and at least one group must end in an "and N more" line.</span>
+</figure>
+
+<h3 id="what-goes-into-the-grouping">What goes into the grouping</h3>
+
+<ul>
+  <li><strong>FAIL and ERROR together.</strong> A test that blew up in a fixture failed for a reason
+  worth grouping, and the reason is in the same field. Errors are counted beside failures everywhere
+  else on the tab, so they are grouped beside them here too.</li>
+  <li><strong><code>xfail</code> is not grouped.</strong> It is an outcome the suite asked for, not
+  one anybody is triaging.</li>
+  <li><strong>The panel reads the current build alone.</strong> Every longitudinal panel below it is
+  blank until there is a second build; this one is answerable on a first run — and a first run that
+  is red is exactly when somebody wants it.</li>
+  <li><strong>A green run leaves the card out</strong> rather than standing empty. There is nothing
+  to group, and an empty panel headed "Why this run failed" answers a question nobody asked.</li>
+</ul>
+
+<h3 id="reading-the-exception-out-of-a-message">Reading the exception out of a message</h3>
+
+<p>Nothing new is collected for this. What is stored against a failing test is what pytest printed
+— and by the time a build has been archived it is text and nothing else. So the type is read back
+out of the message, in one pass over its lines, with these rules.</p>
+
+<ol>
+  <li><strong>ANSI colour is stripped first.</strong> It is invisible in the report, but it sits
+  between the start of a line and the exception name, and would stop the name matching at all.</li>
+  <li><strong>pytest's <code>E</code> marker is stripped.</strong> A failure has had it removed by
+  the time it is stored, but an <em>error</em> keeps the whole traceback as printed — and the
+  exception is on one of the marked lines.</li>
+  <li><strong>A candidate line has to match at its start</strong>: an optionally dotted name
+  beginning with a capital, then a colon or the end of the line.
+  <code>^((?:[A-Za-z_]\w*\.)*[A-Z]\w*)\s*(?::|$)</code>. The anchor is the point — an assertion diff
+  prints lines like <code>- ValueError: nope</code>, and that is a string being compared, not
+  something that was raised.</li>
+  <li><strong>A dotted name is cut to the class.</strong>
+  <code>selenium.common.exceptions.TimeoutException</code> and <code>TimeoutException</code> are one
+  group; which of the two a message carries is down to how the traceback was rendered rather than to
+  what went wrong.</li>
+  <li><strong>A name ending in <code>Error</code>, <code>Exception</code>, <code>Failure</code>,
+  <code>Failed</code>, <code>Skipped</code>, <code>Timeout</code>, <code>Interrupt</code>,
+  <code>Abort</code> or <code>Exit</code> is read as raised, and the <em>last</em> such line
+  wins.</strong> A chained failure prints the original traceback first and the exception that
+  actually surfaced last — which is the one pytest itself reports. This suffix rule is also what
+  keeps Selenium's <code>Message:</code> lines out: a WebDriver error prints
+  <code>TimeoutException: Message: ...</code> and then more <code>Message:</code> lines under it.</li>
+  <li><strong>Any other capitalised name is kept from the <em>first</em> line</strong>, where a plain
+  traceback puts its headline.</li>
+  <li><strong>A bare <code>assert</code> line is read as <code>AssertionError</code>.</strong> pytest
+  prints those with no type name at all, and they are far too common a failure to leave sitting in
+  the unclassified pile.</li>
+  <li><strong>Nothing found puts the failure in <code>Unclassified</code>.</strong></li>
+</ol>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Message</th><th>Group</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><code>AssertionError: assert 1 == 2</code></td><td class="t-nowrap"><code>AssertionError</code></td><td>Named at the start of the line, and the suffix says it was raised.</td></tr>
+      <tr><td><code>assert 1 == 2</code></td><td class="t-nowrap"><code>AssertionError</code></td><td>The bare-assert rule.</td></tr>
+      <tr><td><code>E&nbsp;&nbsp;&nbsp;TimeoutException: Message: element not found</code></td><td class="t-nowrap"><code>TimeoutException</code></td><td>The <code>E</code> marker is stripped; the <code>Message:</code> lines under it carry no raised suffix.</td></tr>
+      <tr><td><code>selenium.common.exceptions.TimeoutException: ...</code></td><td class="t-nowrap"><code>TimeoutException</code></td><td>The dotted name is cut to the class.</td></tr>
+      <tr><td>A chained traceback ending in <code>RuntimeError</code></td><td class="t-nowrap"><code>RuntimeError</code></td><td>The last raised name wins — the exception that surfaced.</td></tr>
+      <tr><td><code>- ValueError: nope</code> (an assertion diff line)</td><td class="t-nowrap"><code>Unclassified</code></td><td>The pattern is anchored at the start, so the diff marker rules the line out.</td></tr>
+      <tr><td><code>Failed: DID NOT RAISE</code></td><td class="t-nowrap"><code>Failed</code></td><td>pytest's own pseudo-exception; <code>Failed</code> is in the suffix list.</td></tr>
+      <tr><td>Free text naming no exception</td><td class="t-nowrap"><code>Unclassified</code></td><td>Nothing matched.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="ranking-and-movement">Ranking, share and movement</h3>
+
+<p>Groups are ranked biggest first, with ties broken by name so the order is stable between two runs
+that failed the same way. <strong><code>Unclassified</code> is held at the bottom however large it
+grows</strong>: a panel headed by <em>Unclassified: 40</em> has answered nothing.</p>
+
+<p>Each group's <strong>share</strong> is its count as a rounded percentage of the run's failures.
+Its <strong>movement</strong> is its count minus the same group's count in the previous build, and it
+is worded rather than always signed:</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Reads</th><th>When</th><th>Why not just the number</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><em>nothing at all</em></td><td>There is no previous build.</td><td>Not the same thing as a group that has not moved, so it is not drawn the same way.</td></tr>
+      <tr><td class="t-nowrap"><code>level</code></td><td>The count is unchanged.</td><td><code>+0</code> beside a failure count reads as noise.</td></tr>
+      <tr><td class="t-nowrap"><code>new</code></td><td>The delta equals the count — the last build had none of these.</td><td><code>+3</code> reads as three more of something that was already there. A failure mode the last build did not have at all is the more interesting of the two.</td></tr>
+      <tr><td class="t-nowrap"><code>+2</code> / <code>-1</code></td><td>Everything else.</td><td>Tinted up or down, so the direction reads before the number does.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="the-headline">The one line the panel is worth reading for</h3>
+
+<p>The count on its own is already on the Dashboard. The headline is the second half — where to
+start — and it is four different sentences rather than one with a suffix:</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Headline</th><th>When</th></tr></thead>
+    <tbody>
+      <tr><td><em>12 failures, 9 are TimeoutException</em></td><td>A lead exists.</td></tr>
+      <tr><td><em>all 12 failures are TimeoutException</em> &mdash; or <em>the one failure is a TimeoutException</em></td><td>One group is everything.</td></tr>
+      <tr><td><em>12 failures, every one a different exception</em></td><td>Nothing groups with anything. Naming the first of twelve one-offs would read as a lead, and that a run failed twelve different ways is itself the finding.</td></tr>
+      <tr><td><em>12 failures, none of them naming an exception</em></td><td>Everything landed in <code>Unclassified</code>.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>The panel lists the top eight groups with up to four test names each. Beyond that, the tail is
+<strong>counted rather than dropped</strong> — <em>and 4 more types, 7 failures between them</em> —
+and opens in the <a href="#and-n-more">same dialog</a> as everything else on the tab, with the count
+of failures in each.</p>
+
+<h2 id="flaky-tests">Flaky tests</h2>
+
+<p><strong>What it means.</strong> The test has given two different answers to the same question. It
+either flipped between passing and failing across builds, or it needed a retry inside a single
+build.</p>
+
+<p><strong>How it is derived.</strong> Every build a test appeared in becomes a point in its history,
+and the points are summarised:</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Number</th><th>Derived from</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>flips</code></td><td>How many times consecutive <em>decided</em> outcomes differ. pass&nbsp;&rarr;&nbsp;fail&nbsp;&rarr;&nbsp;pass is two flips.</td></tr>
+      <tr><td class="t-nowrap"><code>flip_rate</code></td><td><code>flips / (decided - 1)</code>, or <code>0.0</code> with fewer than two decided builds. This is what the stability score is charged against.</td></tr>
+      <tr><td class="t-nowrap"><code>reruns</code></td><td>The rerun counts summed across every point — retries <em>inside</em> builds, not across them.</td></tr>
+      <tr><td class="t-nowrap"><code>flaky</code></td><td><code>any flips</code> <strong>or</strong> <code>any reruns</code> — then forced off if the test is <a href="#standing-failures">broken</a>.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>A rerun on its own is enough. It is the least ambiguous flake evidence there is: the same code,
+the same build, two different answers. That signal only exists if
+<a href="features.html">pytest-rerunfailures</a> is installed and retries were budgeted — counting
+attempts is the only reliable measure available, because <code>--reruns</code>, the ini key and
+<code>@pytest.mark.flaky(reruns=n)</code> can each set a different one.</p>
+
+<div class="note"><span class="note__title">Note</span><strong>Skips are excluded from the pass/fail
+arithmetic.</strong> A skip says nothing about whether a test works, so pass rate, flips and streak
+are all computed over the builds that decided something. A test skipped for three builds between two
+passes has not flipped twice.</div>
+
+<p><strong>How to act on it.</strong> Open the per-test table, which already opens worst-behaved
+first, and read the row: its History strip is the last twelve outcomes oldest-first as one block per
+build, and beside it are the flip count, the retry count and the current streak. A strip that
+alternates is a race or an ordering dependency; a strip that is solid green with a retry count is
+something that only fails under load.</p>
+
+<figure class="imgslot" data-shot="analytics-stability-table.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/analytics-stability-table.png</b>
+  <span>The per-test stability table at 1440px, light theme, in its default order and untouched — so the first rows are "Always failing" and the ones under them "Flaky". Twelve or so rows in frame, from a folder with 10+ archived builds. Every column must be readable, in the order the table draws them: suite and test, the verdict pill in its tone, the History strip of coloured blocks, pass rate, builds, flips, retries, current streak and duration. At least one row must show a mixed strip, one a solid red strip, and one a "--" pass rate for a test that has only ever been skipped.</span>
+</figure>
+
+<h2 id="standing-failures">Standing failures</h2>
+
+<p><strong>What it means.</strong> The test has never passed in any retained build, and it has been
+failing for at least two builds running. One failure is a failure; a standing one is a different
+conversation.</p>
+
+<p><strong>How it is derived.</strong> A test is <code>broken</code> when it has decided at least
+once, its fail count equals its decided count, and its streak has reached
+<code>BROKEN_STREAK</code>&nbsp;(2). The streak is how many decided builds the newest outcome has
+held for, uninterrupted.</p>
+
+<div class="note note--tip"><span class="note__title">Tip</span><strong>A broken test is explicitly
+un-flagged as flaky.</strong> A test that only ever fails is not flaky, it is broken — and listing it
+under flakiness sends somebody hunting for a race that is not there. It is a bug with an owner.</div>
+
+<p>The same history drives the verdict on every row of the table, and the wording is careful not to
+claim more than the history supports. <em>Unreliable</em> is a claim about a <em>pattern</em>, and a
+test that failed the only build it was in has not shown one yet — it has simply failed.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Verdict</th><th>When</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><strong>Always failing</strong></td><td>Never passed, and failing two builds or more running.</td></tr>
+      <tr><td class="t-nowrap"><strong>Flaky</strong></td><td>Flipped between outcomes, or needed a retry.</td></tr>
+      <tr><td class="t-nowrap"><strong>Failing</strong></td><td>Pass rate of 0, but not yet a two-build streak.</td></tr>
+      <tr><td class="t-nowrap"><strong>Stable</strong></td><td>Pass rate of 100.</td></tr>
+      <tr><td class="t-nowrap"><strong>Skipped</strong></td><td>No pass rate at all — the test has only ever been skipped and has decided nothing. Shown as <code>--</code>, not as 0, and sorted as <code>-1</code>.</td></tr>
+      <tr><td class="t-nowrap"><strong>Unreliable</strong></td><td>Everything else: a pass rate strictly between 0 and 100, with no flips and no retries recorded.</td></tr>
+      <tr><td class="t-nowrap"><strong>Not in this run</strong></td><td>Overrides every verdict above when the test's last point is not the current build.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p><strong>How to act on it.</strong> The table's default order is the triage order: consistently
+failing first, by longest streak then name; then flaky, by flip rate then retry count; then
+everything else by pass rate, with tests that have decided nothing last. It is sortable, but what it
+shows before anyone touches it should already be the list to work through.</p>
+
+<p>A test that has decided nothing shows <code>--</code> for its streak rather than
+<em>0 builds</em>, which would read as a measurement rather than as the absence of one.</p>
+
+<h2 id="pass-rate-drift">Pass-rate drift</h2>
+
+<p><strong>What it means.</strong> Whether the suite is getting better or worse, as a line rather
+than as today's number.</p>
+
+<p><strong>How it is derived.</strong> Each build's rate is computed off that build's own counts, not
+off the per-test histories: <code>round(100 * pass / (pass + fail), 1)</code>, and <code>None</code>
+when nothing was decided. A <code>None</code> point draws as a <strong>gap</strong> rather than as a
+zero — a build in which everything was skipped did not have a pass rate of nought.</p>
+
+<p>Four charts sit under the tiles. Two of them are drawn over the last twenty builds, a third set
+over the nineteen transitions between them, and the fourth reads the current run alone:</p>
+
+<ul>
+  <li><strong>Pass rate across builds</strong> — the drift itself. <strong>The axis is not pinned to
+  0&ndash;100</strong>, because a suite that lives between 96% and 99% is exactly the one whose
+  two-point drops matter.</li>
+  <li><strong>What moved, build to build</strong> — the four <a href="#movement-cards">movement</a>
+  counts stacked at each step.</li>
+  <li><strong>Where the time goes</strong> — <a href="#where-the-time-goes">the duration
+  histogram</a>.</li>
+  <li><strong>Test base growth</strong> — the per-build test count. The suite being added to, or
+  quietly shrinking.</li>
+</ul>
+
+<p>The <strong>headline drift</strong> on the pass-rate tile compares the current build with the one
+immediately before it, and is three different sentences rather than one phrase with a suffix:
+<em>no earlier build to compare</em>, <em>level with the last build</em> when the rounded difference
+is zero, or <em>+2.3 pts since the last build</em>.</p>
+
+<figure class="imgslot" data-shot="analytics-drift-charts.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/analytics-drift-charts.png</b>
+  <span>The four-chart grid on the Analytics tab at 1440px, light theme, all in one frame: "Pass rate across builds", "What moved, build to build", "Where the time goes" and "Test base growth". Generated from at least 15 archived builds with varying results, so the pass-rate line has visible movement and a narrow y axis rather than a flat line at 100, the flow chart has stacked bars in all four colours at several steps, the histogram has weight in more than two bands, and the growth line steps up at least once. Axis labels must be legible.</span>
+</figure>
+
+<div class="note"><span class="note__title">Note</span>Every numeric series is written into the page
+as an escaped JavaScript literal, and the slowest-tests series — the only one carrying test names —
+rides on an escaped HTML attribute rather than being written as source code at all. A parametrized
+case can be called anything at all, and nothing a test is named ever lands somewhere the browser is
+willing to execute.</div>
+
+<h2 id="where-the-time-goes">Where the run's time goes</h2>
+
+<p><strong>What it means.</strong> A histogram answers something a slowest-tests list cannot: two
+thousand tests at 300ms each is a different problem from ten tests at a minute, and both of those
+suites take ten minutes.</p>
+
+<p><strong>How it is derived.</strong> The <strong>current run's tests only</strong> are spread
+across seven bands. The first edge a duration is strictly under wins it; anything at or past 30
+seconds falls into the overflow bucket, which is the one worth looking at.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Band</th><th>Holds a duration of</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>&lt; 100ms</code></td><td>under 0.1s</td></tr>
+      <tr><td class="t-nowrap"><code>100 - 500ms</code></td><td>0.1s up to 0.5s</td></tr>
+      <tr><td class="t-nowrap"><code>0.5 - 1s</code></td><td>0.5s up to 1s</td></tr>
+      <tr><td class="t-nowrap"><code>1 - 5s</code></td><td>1s up to 5s</td></tr>
+      <tr><td class="t-nowrap"><code>5 - 10s</code></td><td>5s up to 10s</td></tr>
+      <tr><td class="t-nowrap"><code>10 - 30s</code></td><td>10s up to 30s</td></tr>
+      <tr><td class="t-nowrap"><code>30s +</code></td><td>30s and over</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>If <strong>no</strong> test in the current run recorded a duration, both the labels and the values
+are emitted empty and the chart is not drawn — rather than drawn empty, which reads as a chart that
+failed to load.</p>
+
+<p>The <strong>slowest tests</strong> chart takes the current run's tests, drops any whose duration is
+zero, sorts descending and keeps the top ten. Dropping the zeroes is deliberate: durations are kept
+to two decimals, so a genuinely quick test measures <code>0.0</code>, and ten rows of "slowest test:
+no time at all" reads as a bug rather than as a fast suite.</p>
+
+<p><strong>Build-level duration</strong> is the sum of that build's per-test durations. The
+<em>time in tests</em> tile shows the current build's total, with the <strong>median</strong> across
+every build that recorded one as its note. Durations read as <code>820ms</code> under a second,
+<code>4.5s</code> under a minute, <code>12m 04s</code> beyond it, and <code>--</code> when
+unknown.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span>Per-test durations are written
+into <code>output.json</code> from the release that shipped Analytics onwards. Builds archived by an
+earlier version have no duration key and are read as <strong>not measured</strong> — so the duration
+panels fill from the run that produced them, not retroactively.</div>
+
+<p><strong>How to act on it.</strong> Weight in the last two bands is a small number of tests you can
+name and fix. Weight in the first two bands with a long wall clock is a fixture or a collection
+problem, not a slow test. The <a href="report-tour.html#test-steps">Test Steps</a> tab is where you
+find out which phase of a named test the time went into.</p>
+
+<figure class="imgslot" data-shot="analytics-first-run.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/analytics-first-run.png</b>
+  <span>The Analytics tab on a genuine first run at 1440px, light theme — generate by deleting the report folder and running the suite once, with a handful of deliberate failures so the failure panel has something to group. The frame must show the scope line reading "this run only - history builds up as you run again", the six tiles with the pass-rate one noting "no earlier build to compare" and "builds analysed" reading 1, the populated "Why this run failed" panel with no movement chips on any group, and the duration panels — "Where the time goes" and "Slowest tests in this run" — drawn while the trend charts and the movement cards are left out entirely.</span>
+</figure>
+
+<h2 id="movement-cards">The movement cards</h2>
+
+<p><strong>What it means.</strong> The four numbers a standup asks for: what got fixed, what
+regressed, what tests were added, and what quietly disappeared.</p>
+
+<p><strong>How it is derived.</strong> Every consecutive pair of builds is walked, and each pair
+produces four lists:</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Card</th><th>List</th><th>Derived from</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><strong>Newly failing</strong></td><td><code>regressed</code></td><td>Present in both builds, <code>pass</code> &rarr; <code>fail</code>.</td></tr>
+      <tr><td class="t-nowrap"><strong>Newly fixed</strong></td><td><code>fixed</code></td><td>Present in both builds, <code>fail</code> &rarr; <code>pass</code>.</td></tr>
+      <tr><td class="t-nowrap"><strong>New tests</strong></td><td><code>added</code></td><td>A key in the newer build that the older one did not have.</td></tr>
+      <tr><td class="t-nowrap"><strong>No longer run</strong></td><td><code>removed</code></td><td>A key in the older build that the newer one does not have.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>A test that was <strong>skipped in either of the two builds is neither fixed nor
+regressed</strong>: only <code>fail</code>&nbsp;&rarr;&nbsp;<code>pass</code> and
+<code>pass</code>&nbsp;&rarr;&nbsp;<code>fail</code> count. And a test vanishing from the suite is
+worth seeing — it is as often an accident as a decision, which is why <em>No longer run</em> is a
+card of its own rather than a footnote.</p>
+
+<p>All four counts across the recent transitions are what the <em>What moved, build to build</em>
+chart stacks. The four cards show the <strong>latest step only</strong>. Each card writes every name
+it has into the page and shows the first six; the rest are hidden and revealed by
+<a href="#and-n-more">the dialog</a>. An empty card says <em>Nothing</em> rather than being
+hidden — a card that disappears when there is nothing in it makes the row jump about between
+builds.</p>
+
+<p>On a first build there are no steps at all, and all four cards are empty.</p>
+
+<p><strong>How to act on it.</strong> <em>Newly failing</em> is the list to read before anything else
+on the tab: those tests passed in the build before this one, so the change that broke them is in the
+diff between the two. <em>No longer run</em> is the one people forget — a test that stopped being
+collected stops failing, and stops protecting anything.</p>
+
+<h2 id="and-n-more">The "and N more" dialogs</h2>
+
+<div class="note note--new"><span class="note__title">New in 0.4.0</span>Every <em>and N more</em> on
+the tab — the failure groups, the exception types past the eighth, and all four movement cards — is a
+button that opens the whole list. The number on its own said how much was being kept from you and
+offered no way to see it.</div>
+
+<p>The dialog shows <strong>the card's own items</strong>, not a copy of them. A card renders every
+name it has and hides the tail with a class; opening the dialog is that hiding taken off. There is no
+second list in a data attribute to fall out of step with the first, and no test name written into the
+page twice.</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>It searches as you type</b>Over the text of the entries it is showing. A movement card
+    carries the suite under the test name, so <code>test_checkout</code> and <code>tests/e2e/</code>
+    both narrow that list.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The count says both numbers while a search is on</b><code>3 of 41 tests</code>. Plain
+    <code>41 tests</code> beside thirty-eight filtered-out rows reads as a list that lost them; the
+    total is what the card promised, and the pair is what the search has left of it.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A search that matches nothing says so</b><em>Nothing here matches that</em>, rather
+    than an empty panel.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The search box takes focus as it opens, and Escape closes it</b>The same key that
+    already closed the captured-output panel and the environment card.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>It counts the right noun</b>A movement card and a failure group open a list of
+    <em>tests</em>; the tail of the failure panel opens a list of <em>types</em>, each with the
+    number of failures in it.</span>
+  </li>
+</ul>
+
+<figure class="imgslot" data-shot="analytics-more-dialog.gif">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/analytics-more-dialog.gif</b>
+  <span>A short loop at 1280px, light theme, of one exception group with 40+ tests in it. The motion must show, in order: the pointer clicking "and 37 more"; the dialog opening with the group's name in its header, the count reading "41 tests" and the cursor already in the search box; a few characters typed so the list narrows and the count changes to "3 of 41 tests"; then Escape pressed and the dialog closing. No cuts.</span>
+</figure>
+
+<h2 id="archives-and-retention">Archives and retention</h2>
+
+<p>How far back Analytics reads is whatever retention has kept. The three limits are the only control
+the tab has, and they are ordinary flags on the run — or, better, keys in the ini file.</p>
+
+<h3 id="the-three-limits">The three limits</h3>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--archive-count</span>
+    <div class="def__meta">
+      <span class="pill">N</span>
+      <span class="pill pill--brand">default: keep every build</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>How many builds to keep. It is handled as <em>text</em> rather than as a number, because
+    <code>''</code> and <code>'0'</code> are different answers and both are asked about later:</p>
+    <ul>
+      <li><strong>Unset</strong> — no count limit at all.</li>
+      <li><strong><code>0</code></strong> — the whole <code>archive/</code> directory is removed and
+      the Archives section is not rendered.</li>
+      <li><strong><code>N</code></strong> — <strong><code>N - 1</code> files are kept on
+      disk.</strong> The build being reported now is shown alongside the archived ones and counts
+      against the limit.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--archive-days</span>
+    <div class="def__meta">
+      <span class="pill">D</span>
+      <span class="pill pill--brand">default: none</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Keep only builds newer than <code>now - D days</code>. Fractions are accepted —
+    <code>0.5</code> is half a day. For a job on a schedule, where "the last 30 days" does not have
+    to be retuned every time the schedule changes.</p>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--archive-since</span>
+    <div class="def__meta">
+      <span class="pill">DATE</span>
+      <span class="pill pill--brand">default: none</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Delete every archived build older than this moment — a one-off cut. Accepts
+    <code>YYYY-MM-DD</code> (midnight, local time), <code>YYYY-MM-DD HH:MM</code> and
+    <code>YYYY-MM-DD HH:MM:SS</code>.</p>
+  </div>
+</div>
+
+<h3 id="how-the-three-intersect">How the three intersect</h3>
+
+<p><strong>They intersect rather than combine.</strong> An archived build has to satisfy
+<em>every</em> limit you set in order to survive: it must be no older than the cutoff <em>and</em>
+among the newest <code>keep</code> files. Set none of them and every build is kept for ever.</p>
+
+<p>When <code>--archive-days</code> and <code>--archive-since</code> are both given, the cutoff is
+the <strong>later</strong> of the two — the stricter one, so neither can widen the other.</p>
+
+<p>All three are validated by name: a non-numeric or negative <code>--archive-count</code>, a
+non-numeric or negative <code>--archive-days</code>, or an unparseable <code>--archive-since</code>
+each fail the run with a usage error rather than raising somewhere inside the render of a build that
+had already rotated its archive.</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Where to set retention">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">CLI</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pytest.ini</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">A nightly job: a month of history, never more than 60 builds</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/ --html-report=./report --archive-days=30 --archive-count=60
+
+# a rolling half day
+$ pytest tests/ --html-report=./report --archive-days=0.5
+
+# a one-off cut at a date and a time
+$ pytest tests/ --html-report=./report --archive-since=&#039;2026-06-01 09:00&#039;
+
+# keep nothing but this build - no Archives section, no Analytics history
+$ pytest tests/ --html-report=./report --archive-count=0</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <span class="codeblock__cap">Retention is a property of the job, not of one invocation</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="ini">[pytest]
+html_report = ./report
+archive_count = 60
+archive_days = 30</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="note note--tip"><span class="note__title">Tip</span>Set retention in the ini file rather
+than on the command line. It is a property of the job — every invocation, however it is started,
+should keep the same window, and a limit that only some of your pipelines pass produces a history
+whose length depends on who ran it.</div>
+
+<h3 id="how-a-build-is-dated">How a build is dated</h3>
+
+<p>A build is dated by <strong>the moment its run started</strong>, and that number is kept in the
+name of its archive file — <code>output_1788426639.262306.json</code>. Retention ages files by
+reading the name, with the file's mtime only as a fallback.</p>
+
+<p>The name is used rather than the mtime deliberately. A checkout into a fresh CI workspace gives
+every file the mtime of the clone, so an age limit read from mtimes would decide that a year of
+history was written this morning and keep all of it for ever. The name survives being copied,
+zipped, downloaded as an artifact and unpacked somewhere else.</p>
+
+<div class="note"><span class="note__title">Note</span>The stamp in an archive's <em>name</em> is the
+start time of the build that <strong>superseded</strong> it — the file is renamed on the way out. The
+build's own <code>start_time</code>, one build older, is inside the file, and that is what Analytics
+sorts on.</div>
+
+<h3 id="the-size-arithmetic">The size arithmetic</h3>
+
+<p>A retained build costs roughly <strong>5KB of the page</strong>, and the cost is cumulative: the
+history is rendered into the one HTML document rather than fetched. That is fine for a suite run a
+few times a day and it is not fine for one run on a timer.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Cadence</th><th>Builds after two months</th><th>History in the page</th></tr></thead>
+    <tbody>
+      <tr><td>Nightly</td><td>~60</td><td>~300KB</td></tr>
+      <tr><td>Every commit, 20 a day</td><td>~1,200</td><td>~6MB</td></tr>
+      <tr><td>Hourly</td><td>~1,450</td><td>~7MB</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>An hourly run reaches a multi-megabyte report inside a couple of months with nothing set, and the
+symptom is a report that takes a long time to open rather than an error. Pruning the folder shrinks
+the page for free.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span>Retention is what Analytics
+reads. Cutting <code>--archive-count</code> to 5 does not only shorten the Archives section — it
+shortens every pass rate, every flip count and every streak on the tab, permanently, because the
+builds are deleted from disk.</div>
+
+<h2 id="output-json">output.json — the archived build record</h2>
+
+<p><code>output.json</code> sits beside the report and is <strong>the only thing that survives from
+one build to the next</strong>. It is written at the end of every build as a single unindented line
+of JSON.</p>
+
+<p>Four things read it:</p>
+
+<ul>
+  <li><strong>The Archives section</strong> — the list of retained builds and their counts.</li>
+  <li><strong>The Trends chart on the Dashboard</strong> — which reads the current file and then the
+  archive names newest-first, <strong>stopping after five</strong>, so the chart is at most six
+  points. Analytics is the one that reads every retained build.</li>
+  <li><strong>The whole Analytics tab</strong> — everything on this page.</li>
+  <li><strong>The <a href="vscode.html">VS Code extension</a></strong> — which is a viewer over this
+  same file plus the rotated copies in <code>archive/</code>. It runs no tests and parses no HTML.</li>
+</ul>
+
+<div class="note"><span class="note__title">Note</span><code>output.json</code> is not an interchange
+format, and a sharded run does <strong>not</strong> merge these. There is no node id in it, no logs,
+no steps, no attachments and no phases — a merge built on it would produce correct totals over an
+empty report. The <a href="ci-integrations.html">merge command</a> reads shard bundles and
+<em>writes</em> an <code>output.json</code> of its own, exactly as a pytest run does.</div>
+
+<h3 id="the-shape">The shape</h3>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">json</span>
+    <span class="codeblock__cap">output.json, abridged and indented — the real file is one line</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="json">{
+  &quot;content&quot;: {
+    &quot;suites&quot;: {
+      &quot;0&quot;: {
+        &quot;suite_name&quot;: &quot;tests/unit/test_analytics.py&quot;,
+        &quot;tests&quot;: {
+          &quot;0&quot;: { &quot;status&quot;: &quot;PASS&quot;, &quot;message&quot;: &quot;&quot;,
+                 &quot;test_name&quot;: &quot;test_only_a_failure_counts&quot;,
+                 &quot;rerun&quot;: &quot;0&quot;, &quot;duration&quot;: 0.0 },
+          &quot;1&quot;: { &quot;status&quot;: &quot;FAIL&quot;, &quot;message&quot;: &quot;AssertionError: assert 1 == 2&quot;,
+                 &quot;test_name&quot;: &quot;test_totals&quot;,
+                 &quot;rerun&quot;: &quot;2&quot;, &quot;duration&quot;: 1.24 }
+        },
+        &quot;status&quot;: { &quot;total_pass&quot;: 1, &quot;total_fail&quot;: 1, &quot;total_skip&quot;: 0,
+                    &quot;total_error&quot;: 0, &quot;total_xpass&quot;: 0, &quot;total_xfail&quot;: 0,
+                    &quot;total_rerun&quot;: 2 }
+      }
+    }
+  },
+  &quot;coverage&quot;: { &quot;percent&quot;: 84.12, &quot;statements&quot;: 5120, &quot;covered&quot;: 4307,
+                &quot;missing&quot;: 813, &quot;branch&quot;: true },
+  &quot;date&quot;: &quot;September 03, 2026&quot;,
+  &quot;start_time&quot;: 1788426639.262306,
+  &quot;total_suite&quot;: 30,
+  &quot;status&quot;: &quot;FAIL&quot;,
+  &quot;status_list&quot;: { &quot;pass&quot;: &quot;691&quot;, &quot;fail&quot;: &quot;1&quot;, &quot;skip&quot;: &quot;0&quot;,
+                   &quot;error&quot;: &quot;0&quot;, &quot;xpass&quot;: &quot;0&quot;, &quot;xfail&quot;: &quot;0&quot;,
+                   &quot;rerun&quot;: &quot;2&quot; },
+  &quot;total_tests&quot;: &quot;692&quot;
+}</code></pre>
+</div>
+
+<h3 id="shapes-not-to-tidy">Shapes a consumer must not tidy</h3>
+
+<p>Some of these are historical, and all of them are load-bearing.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Key</th><th>Shape</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>content.suites</code></td><td>Keyed by <strong>stringified integer index</strong>, not by suite name. Each suite's <code>tests</code> map is keyed the same way, by position within the suite.</td></tr>
+      <tr><td class="t-nowrap"><code>tests.&lt;j&gt;.rerun</code></td><td>A <strong>string</strong>. <code>duration</code> beside it is a number.</td></tr>
+      <tr><td class="t-nowrap"><code>tests.&lt;j&gt;.duration</code></td><td>Written for the sake of the build <em>after</em> this one: Analytics reads durations back out of the archives, and a number that was never stored is a number no later run can show.</td></tr>
+      <tr><td class="t-nowrap"><code>tests.&lt;j&gt;.message</code></td><td>The failure text, stored raw. This is what the exception grouping reads.</td></tr>
+      <tr><td class="t-nowrap"><code>status_list</code></td><td>Run-wide totals, and <strong>every value is a string</strong>. So is <code>total_tests</code>. The Trends chart's "Failed" series is <code>fail + error</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>status</code></td><td><code>"FAIL"</code> if any suite recorded a non-zero <code>total_fail</code> or <code>total_error</code>; <code>"PASS"</code> otherwise.</td></tr>
+      <tr><td class="t-nowrap"><code>coverage</code></td><td>Present <strong>only when coverage was measured</strong>. Its absence means "not known", which is a different answer from zero and is the true one.</td></tr>
+      <tr><td class="t-nowrap"><code>start_time</code></td><td>The moment the build is filed under. It names the file the <em>next</em> build archives this one as, labels the trend point, and orders the builds in Analytics.</td></tr>
+      <tr><td class="t-nowrap"><code>date</code></td><td><code>"%B %d, %Y"</code> — the day the tests ran. Both the Trends loader and the Archives loader parse this back out.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2 id="delta-vs-the-previous-build">Delta vs the previous build</h2>
+
+<p>The archives pay for one more thing, and it is not on the Analytics tab at all. Once there is a
+build to compare against, the Dashboard's <strong>Highlights</strong> card gains a second entry
+saying which way the suite is moving — <code>&#9650; +3 failures</code> under
+<code>SINCE LAST BUILD</code>, red when there are more failures than last time and green with a
+<code>&#9660;</code> when there are fewer.</p>
+
+<p>The absolute count tells you how bad this build is. The delta tells you whether it is getting
+better, which is the one you act on.</p>
+
+<ul>
+  <li><strong>Nothing to configure.</strong> It appears as soon as a second build has been
+  archived.</li>
+  <li><strong>Hovering gives the two counts behind it</strong> — <em>12 failures this build, 9 in the
+  build before it</em> — because <code>+3</code> reads very differently against 3 than against
+  300.</li>
+  <li><strong>"Failures" means failures and errors</strong>, which is exactly what the Trends chart
+  plots as <em>Failed</em>. Both are read off the same per-build list, so the two can never
+  disagree.</li>
+  <li><strong>No change is written <code>&plusmn;0 failures</code></strong> rather than
+  <code>0 failures</code>, which beside <code>SINCE LAST BUILD</code> would say the opposite of what
+  it means.</li>
+  <li><strong>A first build has nothing to compare against</strong>, and the whole entry — caption
+  included — is left out rather than showing "no change" against a build that does not exist.</li>
+</ul>
+
+<h2 id="where-to-go-next">Where to go next</h2>
+
+<div class="grid grid--3">
+  <a class="card" href="report-tour.html#analytics">
+    <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg></div>
+    <h3>A tour of the report</h3>
+    <p>Where the Analytics tab sits among the other eight, and what each of them answers.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="ci-integrations.html">
+    <div class="card__icon is-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg></div>
+    <h3>CI integrations</h3>
+    <p>Keeping the report folder across runs so a history exists at all — and merging a matrix into
+    one build rather than four.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="card" href="vscode.html">
+    <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg></div>
+    <h3>VS Code extension</h3>
+    <p>The same <code>output.json</code> and the same <code>archive/</code>, read into a sidebar
+    beside your code.</p>
+    <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+  </a>
+</div>

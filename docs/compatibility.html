@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compatibility &amp; files · pytest-html-reporter</title>
+<meta name="description" content="Tested Python, pytest and platform versions, the required and optional dependencies, every file a run writes to disk, and the licences of everything vendored into the report.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../assets/img/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="../assets/img/icon-256.png">
+<meta property="og:title" content="Compatibility &amp; files · pytest-html-reporter">
+<meta property="og:description" content="Tested Python, pytest and platform versions, the required and optional dependencies, every file a run writes to disk, and the licences of everything vendored into the report.">
+<meta property="og:type" content="article">
+<meta property="og:image" content="../assets/img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script>
+/* Set the theme before first paint so a dark reader never sees a white flash. */
+(function(){try{var t=localStorage.getItem('phr-theme');
+if(!t)t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}
+document.documentElement.classList.add('js');})();
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="topbar__inner">
+    <button class="iconbtn navburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <a class="brand" href="../index.html" aria-label="pytest-html-reporter home">
+      <svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="3.9" height="18" rx="1" fill="#3571a3"/><rect x="7.4" y="7.85" width="3.9" height="13.15" rx="1" fill="#ffd143"/><rect x="12.8" y="12.7" width="3.9" height="8.3" rx="1" fill="#8b8b8b"/><rect x="18.2" y="17.3" width="3.9" height="3.7" rx="1" fill="#3571a3"/></svg>
+      <span class="brand__text"><span class="brand__a">pytest</span><span class="brand__b">HTML Reporter</span></span>
+    </a>
+    <nav class="navlinks" aria-label="Main"><a href="../docs/getting-started.html">Docs</a><a href="../docs/report-tour.html">Report tour</a><a href="../docs/cli-reference.html">Reference</a><a href="../docs/github-action.html">Action</a><a href="../docs/vscode.html">VS&nbsp;Code</a><a href="../docs/changelog.html">Changelog</a></nav>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <a class="iconbtn" href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener" title="PyPI" aria-label="pytest-html-reporter on PyPI">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+      </a>
+      <a class="iconbtn" href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener" title="GitHub" aria-label="Source on GitHub"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.5 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.26 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg></a>
+      <button class="iconbtn theme-toggle" type="button" aria-label="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div class="navscrim" aria-hidden="true"></div>
+<div class="docs">
+<aside class="sidebar" id="sidebar"><nav aria-label="Documentation">
+<div class="sidebar__group">
+<span class="sidebar__label">Introduction</span>
+<a class="sidebar__link" href="../docs/getting-started.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2 2 0 0 0-2.9 0z"/><path d="M12 15 9 12a11 11 0 0 1 2-6c2.2-3 5.5-3.5 8-3.5 0 2.5-.5 5.8-3.5 8a11 11 0 0 1-6 2z"/><path d="M9 12H5s.4-2.5 2-3.5c1.7-1 3.5-.5 3.5-.5M12 15v4s2.5-.4 3.5-2c1-1.7.5-3.5.5-3.5"/></svg>Getting started</a>
+<a class="sidebar__link" href="../docs/features.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"/><path d="M19 3v4M17 5h4M5 17v2M4 18h2"/></svg>Features</a>
+<a class="sidebar__link" href="../docs/report-tour.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Report tour</a>
+<a class="sidebar__link" href="../docs/comparison.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M7 21h10M3 8l4-5 4 5M3 8a4 4 0 0 0 8 0M13 12l4-5 4 5M13 12a4 4 0 0 0 8 0"/></svg>Compared to others</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Reference</span>
+<a class="sidebar__link" href="../docs/cli-reference.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 4 4-4 4M13 16h6"/><rect x="2" y="3" width="20" height="18" rx="2"/></svg>CLI reference</a>
+<a class="sidebar__link" href="../docs/configuration.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Configuration</a>
+<a class="sidebar__link" href="../docs/python-api.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg>Python API</a>
+<a class="sidebar__link is-active" href="../docs/compatibility.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>Compatibility &amp; files</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Guides</span>
+<a class="sidebar__link" href="../docs/screenshots.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="m8 6 1.5-2.5h5L16 6"/><circle cx="12" cy="13" r="3.4"/></svg>Screenshots</a>
+<a class="sidebar__link" href="../docs/steps-and-bdd.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Steps &amp; BDD</a>
+<a class="sidebar__link" href="../docs/analytics.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>Analytics &amp; history</a>
+<a class="sidebar__link" href="../docs/ci-integrations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><path d="M6 6.5h.01M6 17.5h.01"/></svg>CI, xdist &amp; scale</a>
+<a class="sidebar__link" href="../docs/security-privacy.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>Security &amp; privacy</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Ecosystem</span>
+<a class="sidebar__link" href="../docs/github-action.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>GitHub Action</a>
+<a class="sidebar__link" href="../docs/vscode.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 3-9 7-4-3-2 1.5v7L4 17l4-3 9 7 4-2V5z"/></svg>VS Code extension</a>
+</div>
+<div class="sidebar__group">
+<span class="sidebar__label">Project</span>
+<a class="sidebar__link" href="../docs/changelog.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Changelog</a>
+<a class="sidebar__link" href="../docs/faq.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a2.9 2.9 0 0 1 5.6 1c0 2-2.8 2.8-2.8 2.8M12 17h.01"/></svg>FAQ</a>
+<a class="sidebar__link" href="../docs/contributing.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>Contributing</a>
+</div>
+</nav></aside>
+<main class="docmain" id="main">
+<div class="crumbs">
+  <a href="../index.html">Home</a>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+  <a href="../docs/getting-started.html">Docs</a>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+  <span>Compatibility & files</span>
+</div>
+<header class="doc-hero">
+  <span class="eyebrow">Reference</span>
+  <h1>Compatibility & files</h1>
+  <p class="lede">What is actually tested rather than what setup.py declares, which plugins the reporter understands, exactly what a run leaves in your repository, and the full licence inventory of the ten libraries and one icon set that ship inside every generated report.</p>
+</header>
+<h2 id="versions-and-platforms">Versions and platforms</h2>
+
+<p>Nothing in the three repositories states a support policy, and the one machine-readable claim is
+out of date. <code>setup.py</code> declares <code>python_requires=&quot;&gt;=3.5&quot;</code>, but the
+package uses f-strings — in <code>cli.py</code>, <code>junit.py</code>, <code>coverage_report.py</code>
+and <code>report_opener.py</code> — which need 3.6, and nothing in CI has exercised 3.5 or 3.6 in
+years. What follows is the tested matrix rather than the declared one.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>What</th><th>Tested</th><th>Ought to work</th><th>Where that is tested</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><strong>Python</strong></td>
+        <td>3.9 and 3.13</td>
+        <td>3.8 and newer</td>
+        <td>The Action's <code>.github/workflows/ci.yml</code> matrix</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><strong>Operating system</strong></td>
+        <td>Ubuntu, macOS, Windows</td>
+        <td>Anything Python runs on</td>
+        <td>The Action's <code>ci.yml</code> and <code>self-test.yml</code> matrices</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><strong>pytest</strong></td>
+        <td>Whatever <code>pip install pytest</code> resolves to</td>
+        <td>Current majors, with the current plugin release</td>
+        <td>The plugin's <code>.github/workflows/main.yml</code></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="python-versions">Python</h3>
+
+<p>The Action's own CI matrix runs <strong>3.9 and 3.13 on <code>ubuntu-latest</code>,
+<code>macos-latest</code> and <code>windows-latest</code></strong> — six cells, <code>fail-fast:
+false</code>, so a break on one interpreter does not hide a break on the other. The plugin's own
+workflow (<code>main.yml</code>) runs the unit suite on whatever Python <code>ubuntu-latest</code>
+provides, on pull requests to <code>master</code> only.</p>
+
+<p>Treat <strong>3.8</strong> as the floor and <strong>3.9–3.13</strong> as the tested band. If you
+need an older interpreter, pin an older plugin release and test it against your own suite — nobody
+else is.</p>
+
+<div class="note"><span class="note__title">Note</span><code>tox.ini</code> still lists
+<code>py37</code> and <code>pypy3</code>, and an <code>ansi2html</code> factor that no code in the
+package reads. It is stale; the GitHub workflows are the live description of what gets run.</div>
+
+<h3 id="pytest-versions">pytest</h3>
+
+<p><code>install_requires</code> is an unpinned <code>pytest</code>, and the plugin tracks pytest
+closely rather than pinning it. Release 0.3.0 exists partly because pytest 9 removed
+<code>TerminalReporter._sessionstarttime</code>, which older releases reached into — the changelog
+entry reads <em>&quot;Fixed compatibility with pytest 9.x (AttributeError: '_sessionstarttime' not
+found)&quot;</em>, and the reporter now keeps its own <code>_sessionstarttime</code> instead.</p>
+
+<p>That is the shape of the risk. A pytest major release can break an <em>old</em> plugin release,
+and the fix ships as a new plugin release rather than as a version pin. <strong>Upgrade the plugin
+when you upgrade pytest.</strong></p>
+
+<h3 id="operating-systems">Operating systems</h3>
+
+<p><code>setup.py</code> classifies the package <code>Operating System :: OS Independent</code>, and
+the Action's <code>self-test.yml</code> backs that up by running the whole composite on
+<code>ubuntu-latest</code>, <code>macos-latest</code> and <code>windows-latest</code> and asserting
+on every output.</p>
+
+<p>One behaviour is genuinely platform-sensitive: <strong>opening the report</strong>. macOS and
+Windows are assumed to have a desktop. Everywhere else, <code>DISPLAY</code> or
+<code>WAYLAND_DISPLAY</code> has to be set, or <code>--report-open=auto</code> stays quiet — see
+<a href="ci-integrations.html">CI integrations</a> for the full check.</p>
+
+<h3 id="companion-projects">The three projects</h3>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Project</th><th>Version</th><th>Requires</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap">Plugin</td>
+        <td><code>0.4.0</code></td>
+        <td>Python 3.8+, pytest, Pillow</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><a href="github-action.html">GitHub Action</a></td>
+        <td><code>v1</code>, moved on each release</td>
+        <td>Any runner with Python; the helper is stdlib-only</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><a href="vscode.html">VS Code extension</a></td>
+        <td><code>0.1.2</code></td>
+        <td>VS Code <code>^1.90.0</code></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>The three version numbers are deliberately independent; there is no relationship between them.
+The extension reads <code>output.json</code> and nothing else, so it works with any plugin release
+that writes one — but its flaky-test verdicts need <code>archive/</code> populated, which needs at
+least two builds.</p>
+
+<h2 id="dependencies">Dependencies</h2>
+
+<p>Two hard dependencies, and that is the whole of it. Everything else is detected at run time and
+degrades to <em>&quot;that tab is empty&quot;</em> rather than failing the run.</p>
+
+<h3 id="required-dependencies">Required</h3>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Package</th><th>Needed for</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>pytest</code></td>
+        <td>The plugin is a pytest plugin. Unpinned, so pip resolves whatever your project already
+        has.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>Pillow</code></td>
+        <td>Writing and handling the screenshot images the reporter captures.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="optional-dependencies">Optional — each unlocks one thing</h3>
+
+<p>None of these are installed for you, and none of them are imported unless they are present.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Package</th><th>Needed for</th><th>What happens without it</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>pytest-cov</code></td>
+        <td>The Test Coverage tab, read from the <code>Coverage</code> object pytest-cov ran in the
+        same session.</td>
+        <td>Tab is empty, unless you point <code>--report-coverage-file</code> at a report of your
+        own.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>coverage</code></td>
+        <td>Reading a bare <code>.coverage</code> SQLite data file. Only auto-discovered names are
+        <code>coverage.json</code> and <code>coverage.xml</code>; a <code>.coverage</code> has to be
+        named explicitly <em>and</em> needs this package.</td>
+        <td><code>summarize_data_file</code> returns <code>None</code> and the tab stays blank.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytest-xdist</code></td>
+        <td>Running <code>-n auto</code>. Workers are detected by <code>config.workerinput</code> and
+        ship their records back to the controller, which writes one report.</td>
+        <td>Nothing — the run is simply not parallel.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytest-bdd</code></td>
+        <td>Gherkin scenarios arriving in the Test Steps tab, with feature, scenario, keyword and
+        parsed arguments.</td>
+        <td>Nothing. The hooks are declared <code>optionalhook</code>, so pytest does not refuse to
+        start over a hook nobody registered.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytest-rerunfailures</code></td>
+        <td>Folding a retried test's attempts into one row, and counting a retry as flake evidence.
+        Detected with <code>pluginmanager.hasplugin(&quot;rerunfailures&quot;)</code>.</td>
+        <td>Nothing — there are no reruns to fold.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap">A browser driver</td>
+        <td>Automatic screenshots on failure. Selenium, Playwright, splinter, seleniumbase and
+        pytest-selenium are all recognised.</td>
+        <td>The Screenshots tab is empty.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="note note--tip"><span class="note__title">Tip</span>The plugin's
+<code>requirements.txt</code> is the <em>development</em> set — <code>pytest-cov</code>,
+<code>coveralls</code>, <code>twine</code>, <code>pytest-xdist</code>,
+<code>beautifulsoup4</code>, <code>pytest-rerunfailures</code>, <code>Pillow</code> and
+<code>pytest-bdd</code>. Do not read it as the runtime set; that is
+<code>install_requires</code>.</div>
+
+<h2 id="plugins">Plugins and drivers it understands</h2>
+
+<h3 id="plugins-supported">Recognised explicitly</h3>
+
+<p>Four plugins are handled by name in the source, and each one is handled defensively — the
+reporter asks pytest's plugin manager whether they are there rather than importing them.</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>pytest-xdist</b>Workers are told apart by <code>hasattr(config, &quot;workerinput&quot;)</code>.
+    Each worker fills its own record list and ships it to the controller, which writes one report —
+    one build, in collection order. Nothing to configure.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>pytest-rerunfailures</b>Attempts are folded into one row only when the plugin is
+    actually installed, because pytest-rerunfailures runs the whole setup/call/teardown protocol
+    again and the fold would otherwise be guessing.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>pytest-bdd 4 through 8</b>Every object handed to the BDD hooks is read with
+    <code>getattr</code> across several candidate names, because the attributes moved between major
+    versions and this plugin pins neither.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>pytest-cov</b>Its <code>Coverage</code> object is read out of the plugin manager
+    (<code>getplugin(&quot;_cov&quot;)</code>) after it has stopped, saved and combined — read rather
+    than raced for.</span>
+  </li>
+</ul>
+
+<h3 id="browser-drivers">Browser drivers, recognised by shape</h3>
+
+<p>No driver is imported and no driver is named as a dependency. The reporter looks through the
+test's own fixtures for a value that can be photographed, trying <code>get_screenshot_as_png</code>
+first and then <code>screenshot</code>, and looking one level down at a <code>.driver</code>
+attribute for wrappers. The fixture names it searches are the ones real suites use:</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Fixture name</th><th>Usually from</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>page</code>, <code>context</code></td><td>pytest-playwright</td></tr>
+      <tr><td class="t-nowrap"><code>driver</code>, <code>webdriver</code></td><td>Selenium, by convention</td></tr>
+      <tr><td class="t-nowrap"><code>browser</code></td><td>splinter, Playwright</td></tr>
+      <tr><td class="t-nowrap"><code>session_browser</code></td><td>pytest-splinter</td></tr>
+      <tr><td class="t-nowrap"><code>selenium</code></td><td>pytest-selenium</td></tr>
+      <tr><td class="t-nowrap"><code>sb</code></td><td>seleniumbase</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>The same duck typing runs on HTTP clients: <code>attach_api</code> reads a response by shape, so
+<code>requests</code> and <code>httpx</code> both work without either being imported.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span>A <code>Mock</code> is ruled out
+by what it <em>is</em>, not by what it can do — it answers every call ever made to it, screenshot
+calls included, so it would be photographed on the strength of a method it does not have, and the
+call would show up in an assertion your test is about to make.</div>
+
+<h3 id="not-supported">Not supported</h3>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Thing</th><th>Why not</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>behave</code></td>
+        <td>It does not run under pytest, so there is no hook to implement and nothing that could be
+        shown. Only pytest-bdd is covered.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>-s</code> / <code>--capture=no</code></td>
+        <td>Not a plugin, but the most common cause of an empty Logs column. pytest has to be
+        capturing for there to be anything to keep. Use <code>--capture=tee-sys</code> to get output
+        on the terminal <em>and</em> in the report.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap">Two report writers on one folder</td>
+        <td>A report folder has exactly one writer per build. That is also why the merge of a
+        sharded run is a console script rather than another pytest run — a fifth pytest started in
+        the folder would clear away the screenshots it was sent to collect.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2 id="what-a-run-writes">What a run writes to disk</h2>
+
+<p>This is the first thing a newcomer hits, and the README currently gets it wrong. The Usage
+section says <em>&quot;the filename used is <code>pytest_html_reporter.html</code> and path chosen
+is <code>report</code>&quot;</em>. Neither half is true. With no <code>--html-report</code>, the
+plugin writes <code>pytest_html_report.html</code> — one <code>er</code> shorter — into the
+<strong>current working directory</strong>, which is usually your repository root:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">pytest_html_reporter/html_reporter.py</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">return os.path.abspath(logfile), &#039;pytest_html_report.html&#039;</code></pre>
+</div>
+
+<p>Run <code>pytest</code> once in a fresh directory and you get three things beside your tests: the
+report, an <code>output.json</code>, and — from the second run onwards — an <code>archive/</code>
+folder. Nothing is cleaned up and nothing warns you. So the first thing to do in a real project is
+give the report a folder of its own and tell git to ignore it.</p>
+
+<figure class="imgslot" data-shot="disk-after-a-bare-run.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/disk-after-a-bare-run.png</b>
+  <span>A terminal, 1200px wide, dark theme. Two commands visible: a bare <code>pytest</code> in a clean project, then <code>ls -la</code> showing <code>pytest_html_report.html</code>, <code>output.json</code> and <code>archive/</code> sitting in the repository root beside the tests. The file size on the HTML should be legible — it is the 1.6 MB figure made concrete.</span>
+</figure>
+
+<h3 id="the-file-tree">Everything a run can create</h3>
+
+<p>All paths are relative to the <strong>report base</strong> — the folder side of
+<code>--html-report</code>. With no flag, the report base is the working directory.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">output</span>
+    <span class="codeblock__cap">&lt;report base&gt;/</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="output">report/
+├── pytest_html_report.html          the report itself
+├── output.json                      this build&#039;s record
+├── archive/
+│   ├── output_1756900000.123.json   a previous build, rotated in
+│   └── output_1756903600.456.json
+├── pytest_screenshots/
+│   └── &lt;test name&gt;.png              images the report links to
+└── shards/                          only in a sharded run
+    └── &lt;shard id&gt;/
+        ├── records.json             this leg&#039;s records, written atomically
+        └── pytest_screenshots/      this leg&#039;s images, left where they are</code></pre>
+</div>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Path</th><th>Written when</th><th>What it is</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><code>pytest_html_report.html</code></td>
+        <td>Every non-shard run</td>
+        <td>The whole report: markup, styles, data and every vendored library, in one file. Roughly
+        1.6 MB for a one-test run — that is the floor, not the content.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>output.json</code></td>
+        <td>Every non-shard run</td>
+        <td>This build's record. The stable, documented build format the VS Code extension and the
+        Action's helper both read.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>archive/</code></td>
+        <td>From the second run onwards</td>
+        <td>Previous builds. A build joins the archive when the <em>next</em> run rotates it there,
+        renaming <code>output.json</code> to <code>output_&lt;start time&gt;.json</code>. Each
+        retained build costs roughly 5 KB of the report page.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>pytest_screenshots/</code></td>
+        <td>When a screenshot is captured</td>
+        <td>PNGs. The report stores a bare name and both screenshot templates rebuild the path, so
+        the folder has to travel with the HTML.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>shards/&lt;id&gt;/</code></td>
+        <td><code>--report-shard</code> only</td>
+        <td>One directory per leg, holding <code>records.json</code> and that leg's own images. A
+        shard writes no report and no <code>output.json</code>, and rotates no archive.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap">Your JUnit XML path</td>
+        <td><code>--report-junit</code> only</td>
+        <td>Written wherever you point it; parent directories are created. An unwritable path is a
+        warning on stderr, never a failed build.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>This project's own report, with 296 archived builds, is 6.6 MB. If yours is heading that way, the
+retention flags in <a href="cli-reference.html">the CLI reference</a> are what you want —
+<code>--archive-days</code>, <code>--archive-count</code> and <code>--archive-since</code>.</p>
+
+<div class="note"><span class="note__title">Note</span>coverage.py's <code>htmlcov/</code> is
+<em>not</em> written by this plugin. When it exists and was written after this run started, the
+report links to it relatively rather than copying it in — so the two travel together or the link is
+simply not offered.</div>
+
+<h3 id="two-path-rules">Two path rules that surprise people</h3>
+
+<p><strong><code>.html</code> anywhere makes it a filename.</strong> The check is <code>if '.html' in
+self.path</code>, not <code>endswith</code>. So
+<code>--html-report=./out.html_v2/report.html</code> is read as a bare filename and the report lands
+in the working directory, because the code then asks whether the <em>directory</em> part also
+contains <code>.html</code> and falls back to <code>.</code> when it does. Rename the folder.</p>
+
+<p><strong><code>~</code> and <code>$VAR</code> are expanded</strong>, by
+<code>os.path.expanduser</code> and <code>os.path.expandvars</code> — so
+<code>--html-report='$CI_PROJECT_DIR/report'</code> and <code>--html-report=~/reports</code> both
+work, on top of the <code>strftime</code> expansion documented in
+<a href="configuration.html">Configuration</a>.</p>
+
+<h3 id="gitignore">The .gitignore block to paste</h3>
+
+<p>Both companion repositories ship a version of this. The Action's is the one to copy, because of
+the leading slashes: they anchor each entry to the repository root, so a tracked fixture called
+<code>output.json</code> deeper in your tree survives.</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Which .gitignore to use">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">You set a report folder</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">You left the default</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">.gitignore — with --html-report=./report</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell"># Everything a pytest-html-reporter run leaves behind lives in one folder.
+/report/</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">.gitignore — report base is the repository root</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell"># What a pytest-html-reporter run leaves behind. Anchored to the root so a
+# tracked fixture called output.json deeper in the tree is still tracked.
+/pytest_html_report.html
+/output.json
+/archive/
+/pytest_screenshots/
+/report/
+/reports/</code></pre>
+    </div>
+  </div>
+</div>
+
+<h2 id="inside-the-report">What ships inside the report</h2>
+
+<p>Every generated report is a single self-contained file, and that is only possible because ten
+JavaScript and CSS libraries plus a Font Awesome icon set are vendored into the package and inlined
+at generation time. If you are reviewing this plugin for a licence audit, this section is the
+inventory.</p>
+
+<figure class="imgslot" data-shot="report-inlined-layers.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Diagram: assets/img/shots/report-inlined-layers.png</b>
+  <span>A layered diagram of one generated HTML file, stacked bottom to top: the ten vendored libraries as one band, the Font Awesome CSS-mask icons as a second, then the report's own markup, styles and build data. To the side, a CDN cloud with an arrow to the file crossed out and labelled &quot;no network, at generation or at read time&quot;. Light and dark variants if practical; 1200px wide.</span>
+</figure>
+
+<h3 id="why-vendored">Why they are vendored at all</h3>
+
+<p>The report used to pull these off a CDN. A run on a machine with no route to the internet produced
+a <strong>blank white page</strong>: jQuery never arrived and nothing after it ran. They now ship in
+the wheel, verbatim as published, and <code>html_page/assets.py</code> writes them into the report.
+That is what makes the offline guarantee real rather than aspirational — you can mail the file,
+attach it to a ticket, put it on a stick, or open it from a locked-down build agent, and every
+chart, table, filter and export still works.</p>
+
+<h3 id="vendored-inventory">The inventory</h3>
+
+<p>Every one of them is MIT. JSZip is dual MIT/GPLv3 and is used under MIT.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>File</th><th>Version</th><th>Licence</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>jquery.min.js</code></td><td>jQuery 3.5.1</td><td><span class="pill">MIT</span></td></tr>
+      <tr><td class="t-nowrap"><code>jquery.dataTables.min.js</code> / <code>.css</code></td><td>DataTables 1.10.19</td><td><span class="pill">MIT</span></td></tr>
+      <tr><td class="t-nowrap"><code>dataTables.buttons.min.js</code>, <code>buttons.dataTables.min.css</code></td><td>Buttons 1.5.2</td><td><span class="pill">MIT</span></td></tr>
+      <tr><td class="t-nowrap"><code>buttons.html5.min.js</code>, <code>buttons.print.min.js</code></td><td>Buttons 1.5.2</td><td><span class="pill">MIT</span></td></tr>
+      <tr><td class="t-nowrap"><code>buttons.colVis.min.js</code></td><td>Buttons 1.6.1</td><td><span class="pill">MIT</span></td></tr>
+      <tr><td class="t-nowrap"><code>bootstrap.min.js</code> / <code>.css</code></td><td>Bootstrap 4.1.3</td><td><span class="pill">MIT</span></td></tr>
+      <tr><td class="t-nowrap"><code>chart.min.js</code></td><td>Chart.js 2.8.0</td><td><span class="pill">MIT</span></td></tr>
+      <tr><td class="t-nowrap"><code>jspdf.min.js</code></td><td>jsPDF 1.3.2</td><td><span class="pill">MIT</span></td></tr>
+      <tr><td class="t-nowrap"><code>dom-to-image.min.js</code></td><td>dom-to-image 2.6.0</td><td><span class="pill">MIT</span></td></tr>
+      <tr><td class="t-nowrap"><code>jszip.min.js</code></td><td>JSZip 3.1.3</td><td><span class="pill">MIT or GPLv3 (used under MIT)</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="icons">Icons</h3>
+
+<p>Font Awesome 4.7.0 glyphs, kept as individual SVGs, sourced from
+<a href="https://github.com/encharm/Font-Awesome-SVG-PNG" target="_blank" rel="noopener">Font-Awesome-SVG-PNG</a>
+(<code>black/svg</code>). Licence: <strong>CC BY 4.0</strong>, per the Font Awesome 4.7.0
+licence.</p>
+
+<p>Each file keeps its Font Awesome name (<code>fa-home</code> → <code>home.svg</code>) and is
+cropped to the glyph's own outline, with the <code>viewBox</code> still recording that outline's
+place on the font's 1792-unit em — the em Font Awesome drew on, with the baseline 1536 units down.
+<code>html_page/icon_styles.py</code> reads the directory at generation time and inlines every glyph
+as a CSS mask, which is why <code>&lt;i class=&quot;fa fa-home&quot;&gt;&lt;/i&gt;</code> still
+works, an icon still sizes itself to the text around it, and it still takes its colour from
+<code>currentcolor</code>.</p>
+
+<h3 id="fancybox">The one library deliberately absent</h3>
+
+<div class="note note--danger"><span class="note__title">Don't</span><strong>fancyBox is not here, and
+must not be added.</strong> The screenshot gallery used fancyBox 3.5.7, which is GPLv3 or a paid
+commercial licence — either way not something an MIT-licensed package can redistribute. The report
+opens screenshots with a lightbox of its own instead, in <code>template.html</code>.</div>
+
+<p>If you are vendoring a replacement for anything, this is the precedent: check the licence before
+the feature.</p>
+
+<h3 id="upgrading-a-vendored-library">Upgrading one, or adding an icon</h3>
+
+<p>Replace the file, update the row in <code>html_page/vendor/README.md</code>, and leave the load
+order alone — it lives in <code>assets.py</code>, not in the README. To add an icon, drop its SVG
+into <code>html_page/icons/</code> named after the <code>fa-*</code> class and the stylesheet picks
+it up automatically; crop it to the outline first, or it is drawn in the wrong place and at the wrong
+size.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span><code>MANIFEST.in</code>
+controls the sdist and <code>setup.py</code>'s <code>package_data</code> plus
+<code>include_package_data</code> control the wheel. A new asset type has to be added in
+<strong>both</strong>, or the sdist has it and the wheel does not — and a wheel missing its assets
+generates a blank white page.</div>
+
+<h2 id="glossary">Glossary</h2>
+
+<p>A dozen terms these docs use with precise meanings that are easy to guess wrong.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Term</th><th>What it means here</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="t-nowrap"><strong>Run</strong></td>
+        <td>One pytest invocation.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><strong>Build</strong></td>
+        <td>One row of history — one <code>output.json</code>. Retention, archives, trends and
+        analytics all count builds, never runs.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><strong>Report base</strong></td>
+        <td>The folder side of <code>--html-report</code>. Every path above is relative to it. With
+        no flag it is the current working directory.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><strong>Archive</strong></td>
+        <td><code>&lt;base&gt;/archive/</code>. A build joins it when the <em>next</em> run renames
+        <code>output.json</code> to <code>output_&lt;start time&gt;.json</code> — so a build is
+        archived by its successor, not by itself.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><strong>Worker</strong></td>
+        <td>An xdist process on <em>this</em> machine, identified by
+        <code>config.workerinput</code>. Workers hand their records to a controller, which writes one
+        report. Nothing to configure.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><strong>Shard</strong></td>
+        <td>A separate <em>machine</em> or leg, writing <code>&lt;base&gt;/shards/&lt;id&gt;/records.json</code>
+        and no report of its own. Something has to merge the bundles afterwards.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><strong>Run token</strong></td>
+        <td>What tells a merge which shards belong together. Given by
+        <code>--report-shard-run</code>, or derived from the CI system's own variables — always
+        carrying the name of the system it came from, so Jenkins build 41 and Drone build 41 cannot
+        collide.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><strong>Suite</strong></td>
+        <td>The grouping the report's Suite Highlights use:
+        <code>nodeid.split(&quot;::&quot;)[0]</code>, which is the test file.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><strong>Step</strong></td>
+        <td>A named, timed piece of a test — <code>@step(&quot;…&quot;)</code> or <code>with
+        step(&quot;…&quot;)</code>, nesting. Setup, body and teardown are timed as steps whether or
+        not anyone declared any, and a pytest-bdd scenario arrives as steps for free.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><strong>Attachment</strong></td>
+        <td>Text, JSON, a file or a whole HTTP request/response a test hands to the report. Built-in
+        types only, because an xdist worker has to ship it back to the controller.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><strong>Decided build</strong></td>
+        <td>A build in which the test did not skip. All the pass/fail maths — rate, flips, streak
+        — is done over decided builds only, so a test skipped for three builds between two passes has
+        not flipped twice.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><strong>Flaky</strong></td>
+        <td>A test that flipped between pass and fail across its decided builds, <em>or</em> needed a
+        retry inside a single build. A retry is the least ambiguous evidence there is: same code,
+        same build, two different answers.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><strong>Standing failure</strong></td>
+        <td>Shown as <em>Always failing</em>. Every decided build failed and the current failing
+        streak is at least two builds — so one failing build is not yet one. A standing failure is
+        explicitly <strong>not</strong> counted as flaky: it is broken, and listing it under
+        flakiness sends people hunting for a race that is not there.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="build-vs-run">Build vs. run</h3>
+
+<p>Usually they are the same thing — but an xdist run with eight workers is eight processes and
+<strong>one build</strong>, and a sharded matrix is four runs and <strong>one build</strong>.
+Everything about retention, archives and trends counts builds.</p>
+
+<h3 id="shard-vs-worker">Shard vs. worker</h3>
+
+<p>Both split work up, and they compose, but they solve different problems and are handled completely
+differently. Workers are processes on <strong>one</strong> machine that hand their results back to a
+controller, which writes one report — nothing to configure. Shards are separate
+<strong>machines</strong>, each writing a bundle and no report, and something has to merge them
+afterwards. You can shard across four machines and run each shard with <code>-n auto</code>; see
+<a href="ci-integrations.html">CI integrations</a> for the wiring.</p>
+<nav class="pagenav" aria-label="Pagination">
+<a class="prev" href="../docs/python-api.html"><span>&larr; Previous</span><b>Python API</b></a>
+<a class="next" href="../docs/screenshots.html"><span>Next &rarr;</span><b>Screenshots</b></a>
+</nav>
+</main>
+<aside class="toc" aria-label="On this page">
+  <div class="toc__title">On this page</div>
+  <ul>
+<li class="lvl-2"><a href="#versions-and-platforms">Versions and platforms</a></li>
+<li class="lvl-2"><a href="#dependencies">Dependencies</a></li>
+<li class="lvl-2"><a href="#plugins">Plugins and drivers it understands</a></li>
+<li class="lvl-2"><a href="#what-a-run-writes">What a run writes to disk</a></li>
+<li class="lvl-2"><a href="#inside-the-report">What ships inside the report</a></li>
+<li class="lvl-2"><a href="#glossary">Glossary</a></li>
+  </ul>
+</aside>
+</div>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div class="footer__about">
+        <a class="brand" href="../index.html"><svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="3.9" height="18" rx="1" fill="#3571a3"/><rect x="7.4" y="7.85" width="3.9" height="13.15" rx="1" fill="#ffd143"/><rect x="12.8" y="12.7" width="3.9" height="8.3" rx="1" fill="#8b8b8b"/><rect x="18.2" y="17.3" width="3.9" height="3.7" rx="1" fill="#3571a3"/></svg>
+          <span class="brand__text"><span class="brand__a">pytest</span><span class="brand__b">HTML Reporter</span></span>
+        </a>
+        <p>A light-weight static HTML report for the pytest framework. MIT licensed, built by Prashanth Sams and contributors.</p>
+      </div>
+      <div>
+        <h2>Documentation</h2>
+        <ul>
+          <li><a href="../docs/getting-started.html">Getting started</a></li>
+          <li><a href="../docs/features.html">Features</a></li>
+          <li><a href="../docs/report-tour.html">Report tour</a></li>
+          <li><a href="../docs/cli-reference.html">CLI reference</a></li>
+          <li><a href="../docs/python-api.html">Python API</a></li>
+          <li><a href="../docs/compatibility.html">Compatibility &amp; files</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Ecosystem</h2>
+        <ul>
+          <li><a href="../docs/github-action.html">GitHub Action</a></li>
+          <li><a href="../docs/vscode.html">VS Code extension</a></li>
+          <li><a href="../docs/ci-integrations.html">CI &amp; scale</a></li>
+          <li><a href="../docs/analytics.html">Analytics &amp; history</a></li>
+          <li><a href="../docs/security-privacy.html">Security &amp; privacy</a></li>
+          <li><a href="../docs/comparison.html">Compared to others</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Project</h2>
+        <ul>
+          <li><a href="https://github.com/prashanth-sams/pytest-html-reporter" target="_blank" rel="noopener">Source on GitHub</a></li>
+          <li><a href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener">PyPI package</a></li>
+          <li><a href="https://marketplace.visualstudio.com/items?itemName=prashanth-sams.pytest-html-reporter-vscode" target="_blank" rel="noopener">VS Code Marketplace</a></li>
+          <li><a href="https://github.com/prashanth-sams/pytest-html-reporter/issues" target="_blank" rel="noopener">Issue tracker</a></li>
+          <li><a href="../docs/contributing.html">Contributing</a></li>
+          <li><a href="../docs/faq.html">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>MIT licensed &middot; &copy; Prashanth Sams</span>
+      <span>Built for people who read their test reports.</span>
+    </div>
+  </div>
+</footer>
+<script src="../assets/js/site.js"></script>
+</body>
+</html>
