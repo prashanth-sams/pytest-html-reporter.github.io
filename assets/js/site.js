@@ -289,7 +289,318 @@
     if (path === here) a.classList.add('is-active');
   });
 
-  /* --------------------------------------------------------- 10. Keyboard */
+  /* ------------------------------------------------------------ 10. Search
+     Client-side, over assets/search-index.json — one record per page section,
+     written by tools/build.py. The index is ~370 KB, so it is fetched on the
+     first open rather than on every page load, and never at all for a reader
+     who does not search. */
+
+  var searchTriggers = $$('.searchbtn');
+
+  if (searchTriggers.length) (function () {
+    var root  = searchTriggers[0].getAttribute('data-search-root') || '';
+    var index = null;       /* the records, once loaded */
+    var state = 'idle';     /* idle | loading | ready | failed */
+    var dlg, input, list, empty, active = -1, hits = [], lastFocus = null;
+
+    var MAC = /Mac|iPhone|iPad/.test(navigator.platform || '');
+    $$('.searchbtn__mod').forEach(function (el) { if (MAC) el.textContent = '⌘'; });
+
+    var ICON_PAGE    = '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>';
+    var ICON_SECTION = '<path d="M4 6h16M4 12h10M4 18h13"/>';
+
+    function svg(paths, cls) {
+      return '<svg class="' + cls + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+             'stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+             paths + '</svg>';
+    }
+
+    function esc(t) {
+      return String(t).replace(/[&<>"]/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+      });
+    }
+
+    /* Escape the term, then wrap the matches — never the other way round, or a
+       query of "amp" starts lighting up the entities. */
+    function mark(text, terms) {
+      if (!terms.length) return esc(text);
+      var re = new RegExp('(' + terms.map(function (t) {
+        return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }).join('|') + ')', 'ig');
+      var out = '', last = 0, m;
+      while ((m = re.exec(text)) !== null) {
+        out += esc(text.slice(last, m.index)) + '<mark>' + esc(m[0]) + '</mark>';
+        last = m.index + m[0].length;
+        if (m[0].length === 0) re.lastIndex++;
+      }
+      return out + esc(text.slice(last));
+    }
+
+    /* --- scoring ---------------------------------------------------------
+       Every term has to appear somewhere in the record, so "xdist junit"
+       finds the one section about both rather than every section about
+       either. Where it appears is what orders the results. */
+
+    /* How often a section says a thing is a fair proxy for whether it is the
+       section about that thing — thirty pages mention --html-report, one
+       documents it. */
+    function count(hay, needle) {
+      var n = 0, at = 0;
+      while ((at = hay.indexOf(needle, at)) !== -1) { n++; at += needle.length; }
+      return n;
+    }
+
+    function score(rec, terms) {
+      var heading = (rec.h || rec.t).toLowerCase();
+      var title   = rec.t.toLowerCase();
+      var text    = rec.x.toLowerCase();
+      var keys    = ' ' + (rec.k || '') + ' ';
+      var total   = 0;
+
+      for (var i = 0; i < terms.length; i++) {
+        var q = terms[i], at = heading.indexOf(q), s = 0;
+        if (at === 0) s = 100;
+        else if (at > 0) s = heading.charAt(at - 1) === ' ' ? 64 : 40;
+        else if (title.indexOf(q) !== -1) s = 26;
+        /* How much of the heading the term covers. "screenshot" against
+           "Screenshots" is nearly all of it; against "Screenshots across
+           shards" it is a third, and the shorter heading is the better hit. */
+        if (at >= 0) s += Math.round(18 * q.length / heading.length);
+        /* A section that names --html-report in its own markup is where the
+           flag is documented; a section that mentions it is not. */
+        if (keys.indexOf(' ' + q + ' ') !== -1) s += 72;
+        else if (q.length > 2 && keys.indexOf(q) !== -1) s += 34;
+        var n = count(text, q);
+        if (n) s += (s ? 4 : 12) + Math.min(9, (n - 1) * 3);
+        if (!s) return 0;
+        total += s;
+      }
+      /* A whole-page record is a fallback for its own sections, not a rival. */
+      if (!rec.h) total -= 6;
+      return total;
+    }
+
+    function snippet(rec, terms) {
+      var text = rec.x || '';
+      if (!text) return '';
+      var low = text.toLowerCase(), at = -1;
+      for (var i = 0; i < terms.length && at < 0; i++) at = low.indexOf(terms[i]);
+      if (at < 60) return text.slice(0, 190);
+      var from = text.lastIndexOf(' ', at - 55) + 1;
+      return '…' + text.slice(from, from + 190);
+    }
+
+    function collect(terms) {
+      var out = [];
+      for (var i = 0; i < index.length; i++) {
+        var sc = score(index[i], terms);
+        if (sc > 0) out.push({ rec: index[i], score: sc, i: i });
+      }
+      /* Ties keep document order, so a page reads top to bottom in results. */
+      out.sort(function (a, b) { return b.score - a.score || a.i - b.i; });
+      return out;
+    }
+
+    function search(query) {
+      var terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+      if (!terms.length || !index) return [];
+
+      var out = collect(terms);
+      if (!out.length) {
+        /* Nothing matched the words as typed. Try their stems, so that
+           "installation" still finds the page that says "install". */
+        var stems = terms.map(function (t) { return t.length > 5 ? t.slice(0, 5) : t; });
+        if (stems.join(' ') !== terms.join(' ')) {
+          out = collect(stems);
+          terms = stems;
+        }
+      }
+      return out.slice(0, 24).map(function (h) {
+        return { rec: h.rec, snippet: snippet(h.rec, terms), terms: terms };
+      });
+    }
+
+    /* --- rendering ------------------------------------------------------- */
+
+    function render(query) {
+      hits = search(query);
+      active = hits.length ? 0 : -1;
+
+      if (state === 'loading') return say('Loading the index…');
+      if (state === 'failed')  return say('Search could not load. The sidebar has every page.');
+      if (!query.trim())       return say('Type to search every page in the documentation.');
+      if (!hits.length)        return say('No match for <b>' + esc(query) + '</b>.');
+
+      empty.hidden = true;
+      var html = '', page = null;
+      hits.forEach(function (h, n) {
+        if (h.rec.t !== page) {
+          page = h.rec.t;
+          html += '<div class="searchdlg__group">' + esc(page) + '</div>';
+        }
+        var href = root + h.rec.p + (h.rec.a ? '#' + h.rec.a : '');
+        html += '<a class="searchhit' + (n === active ? ' is-active' : '') + '" href="' + esc(href) +
+                '" data-n="' + n + '">' +
+                svg(h.rec.h ? ICON_SECTION : ICON_PAGE, 'searchhit__icon') +
+                '<span class="searchhit__body">' +
+                  '<span class="searchhit__title">' + mark(h.rec.h || h.rec.t, h.terms) + '</span>' +
+                  (h.snippet ? '<span class="searchhit__text">' + mark(h.snippet, h.terms) + '</span>' : '') +
+                '</span></a>';
+      });
+      list.innerHTML = html;
+      list.hidden = false;
+    }
+
+    function say(html) {
+      list.hidden = true;
+      list.innerHTML = '';
+      empty.hidden = false;
+      empty.innerHTML = html;
+    }
+
+    function move(step) {
+      if (!hits.length) return;
+      active = (active + step + hits.length) % hits.length;
+      var rows = $$('.searchhit', list);
+      rows.forEach(function (r, n) { r.classList.toggle('is-active', n === active); });
+      if (rows[active]) rows[active].scrollIntoView({ block: 'nearest' });
+    }
+
+    /* --- the dialog ------------------------------------------------------ */
+
+    function build() {
+      dlg = document.createElement('div');
+      dlg.className = 'searchdlg';
+      dlg.hidden = true;
+      dlg.setAttribute('role', 'dialog');
+      dlg.setAttribute('aria-modal', 'true');
+      dlg.setAttribute('aria-label', 'Search the documentation');
+      dlg.innerHTML =
+        '<div class="searchdlg__scrim"></div>' +
+        '<div class="searchdlg__panel">' +
+          '<div class="searchdlg__field">' +
+            svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/>', '') +
+            '<input class="searchdlg__input" type="search" placeholder="Search the docs…" ' +
+              'autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Search query">' +
+            '<kbd class="searchdlg__esc">Esc</kbd>' +
+          '</div>' +
+          '<div class="searchdlg__results" hidden></div>' +
+          '<div class="searchdlg__empty"></div>' +
+          '<div class="searchdlg__foot">' +
+            '<span><kbd>↑</kbd><kbd>↓</kbd> to navigate</span>' +
+            '<span><kbd>↵</kbd> to open</span>' +
+            '<span><kbd>Esc</kbd> to close</span>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(dlg);
+
+      input = $('.searchdlg__input', dlg);
+      list  = $('.searchdlg__results', dlg);
+      empty = $('.searchdlg__empty', dlg);
+
+      $('.searchdlg__scrim', dlg).addEventListener('click', close);
+      input.addEventListener('input', function () { render(input.value); });
+
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowDown')      { e.preventDefault(); move(1); }
+        else if (e.key === 'ArrowUp')   { e.preventDefault(); move(-1); }
+        else if (e.key === 'Enter') {
+          var row = $$('.searchhit', list)[active];
+          if (row) { e.preventDefault(); go(row.href); }
+        } else if (e.key === 'Escape')  { e.preventDefault(); close(); }
+      });
+
+      /* A hit on the page you are already reading is just a hash change: no
+         reload happens, so nothing would dismiss the dialog on its own. */
+      list.addEventListener('click', function (e) {
+        if (e.target.closest && e.target.closest('.searchhit')) close();
+      });
+
+      /* Pointer over a row makes it the one Enter opens — otherwise the
+         keyboard highlight and the mouse disagree about what is selected. */
+      list.addEventListener('mousemove', function (e) {
+        var row = e.target.closest && e.target.closest('.searchhit');
+        if (!row) return;
+        var n = +row.getAttribute('data-n');
+        if (n === active) return;
+        active = n;
+        $$('.searchhit', list).forEach(function (r, i) { r.classList.toggle('is-active', i === n); });
+      });
+    }
+
+    function load() {
+      if (state !== 'idle') return;
+      state = 'loading';
+      fetch(root + 'assets/search-index.json')
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function (data) {
+          index = data.d || [];
+          state = 'ready';
+          if (dlg && !dlg.hidden) render(input.value);
+        })
+        .catch(function () {
+          state = 'failed';
+          if (dlg && !dlg.hidden) render(input.value);
+        });
+    }
+
+    function open(seed) {
+      if (!dlg) build();
+      load();
+      lastFocus = document.activeElement;
+      dlg.hidden = false;
+      document.body.style.overflow = 'hidden';
+      input.value = seed || '';
+      render(input.value);
+      input.focus();
+      input.select();
+    }
+
+    function go(href) {
+      close();
+      location.href = href;
+    }
+
+    function close() {
+      if (!dlg || dlg.hidden) return;
+      dlg.hidden = true;
+      document.body.style.overflow = '';
+      var back = lastFocus && lastFocus.isConnected && lastFocus !== document.body
+        ? lastFocus : searchTriggers[0];
+      if (back && back.focus) back.focus();
+      /* focus() on something unfocusable is a silent no-op, which would leave
+         the caret inside the dialog we have just hidden. */
+      if (dlg.contains(document.activeElement)) {
+        document.activeElement.blur();
+        if (searchTriggers[0]) searchTriggers[0].focus();
+      }
+    }
+
+    searchTriggers.forEach(function (b) {
+      b.addEventListener('click', function () { open(); });
+      /* Warm the index on intent, so the first keystroke has it already. */
+      b.addEventListener('mouseenter', load, { once: true });
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        dlg && !dlg.hidden ? close() : open();
+        return;
+      }
+      if (dlg && !dlg.hidden) {
+        if (e.key === 'Escape') { e.preventDefault(); close(); }
+        return;
+      }
+      var tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === '/') { e.preventDefault(); open(); }
+    });
+  })();
+
+  /* --------------------------------------------------------- 11. Keyboard */
 
   document.addEventListener('keydown', function (e) {
     var tag = (e.target.tagName || '').toLowerCase();

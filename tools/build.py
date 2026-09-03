@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import re
 import sys
-from html import escape
+from html import escape, unescape
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -110,6 +110,27 @@ GITHUB_GLYPH = (
     '1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg>'
 )
 
+SEARCH_GLYPH = (
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+    'stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/>'
+    '<path d="m20 20-3.6-3.6"/></svg>'
+)
+
+
+def searchbtn(prefix: str) -> str:
+    """The topbar trigger. Everything else about search is built by site.js.
+
+    The index it loads is written by write_search_index(); data-search-root is
+    how the script turns the site-relative paths in that file into links that
+    work from both / and /docs/."""
+    return f"""<button class="searchbtn" type="button" data-search-root="{prefix}"
+      aria-label="Search the documentation" aria-haspopup="dialog">
+      {SEARCH_GLYPH}
+      <span class="searchbtn__label">Search docs</span>
+      <kbd class="searchbtn__kbd"><span class="searchbtn__mod">Ctrl</span>K</kbd>
+    </button>"""
+
+
 TOP_NAV_LINKS = [
     ("getting-started", "Docs"),
     ("report-tour", "Report tour"),
@@ -172,6 +193,7 @@ def topbar(slug: str, prefix: str) -> str:
     </a>
     <nav class="navlinks" aria-label="Main">{links}</nav>
     <div class="topbar__spacer"></div>
+    {searchbtn(prefix)}
     <div class="topbar__right">
       <a class="iconbtn" href="{PYPI}" target="_blank" rel="noopener" title="PyPI" aria-label="pytest-html-reporter on PyPI">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
@@ -323,7 +345,7 @@ def footer(prefix: str) -> str:
 FRONT_RE = re.compile(r"^\s*<!--META\s*(\{.*?\})\s*-->", re.S)
 
 
-def render(path: Path) -> tuple[str, str]:
+def render(path: Path) -> tuple[str, str, list[dict]]:
     raw = path.read_text(encoding="utf-8")
     m = FRONT_RE.match(raw)
     if not m:
@@ -362,8 +384,97 @@ def render(path: Path) -> tuple[str, str]:
         + "\n</div>\n"
         + footer(prefix)
     )
-    return slug, html
+    return slug, html, search_records(slug, meta, body)
 
+
+
+# ------------------------------------------------------------- search index
+
+# A section of a reference page can run to several thousand characters. Past
+# this the record stops earning its download, so it is cut — the heading and
+# the opening of the section are what a search result actually shows.
+SNIPPET_MAX = 900
+
+DROP_RE = re.compile(r"<(script|style|svg)\b.*?</\1>", re.S | re.I)
+TAGS_RE = re.compile(r"<[^>]+>")
+CODE_RE = re.compile(r"<code[^>]*>(.*?)</code>", re.S | re.I)
+# A flag, a setting, a module path, a file name — the things a reader types into
+# a search box verbatim. Bare prose in <code> ("true", "pytest") is not one.
+TOKEN_RE = re.compile(r"^-{0,2}[A-Za-z0-9_][A-Za-z0-9_./-]{2,44}$")
+
+
+def plain(html: str) -> str:
+    """Everything a reader would see in this fragment, as one line of text."""
+    text = DROP_RE.sub(" ", html)
+    text = TAGS_RE.sub(" ", text)
+    text = re.sub(r"\s+", " ", unescape(text))
+    # Dropping the tags leaves a gap wherever markup hugged its punctuation —
+    # "report.html , and" — which a search snippet then shows verbatim.
+    return re.sub(r" ([,.;:!?)\]])", r"\1", text).strip()
+
+
+def keywords(chunk: str) -> str:
+    """The code tokens in this section.
+
+    A CLI reference documents its flags in a table, not in headings, so
+    searching for --html-report otherwise finds every page that happens to
+    mention it and never the page that defines it."""
+    seen: dict[str, None] = {}
+    for raw in CODE_RE.findall(chunk):
+        tok = plain(raw)
+        if not TOKEN_RE.match(tok):
+            continue
+        # A word with no punctuation is prose in a <code> font, not a name.
+        if tok.isalpha() and not tok.startswith("-"):
+            continue
+        seen.setdefault(tok.lower(), None)
+        if len(seen) >= 48:
+            break
+    return " ".join(seen)
+
+
+def search_records(slug: str, meta: dict, body: str) -> list[dict]:
+    """One record per section, because a result should land on the heading it
+    matched rather than at the top of a two-thousand-word page."""
+    title = unescape(meta["title"])
+    page = f"docs/{slug}.html"
+    marks = list(HEADING_RE.finditer(body))
+
+    recs = []
+    lede = plain(meta.get("lede", meta.get("description", "")))
+    intro = plain(body[: marks[0].start()] if marks else body)
+    recs.append({
+        "p": page, "t": title, "h": "", "a": "",
+        "x": (lede + " " + intro).strip()[:SNIPPET_MAX],
+        "k": keywords(body[: marks[0].start()] if marks else body),
+    })
+
+    for i, m in enumerate(marks):
+        end = marks[i + 1].start() if i + 1 < len(marks) else len(body)
+        heading = plain(m.group(5))
+        if not heading:
+            continue
+        chunk = body[m.end(): end]
+        recs.append({
+            "p": page, "t": title, "h": heading, "a": m.group(3),
+            "x": plain(chunk)[:SNIPPET_MAX],
+            "k": keywords(chunk),
+        })
+    return recs
+
+
+def write_search_index(records: list[dict], check: bool = False) -> bool:
+    """Returns True when the file on disk is already what this run would write."""
+    path = ROOT / "assets" / "search-index.json"
+    payload = json.dumps({"v": 1, "d": records}, ensure_ascii=False, separators=(",", ":")) + "\n"
+    if path.exists() and path.read_text(encoding="utf-8") == payload:
+        print("  = assets/search-index.json")
+        return True
+    if check:
+        return False
+    path.write_text(payload, encoding="utf-8")
+    print(f"  + assets/search-index.json ({len(records)} sections, {len(payload):,} bytes)")
+    return True
 
 
 SITE_URL = "https://pytest-html-reporter.github.io"
@@ -399,8 +510,10 @@ def main() -> int:
         return 1
 
     stale = []
-    for src in sources:
-        slug, html = render(src)
+    records = []
+    for src in sorted(sources, key=lambda p: (ORDER.index(p.stem) if p.stem in ORDER else len(ORDER), p.stem)):
+        slug, html, recs = render(src)
+        records.extend(recs)
         dest = OUT / f"{slug}.html"
         old = dest.read_text(encoding="utf-8") if dest.exists() else None
         if old == html:
@@ -414,6 +527,8 @@ def main() -> int:
 
     if not check:
         write_sitemap(sources)
+    if not write_search_index(records, check):
+        stale.append(Path("assets/search-index.json"))
 
     missing = [s for s in ORDER if not (CONTENT / f"{s}.html").exists()]
     if missing:

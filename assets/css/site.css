@@ -305,7 +305,115 @@ strong, b { color: var(--text); font-weight: 640; }
 
 .navburger { display: none; }
 
-/* ------------------------------------------------------------ 5. Buttons */
+/* ------------------------------------------------------------ 5. Search */
+
+/* The trigger. A button rather than an input: the real field lives in the
+   dialog, and two focusable text fields for one search is one too many. */
+.searchbtn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 34px; padding: 0 7px 0 10px; min-width: 216px;
+  font-family: inherit; font-size: .85rem; text-align: left;
+  color: var(--text-faint); background: var(--bg-alt);
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background .16s var(--ease), border-color .16s var(--ease), color .16s var(--ease);
+}
+.searchbtn:hover { color: var(--text-muted); border-color: var(--border-strong); background: var(--bg); }
+.searchbtn svg { width: 15px; height: 15px; flex: none; }
+.searchbtn__label { flex: 1; }
+.searchbtn__kbd {
+  font-family: var(--font); font-size: .72rem; font-weight: 600; line-height: 1;
+  color: var(--text-faint); background: var(--bg); padding: 4px 6px;
+  border: 1px solid var(--border); border-radius: var(--r-xs);
+}
+
+.searchdlg[hidden] { display: none; }
+.searchdlg {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; justify-content: center; align-items: flex-start;
+  padding: max(9vh, 40px) 18px 24px;
+}
+.searchdlg__scrim {
+  position: absolute; inset: 0;
+  background: rgba(8,12,18,.45);
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+}
+:root[data-theme="dark"] .searchdlg__scrim { background: rgba(0,0,0,.62); }
+
+.searchdlg__panel {
+  position: relative; width: min(640px, 100%);
+  max-height: min(560px, calc(100dvh - 20vh));
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--bg-elev); color: var(--text-body);
+  border: 1px solid var(--border-strong); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+}
+.js .searchdlg__panel { animation: searchin .18s var(--ease) both; }
+@keyframes searchin { from { opacity: 0; transform: translateY(-8px) scale(.985); } }
+
+.searchdlg__field {
+  display: flex; align-items: center; gap: 10px; flex: none;
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+}
+.searchdlg__field svg { width: 18px; height: 18px; flex: none; color: var(--text-faint); }
+.searchdlg__input {
+  flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
+  font-family: inherit; font-size: 1rem; color: var(--text);
+}
+.searchdlg__input::placeholder { color: var(--text-faint); }
+/* The browser's own clear button for type="search" — unstyleable, and Esc
+   already does the job beside it. */
+.searchdlg__input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.searchdlg__esc {
+  font-family: var(--font); font-size: .7rem; font-weight: 600; line-height: 1;
+  color: var(--text-faint); background: var(--bg-alt); padding: 5px 7px;
+  border: 1px solid var(--border); border-radius: var(--r-xs);
+}
+
+.searchdlg__results { overflow-y: auto; overscroll-behavior: contain; padding: 8px; }
+.searchdlg__group {
+  font-size: .7rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--text-faint); padding: 12px 10px 6px;
+}
+.searchdlg__group:first-child { padding-top: 4px; }
+
+.searchhit {
+  display: flex; align-items: flex-start; gap: 11px;
+  padding: 9px 10px; border-radius: var(--r-sm);
+  color: var(--text-body); border: 1px solid transparent;
+}
+.searchhit:hover, .searchhit.is-active { background: var(--brand-soft); border-color: var(--border); color: var(--text-body); }
+.searchhit__icon { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--text-faint); }
+.searchhit.is-active .searchhit__icon { color: var(--brand); }
+.searchhit__body { min-width: 0; }
+.searchhit__title {
+  font-size: .9rem; font-weight: 600; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.searchhit__text {
+  font-size: .8rem; color: var(--text-muted); margin-top: 2px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.searchhit mark {
+  background: var(--accent-soft); color: var(--accent-ink);
+  border-radius: 3px; padding: 0 1px; font-weight: 600;
+}
+:root[data-theme="dark"] .searchhit mark { color: var(--accent-deep); }
+
+.searchdlg__empty { padding: 34px 16px; text-align: center; color: var(--text-muted); font-size: .9rem; }
+.searchdlg__empty b { color: var(--text); }
+.searchdlg__foot {
+  flex: none; display: flex; gap: 16px; align-items: center;
+  padding: 9px 16px; border-top: 1px solid var(--border);
+  background: var(--bg-alt); font-size: .74rem; color: var(--text-faint);
+}
+.searchdlg__foot span { display: inline-flex; align-items: center; gap: 5px; }
+.searchdlg__foot kbd {
+  font-family: var(--font); font-weight: 600; font-size: .72rem; line-height: 1;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 3px 5px;
+}
+
+/* ------------------------------------------------------------ 6. Buttons */
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -344,7 +452,7 @@ strong, b { color: var(--text); font-weight: 640; }
 .btnrow { display: flex; flex-wrap: wrap; gap: 11px; align-items: center; }
 .center .btnrow { justify-content: center; }
 
-/* ------------------------------------------------------------ 6. Hero */
+/* ------------------------------------------------------------ 7. Hero */
 
 .hero {
   position: relative; overflow: hidden;
@@ -462,7 +570,7 @@ strong, b { color: var(--text); font-weight: 640; }
 .mock__row .nm { font-family: var(--mono); color: var(--text-body); }
 .mock__row .tm { margin-left: auto; font-family: var(--mono); color: var(--text-faint); }
 
-/* ------------------------------------------------------------ 7. Sections */
+/* ------------------------------------------------------------ 8. Sections */
 
 .section { padding: clamp(52px, 6.5vw, 88px) 0; }
 .section--alt { background: var(--bg-alt); border-block: 1px solid var(--border); }
@@ -470,7 +578,7 @@ strong, b { color: var(--text); font-weight: 640; }
 .section__head { max-width: 660px; margin-bottom: 2.5rem; }
 .section__head.center { margin-inline: auto; }
 
-/* ------------------------------------------------------------ 8. Cards */
+/* ------------------------------------------------------------ 9. Cards */
 
 .grid { display: grid; gap: 18px; }
 .grid--2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
@@ -559,7 +667,7 @@ a.card:hover .card__more svg { transform: translateX(3px); }
 .stat b { display: block; font-size: 1.7rem; font-weight: 720; letter-spacing: -.03em; color: var(--text); line-height: 1.1; }
 .stat span { font-size: .78rem; color: var(--text-muted); }
 
-/* ------------------------------------------------------------ 9. Pills */
+/* ------------------------------------------------------------ 10. Pills */
 
 .pill {
   display: inline-flex; align-items: center; gap: 6px;
@@ -577,7 +685,7 @@ a.card:hover .card__more svg { transform: translateX(3px); }
 .pill--teal   { background: var(--teal-soft);   color: var(--teal-ink);    border-color: color-mix(in srgb, var(--teal) 28%, transparent); }
 .pill--new::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-/* ------------------------------------------------------------ 10. Code */
+/* ------------------------------------------------------------ 11. Code */
 
 code, kbd, samp, pre { font-family: var(--mono); font-size: .855em; }
 
@@ -682,7 +790,7 @@ kbd {
 .codetabs .codeblock { border-radius: 0 var(--r-md) var(--r-md) var(--r-md); margin: 0; }
 .codetabs__panel[hidden] { display: none; }
 
-/* ------------------------------------------------------------ 11. Callouts */
+/* ------------------------------------------------------------ 12. Callouts */
 
 .note {
   position: relative; margin: 0 0 1.4rem; padding: 15px 18px 15px 46px;
@@ -712,7 +820,7 @@ kbd {
 .note--new::before { color: var(--purple);
   --ico: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m12 3 2.4 6.3L21 11l-6.6 1.7L12 19l-2.4-6.3L3 11l6.6-1.7z'/></svg>"); }
 
-/* ---------------------------------------------------- 12. Image placeholder */
+/* ---------------------------------------------------- 13. Image placeholder */
 
 .shot {
   margin: 0 0 1.6rem;
@@ -737,7 +845,7 @@ kbd {
 .imgslot span { font-size: .8rem; max-width: 46ch; }
 .imgslot code { font-size: .76rem; }
 
-/* ------------------------------------------------------------ 13. Tables */
+/* ------------------------------------------------------------ 14. Tables */
 
 /* A reference table with five columns genuinely has to scroll on a narrow
    screen. The scroll itself is fine; a scroll with no sign that there is more
@@ -793,7 +901,7 @@ td a, td code, th code { overflow-wrap: anywhere; }
 .t-nowrap { white-space: nowrap; }
 .t-mono { font-family: var(--mono); font-size: .82rem; }
 
-/* ------------------------------------------------------------ 14. Docs shell */
+/* ------------------------------------------------------------ 15. Docs shell */
 
 .docs {
   display: grid;
@@ -888,7 +996,7 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus { opacity: 1; }
 .pagenav b { font-size: .95rem; color: var(--text); font-weight: 620; }
 .pagenav .next { text-align: right; }
 
-/* ------------------------------------------------------- 15. Feature list */
+/* ------------------------------------------------------- 16. Feature list */
 
 .featlist { list-style: none; padding: 0; margin: 0 0 1.6rem; display: grid; gap: 10px; }
 .featlist li {
@@ -974,7 +1082,7 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus { opacity: 1; }
 .split { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 18px; margin-bottom: 1.6rem; }
 .split > * { margin-bottom: 0; }
 
-/* ------------------------------------------------------------ 16. Footer */
+/* ------------------------------------------------------------ 17. Footer */
 
 .footer {
   border-top: 1px solid var(--border);
@@ -996,11 +1104,17 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus { opacity: 1; }
 }
 .footer__social { display: flex; gap: 6px; }
 
-/* --------------------------------------------------------- 17. Responsive */
+/* --------------------------------------------------------- 18. Responsive */
 
 @media (max-width: 1180px) {
   .docs { grid-template-columns: var(--side-w) minmax(0,1fr); gap: 36px; }
   .toc { display: none; }
+}
+
+@media (max-width: 1100px) {
+  /* No room for the label and the shortcut hint; the magnifier still reads. */
+  .searchbtn { min-width: 0; padding-inline: 9px; }
+  .searchbtn__label, .searchbtn__kbd { display: none; }
 }
 
 @media (max-width: 900px) {
@@ -1043,7 +1157,7 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus { opacity: 1; }
   .brand__text { display: none; }
 }
 
-/* ------------------------------------------------------------ 18. Motion */
+/* ------------------------------------------------------------ 19. Motion */
 
 /* Scoped to .js, which the inline head script adds. Without it the content is
    simply visible — a reveal animation must never be the only thing standing
@@ -1053,7 +1167,7 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus { opacity: 1; }
 
 /* Print */
 @media print {
-  .topbar, .sidebar, .toc, .footer, .pagenav, .copybtn, .navscrim { display: none !important; }
+  .topbar, .sidebar, .toc, .footer, .pagenav, .copybtn, .navscrim, .searchdlg { display: none !important; }
   .docs { display: block; padding: 0; }
   body { background: #fff; color: #000; }
   .codeblock { background: #f6f6f6; border-color: #ccc; }
