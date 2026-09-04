@@ -40,7 +40,6 @@ SIDEBAR = [
         ("getting-started", "Getting started", "rocket"),
         ("features", "Features", "sparkle"),
         ("report-tour", "Report tour", "layout"),
-        ("comparison", "Compared to others", "scales"),
     ]),
     ("Reference", [
         ("cli-reference", "CLI reference", "terminal"),
@@ -85,7 +84,6 @@ ICONS = {
     "vscode":  '<path d="m17 3-9 7-4-3-2 1.5v7L4 17l4-3 9 7 4-2V5z"/>',
     "clock":   '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
     "help":    '<circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a2.9 2.9 0 0 1 5.6 1c0 2-2.8 2.8-2.8 2.8M12 17h.01"/>',
-    "scales":  '<path d="M12 3v18M7 21h10M3 8l4-5 4 5M3 8a4 4 0 0 0 8 0M13 12l4-5 4 5M13 12a4 4 0 0 0 8 0"/>',
     "package": '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>',
     "shield":  '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
     "heart":   '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/>',
@@ -315,7 +313,6 @@ def footer(prefix: str) -> str:
           <li><a href="{prefix}docs/ci-integrations.html">CI &amp; scale</a></li>
           <li><a href="{prefix}docs/analytics.html">Analytics &amp; history</a></li>
           <li><a href="{prefix}docs/security-privacy.html">Security &amp; privacy</a></li>
-          <li><a href="{prefix}docs/comparison.html">Compared to others</a></li>
         </ul>
       </div>
       <div>
