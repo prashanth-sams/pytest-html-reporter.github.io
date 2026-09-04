@@ -272,7 +272,7 @@ report_screenshots = failed</code></pre>
       <span class="eyebrow">How it compares</span>
       <h2>One file, or a pipeline</h2>
       <p class="lede">
-        Three ways to get a report out of pytest, across sixty-two things a report is asked to do.
+        Three ways to get a report out of pytest, across sixty things a report is asked to do.
         Where a tool can do something only with a flag or a line of your own code, the cell says
         which one.
       </p>
@@ -656,24 +656,11 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>the same five severity levels</small></td>
             </tr>
             <tr>
-              <th scope="rowgroup" rowspan="2" class="cmp__sec">Extensibility / hooks</th>
-              <th scope="row">Hooks that change the report's own layout</th>
-              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>title, columns, rows and summary</small></td>
-              <td class="is-us"><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>flags and helpers, but no layout hook</small></td>
-              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>Allure 3 has a plugin-based architecture, not pytest-style hooks</small></td>
-            </tr>
-            <tr>
+              <th scope="rowgroup" rowspan="1" class="cmp__sec">Extensibility / hooks</th>
               <th scope="row">A Python API for attachments and steps</th>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small><code>extras</code> gives rich attachments and content, but no step API</small></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>six functions</small></td>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>attachments, steps and labels</small></td>
-            </tr>
-            <tr>
-              <th scope="rowgroup" rowspan="1" class="cmp__sec">Quality gates</th>
-              <th scope="row">Quality gates enforced by the reporting layer</th>
-              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
-              <td class="is-us"><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
-              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>Allure 3 has configurable quality-gate rules</small></td>
             </tr>
             <tr>
               <th scope="rowgroup" rowspan="2" class="cmp__sec">CI integration</th>
