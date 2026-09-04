@@ -1254,7 +1254,81 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus { opacity: 1; }
 }
 .footer__social { display: flex; gap: 6px; }
 
-/* --------------------------------------------------------- 18. Responsive */
+/* ------------------------------------------------------------ 18. Sponsor */
+
+/* The Pickoh artwork is a single-colour black mark on transparency, so the dark
+   theme flips it to white with a filter instead of shipping a second file. The
+   filter is on the <img> alone — nothing around it inverts with it. */
+.sponsor-logo { display: block; height: auto; }
+:root[data-theme="dark"] .sponsor-logo { filter: invert(1); }
+
+.sponsor-label {
+  display: block; font-size: .68rem; font-weight: 750; letter-spacing: .17em;
+  text-transform: uppercase; color: var(--text-faint); line-height: 1.4;
+}
+
+/* Home page: the full plaque. -------------------------------------------- */
+
+.sponsorband {
+  background: var(--bg-sunken); border-block: 1px solid var(--border);
+  padding: clamp(40px, 4.6vw, 62px) 0;
+}
+.sponsorcard {
+  position: relative; overflow: hidden; display: block; text-align: center;
+  max-width: 560px; margin-inline: auto;
+  padding: clamp(26px, 3vw, 34px) clamp(24px, 3vw, 40px) clamp(22px, 2.6vw, 28px);
+  background: var(--bg-elev); border: 1px solid var(--border);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
+  color: var(--text-muted);
+  transition: transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease);
+}
+.sponsorcard:hover {
+  transform: translateY(-3px); box-shadow: var(--shadow-md);
+  border-color: var(--border-strong); color: var(--text-muted);
+}
+/* The pin out of the wordmark, oversized and nearly invisible: texture on the
+   card rather than a second logo competing with the first. */
+.sponsorcard__pin {
+  position: absolute; right: -86px; top: 50%; translate: 0 -50%;
+  width: 152px; opacity: .04; pointer-events: none;
+}
+:root[data-theme="dark"] .sponsorcard__pin { filter: invert(1); opacity: .07; }
+.sponsorcard__inner { position: relative; display: block; }
+.sponsorcard .sponsor-logo { width: min(212px, 64%); margin: 15px auto 0; }
+.sponsorcard__note {
+  display: block; margin: 16px auto 0; max-width: 44ch;
+  font-size: .875rem; line-height: 1.6; color: var(--text-muted);
+}
+.sponsorcard__go {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 14px;
+  font-size: .85rem; font-weight: 620; color: var(--brand);
+}
+.sponsorcard__go svg { width: 13px; height: 13px; transition: transform .18s var(--ease); }
+.sponsorcard:hover .sponsorcard__go svg { transform: translateX(3px); }
+
+/* Footer: the same credit, small, on every page. -------------------------- */
+
+.sponsor-foot {
+  display: inline-block; margin-top: 20px; padding: 12px 16px 13px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md);
+  transition: border-color .16s var(--ease), background .16s var(--ease);
+}
+.sponsor-foot:hover { border-color: var(--border-strong); background: var(--bg-elev); }
+.sponsor-foot .sponsor-label { font-size: .63rem; letter-spacing: .16em; }
+.sponsor-foot .sponsor-logo { width: 118px; margin-top: 9px; }
+
+/* Docs sidebar: below the navigation, out of the reading path. ------------ */
+
+.sponsor-side {
+  display: block; margin: 26px 6px 0 0; padding: 14px 12px 16px; text-align: center;
+  background: var(--bg-alt); border: 1px solid var(--border); border-radius: var(--r-md);
+  transition: border-color .16s var(--ease), background .16s var(--ease);
+}
+.sponsor-side:hover { border-color: var(--border-strong); background: var(--bg-elev); }
+.sponsor-side .sponsor-label { font-size: .6rem; letter-spacing: .15em; }
+.sponsor-side .sponsor-logo { width: 110px; margin: 10px auto 0; }
+
+/* --------------------------------------------------------- 19. Responsive */
 
 @media (max-width: 1180px) {
   .docs { grid-template-columns: var(--side-w) minmax(0,1fr); gap: 36px; }
@@ -1305,9 +1379,11 @@ h2:hover .anchor, h3:hover .anchor, .anchor:focus { opacity: 1; }
   .footer__grid { grid-template-columns: 1fr; }
   .btnrow .btn { width: 100%; }
   .brand__text { display: none; }
+  /* On a narrow card the watermark stops being texture and starts being art. */
+  .sponsorcard__pin { width: 118px; right: -66px; }
 }
 
-/* ------------------------------------------------------------ 19. Motion */
+/* ------------------------------------------------------------ 20. Motion */
 
 /* Scoped to .js, which the inline head script adds. Without it the content is
    simply visible — a reveal animation must never be the only thing standing

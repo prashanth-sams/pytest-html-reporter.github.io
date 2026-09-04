@@ -32,6 +32,11 @@ PYPI = "https://pypi.org/project/pytest-html-reporter/"
 MARKETPLACE = ("https://marketplace.visualstudio.com/items"
                "?itemName=prashanth-sams.pytest-html-reporter-vscode")
 
+# The project's sponsor. The artwork lives in images/ and is a black mark on
+# transparency; the stylesheet inverts it for the dark theme.
+SPONSOR_NAME = "Pickoh"
+SPONSOR_URL = "https://pickoh.com/"
+
 # --------------------------------------------------------------- navigation
 
 # (group label, [(slug, title, icon key)])
@@ -223,7 +228,15 @@ def sidebar(slug: str, prefix: str) -> str:
                 f"{title}</a>"
             )
         out.append("</div>")
-    out.append("</nav></aside>")
+    out.append("</nav>")
+    # Below the navigation, not inside it: a credit, not a destination.
+    out.append(
+        f'<a class="sponsor-side" href="{SPONSOR_URL}" target="_blank" rel="noopener sponsored">'
+        f'<span class="sponsor-label">Sponsored by</span>'
+        f'<img class="sponsor-logo" src="{prefix}images/pickoh.png" alt="{SPONSOR_NAME}" '
+        f'width="1018" height="251" loading="lazy" decoding="async"></a>'
+    )
+    out.append("</aside>")
     return "\n".join(out)
 
 
@@ -293,6 +306,10 @@ def footer(prefix: str) -> str:
           <span class="brand__text"><span class="brand__a">pytest</span><span class="brand__b">HTML Reporter</span></span>
         </a>
         <p>A light-weight static HTML report for the pytest framework. MIT licensed, built by Prashanth Sams and contributors.</p>
+        <a class="sponsor-foot" href="{SPONSOR_URL}" target="_blank" rel="noopener sponsored">
+          <span class="sponsor-label">Sponsored by</span>
+          <img class="sponsor-logo" src="{prefix}images/pickoh.png" alt="{SPONSOR_NAME}" width="1018" height="251" loading="lazy" decoding="async">
+        </a>
       </div>
       <div>
         <h2>Documentation</h2>
