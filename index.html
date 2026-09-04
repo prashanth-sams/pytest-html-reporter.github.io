@@ -272,7 +272,7 @@ report_screenshots = failed</code></pre>
       <span class="eyebrow">How it compares</span>
       <h2>One file, or a pipeline</h2>
       <p class="lede">
-        Three ways to get a report out of pytest, across fifty-seven things a report is asked to do.
+        Three ways to get a report out of pytest, across fifty-eight things a report is asked to do.
         Where a tool can do something only with a flag or a line of your own code, the cell says
         which one.
       </p>
@@ -612,17 +612,23 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
             </tr>
             <tr>
-              <th scope="rowgroup" rowspan="2" class="cmp__sec">Enterprise metadata</th>
+              <th scope="rowgroup" rowspan="3" class="cmp__sec">Enterprise metadata</th>
               <th scope="row">Environment and build details</th>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>its environment table</small></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>--environment</code> and <code>--build-info</code></small></td>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>environment.properties</code></small></td>
             </tr>
             <tr>
-              <th scope="row">Severity, epic and story labels</th>
-              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
-              <td class="is-us"><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>markers, but no severity model</small></td>
-              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>labels are part of its model</small></td>
+              <th scope="row">Owner / team labels</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>no built-in owner model</small></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>@pytest.mark.owner("team")</code>, several owners on one test, and the badge can link out</small></td>
+              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>owner</code> is a supported Allure label</small></td>
+            </tr>
+            <tr>
+              <th scope="row">Severity labels</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>no built-in severity model</small></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>blocker, critical, normal, minor and trivial; unrated stays unrated</small></td>
+              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>the same five severity levels</small></td>
             </tr>
             <tr>
               <th scope="rowgroup" rowspan="2" class="cmp__sec">Extensibility / hooks</th>
