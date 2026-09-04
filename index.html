@@ -272,7 +272,7 @@ report_screenshots = failed</code></pre>
       <span class="eyebrow">How it compares</span>
       <h2>One file, or a pipeline</h2>
       <p class="lede">
-        Three ways to get a report out of pytest, across fifty-eight things a report is asked to do.
+        Three ways to get a report out of pytest, across sixty-two things a report is asked to do.
         Where a tool can do something only with a flag or a line of your own code, the cell says
         which one.
       </p>
@@ -458,7 +458,7 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>not automatic in <code>allure-pytest</code>; some HTTP-client integrations do redact</small></td>
             </tr>
             <tr>
-              <th scope="rowgroup" rowspan="4" class="cmp__sec">Step diagnostics</th>
+              <th scope="rowgroup" rowspan="5" class="cmp__sec">Step diagnostics</th>
               <th scope="row">Named, timed, nested steps</th>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>step()</code>, as a block or a decorator</small></td>
@@ -481,6 +481,12 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>a paperclip on the step</small></td>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td>
+            </tr>
+            <tr>
+              <th scope="row">Async and concurrent steps keep their timing and nesting</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>no step model</small></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>async with step()</code>, <code>@step</code> on an <code>async def</code>, concurrent tasks stay siblings and attachments stay with the right task</small></td>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>its steps follow the sync and thread context</small></td>
             </tr>
             <tr>
               <th scope="rowgroup" rowspan="2" class="cmp__sec">BDD &amp; markers</th>
@@ -519,6 +525,19 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>newly failing, newly fixed, new, no longer run</small></td>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>new, fixed, regressed and malfunctioned, once history is configured</small></td>
+            </tr>
+            <tr>
+              <th scope="rowgroup" rowspan="2" class="cmp__sec">Ownership &amp; priority</th>
+              <th scope="row">Owner-based analytics</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>who owns what: test share, mean pass rate, failing now, flaky tests and time per owner</small></td>
+              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>Allure 3 can group analytics by owner, but not as one roll-up panel</small></td>
+            </tr>
+            <tr>
+              <th scope="row">Severity-based failure analysis</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>how much it matters: blocker down to trivial, plus unrated, with failing counts</small></td>
+              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>a built-in severity and status chart</small></td>
             </tr>
             <tr>
               <th scope="rowgroup" rowspan="4" class="cmp__sec">Historical analysis</th>
@@ -585,11 +604,17 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>allure generate</code> over the lot</small></td>
             </tr>
             <tr>
-              <th scope="rowgroup" rowspan="1" class="cmp__sec">JUnit XML</th>
+              <th scope="rowgroup" rowspan="2" class="cmp__sec">JUnit XML</th>
               <th scope="row">Written by the same run</th>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>pytest's own <code>--junitxml</code></small></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>--report-junit</code>, from the same records</small></td>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>pytest's own <code>--junitxml</code></small></td>
+            </tr>
+            <tr>
+              <th scope="row">Traceability metadata written into each testcase</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small><code>record_property</code> by hand</small></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>owner, severity and configured TMS or issue markers become <code>&lt;property&gt;</code> elements</small></td>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>Allure labels don't become pytest JUnit properties</small></td>
             </tr>
             <tr>
               <th scope="rowgroup" rowspan="1" class="cmp__sec">Machine-readable output</th>
