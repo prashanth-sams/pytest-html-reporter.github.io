@@ -458,7 +458,8 @@ strong, b { color: var(--text); font-weight: 640; }
 }
 .btn--accent:hover { color: var(--accent-ink); transform: translateY(-1px); box-shadow: var(--shadow-md); }
 
-.btn--sm { padding: 7px 13px; font-size: .83rem; }
+.btn--sm { padding: 7px 13px; font-size: .83rem; gap: 7px; }
+.btn--sm svg { width: 14px; height: 14px; }  /* 16px overpowers a .83rem label */
 .btn--lg { padding: 13px 24px; font-size: .97rem; }
 
 .btnrow { display: flex; flex-wrap: wrap; gap: 11px; align-items: center; }
