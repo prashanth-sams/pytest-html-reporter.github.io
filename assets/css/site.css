@@ -426,13 +426,25 @@ strong, b { color: var(--text); font-weight: 640; }
 .btn svg { width: 16px; height: 16px; flex: none; }
 .btn:active { transform: translateY(1px); }
 
+/* Flat and saturated, not a top-lit gradient: on white a lightened top edge
+   reads glossy and drains the blue. Dark keeps its gradient — against #0c0e11
+   the same two stops sit close enough to read as one bright chip. */
 .btn--primary {
-  background: linear-gradient(180deg, var(--brand-bright), var(--brand));
-  color: #fff; box-shadow: var(--shadow-sm);
+  background: var(--brand); color: #fff;
+  box-shadow: 0 1px 2px rgba(21,60,95,.22), 0 1px 3px rgba(21,60,95,.10);
 }
-.btn--primary:hover { color: #fff; box-shadow: var(--shadow-md); transform: translateY(-1px); }
-:root[data-theme="dark"] .btn--primary { color: #08131d; }
-:root[data-theme="dark"] .btn--primary:hover { color: #08131d; }
+.btn--primary:hover {
+  background: var(--brand-strong); color: #fff; transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(21,60,95,.20), 0 1px 3px rgba(21,60,95,.12);
+}
+:root[data-theme="dark"] .btn--primary {
+  background: linear-gradient(180deg, var(--brand-bright), var(--brand));
+  color: #08131d; box-shadow: var(--shadow-sm);
+}
+:root[data-theme="dark"] .btn--primary:hover {
+  background: linear-gradient(180deg, var(--brand-bright), var(--brand));
+  color: #08131d; box-shadow: var(--shadow-md);
+}
 
 .btn--ghost {
   background: var(--bg-elev); color: var(--text); border-color: var(--border-strong);
