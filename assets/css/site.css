@@ -636,10 +636,12 @@ a.card:hover .card__more svg { transform: translateX(3px); }
 .cmpwrap { max-width: 1120px; margin-inline: auto; }
 /* Fixed layout so the three tool columns stay equal whatever a cell holds;
    the min-width is what makes the table scroll on a narrow screen instead. */
-.cmp table { font-size: .865rem; table-layout: fixed; min-width: 780px; }
+.cmp table { font-size: .865rem; table-layout: fixed; min-width: 900px; }
 .cmp thead th { vertical-align: bottom; }
-.cmp thead th:nth-child(1) { width: 31%; }
-.cmp thead th:nth-child(n+2) { width: 23%; text-align: center; }
+/* 1 section · 2 capability · 3-5 the three tools */
+.cmp thead th:nth-child(1) { width: 12%; }
+.cmp thead th:nth-child(2) { width: 26%; }
+.cmp thead th:nth-child(n+3) { width: 20.66%; text-align: center; }
 /* The row labels are the question, not the answer: a shade softer than the
    headings above them, and fenced off from the columns doing the answering. */
 .cmp tbody th {
@@ -649,7 +651,7 @@ a.card:hover .card__more svg { transform: translateX(3px); }
   border-right: 1px solid var(--border);
   vertical-align: middle; font-size: .875rem; line-height: 1.4;
 }
-.cmp thead th:first-child { border-right: 1px solid var(--border); }
+.cmp thead th:nth-child(1), .cmp thead th:nth-child(2) { border-right: 1px solid var(--border); }
 .cmp tbody td { text-align: center; vertical-align: top; padding: 15px 12px; }
 .cmp tbody tr:last-child th { border-bottom: 0; }
 .cmp tbody tr:hover th { background: color-mix(in srgb, var(--brand) 7%, var(--bg-alt)); }
@@ -688,14 +690,14 @@ a.card:hover .card__more svg { transform: translateX(3px); }
 .mark--n { background: var(--fail); }
 .mark--n svg { width: 10.5px; height: 10.5px; }
 
-/* Section bands inside the comparison table. */
-.cmp__sec th {
-  background: var(--bg-sunken); color: var(--text-faint);
-  font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  padding: 9px 15px; text-align: left;
-  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+/* The section name is a column of its own, spanning the rows it covers. */
+.cmp tbody th.cmp__sec {
+  width: 13%; background: var(--bg-sunken); color: var(--text-faint);
+  font-size: .69rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+  line-height: 1.5; text-align: left; vertical-align: top; padding: 16px 14px;
+  border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
 }
-.cmp tbody tr.cmp__sec:hover th { background: var(--bg-sunken); }
+.cmp tbody tr:hover th.cmp__sec { background: var(--bg-sunken); }
 /* The dark palette's green and red are light; the glyph flips to ink on them. */
 :root[data-theme="dark"] .mark { color: var(--text-invert); box-shadow: none; }
 
