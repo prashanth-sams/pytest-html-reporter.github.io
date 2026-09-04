@@ -1076,7 +1076,7 @@ td a, td code, th code { overflow-wrap: anywhere; }
 }
 .sidebar__link {
   display: flex; align-items: center; gap: 9px;
-  padding: 6px 10px; border-radius: var(--r-sm);
+  padding: 6px 10px; /* square: the rounded corner clipped the inset accent bar */
   font-size: .875rem; color: var(--text-muted); font-weight: 500;
   transition: background .14s var(--ease), color .14s var(--ease);
 }
