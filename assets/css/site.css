@@ -782,14 +782,18 @@ a.card:hover .card__more svg { transform: translateX(3px); }
   transition: transform .2s var(--ease), box-shadow .2s var(--ease);
 }
 .prod:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+/* One neutral header tint across all three. These cards name sibling projects,
+   not statuses, so a hue per card was decoration that read as meaning — and
+   three unrelated hues side by side read as no system at all. */
 .prod__top {
   padding: 24px 24px 18px;
-  background: linear-gradient(160deg, var(--brand-soft), transparent 78%);
+  background: rgba(16,32,48,.035);
   border-bottom: 1px solid var(--border);
 }
+:root[data-theme="dark"] .prod__top { background: rgba(255,255,255,.04); }
 .prod__kind {
   font-size: .66rem; font-weight: 700; letter-spacing: .11em; text-transform: uppercase;
-  color: var(--brand); display: block; margin-bottom: 8px;
+  color: var(--text-muted); display: block; margin-bottom: 8px;
 }
 .prod__top h3 { margin: 0 0 .35rem; font-size: 1.14rem; }
 .prod__top p { margin: 0; font-size: .88rem; color: var(--text-muted); }
@@ -798,10 +802,6 @@ a.card:hover .card__more svg { transform: translateX(3px); }
 .prod__list li { display: flex; gap: 9px; font-size: .875rem; color: var(--text-muted); margin: 0; }
 .prod__list li svg { width: 15px; height: 15px; flex: none; color: var(--pass); margin-top: 3px; }
 .prod__foot { margin-top: auto; display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
-.prod--accent .prod__top { background: linear-gradient(160deg, var(--accent-soft), transparent 78%); }
-.prod--accent .prod__kind { color: var(--accent-deep); }
-.prod--purple .prod__top { background: linear-gradient(160deg, var(--purple-soft), transparent 78%); }
-.prod--purple .prod__kind { color: var(--purple); }
 
 /* Stat strip */
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px;
