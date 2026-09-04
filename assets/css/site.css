@@ -450,7 +450,7 @@ strong, b { color: var(--text); font-weight: 640; }
 .btn--lg { padding: 13px 24px; font-size: .97rem; }
 
 .btnrow { display: flex; flex-wrap: wrap; gap: 11px; align-items: center; }
-.center .btnrow { justify-content: center; }
+.center .btnrow, .btnrow.center { justify-content: center; }
 
 /* ------------------------------------------------------------ 7. Hero */
 
@@ -630,6 +630,53 @@ a.card:hover h3 { color: var(--brand); }
 }
 .card__more svg { width: 13px; height: 13px; transition: transform .18s var(--ease); }
 a.card:hover .card__more svg { transform: translateX(3px); }
+
+/* Comparison table. A tick or a cross per cell, with the qualifier underneath
+   when a tool can do the thing only with a flag or a line of your own code. */
+.cmpwrap { max-width: 1120px; margin-inline: auto; }
+.cmp table { font-size: .865rem; }
+.cmp thead th { vertical-align: bottom; }
+.cmp tbody td, .cmp tbody th, .cmp thead th { min-width: 19ch; }
+.cmp thead th:nth-child(1) { width: 31%; }
+.cmp thead th:nth-child(n+2) { width: 23%; text-align: center; }
+.cmp tbody th {
+  text-align: left; font-weight: 620; color: var(--text);
+  padding: 14px 15px; border-bottom: 1px solid var(--border-hair);
+  vertical-align: middle; font-size: .875rem; line-height: 1.4;
+}
+.cmp tbody td { text-align: center; vertical-align: top; padding: 15px 12px; }
+.cmp tbody tr:last-child th { border-bottom: 0; }
+.cmp tbody tr:hover th { background: var(--bg-alt); }
+.cmp th.is-us, .cmp td.is-us {
+  background: color-mix(in srgb, var(--brand) 7%, var(--bg-elev));
+  box-shadow: inset 1px 0 0 color-mix(in srgb, var(--brand) 22%, transparent),
+              inset -1px 0 0 color-mix(in srgb, var(--brand) 22%, transparent);
+}
+.cmp tbody tr:hover td.is-us { background: color-mix(in srgb, var(--brand) 11%, var(--bg-elev)); }
+.cmp thead th.is-us { color: var(--brand); text-align: center; }
+.cmp__tag {
+  display: block; margin-top: 4px; font-size: .62rem; font-weight: 700;
+  letter-spacing: .08em; color: var(--text-faint);
+}
+.cmp td small {
+  display: block; margin-top: 6px; font-size: .74rem; line-height: 1.4;
+  color: var(--text-faint); text-wrap: balance;
+}
+.cmp td small code { font-size: .7rem; }
+.cmp__source {
+  max-width: 62ch; margin: 14px auto 0; text-align: center;
+  font-size: .8rem; color: var(--text-faint);
+}
+.cmp + .cmp__source + .note { margin-top: 22px; }
+
+/* The verdict marks. Green tick, red cross, nothing else to interpret. */
+.mark {
+  display: inline-grid; place-items: center; width: 26px; height: 26px;
+  border-radius: 50%; border: 1px solid transparent;
+}
+.mark svg { width: 14px; height: 14px; }
+.mark--y { color: var(--pass); background: var(--pass-soft); border-color: color-mix(in srgb, var(--pass) 30%, transparent); }
+.mark--n { color: var(--fail); background: var(--fail-soft); border-color: color-mix(in srgb, var(--fail) 30%, transparent); }
 
 /* Feature list — the whole of what the report holds, grouped and scannable.
    Each group takes a --tint from the .tint-* classes below, which colour the
