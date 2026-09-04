@@ -644,6 +644,7 @@ a.card:hover .card__more svg { transform: translateX(3px); }
    headings above them, and fenced off from the columns doing the answering. */
 .cmp tbody th {
   text-align: left; font-weight: 600; color: var(--text-body);
+  background: var(--bg-alt);
   padding: 14px 15px; border-bottom: 1px solid var(--border-hair);
   border-right: 1px solid var(--border);
   vertical-align: middle; font-size: .875rem; line-height: 1.4;
@@ -651,7 +652,7 @@ a.card:hover .card__more svg { transform: translateX(3px); }
 .cmp thead th:first-child { border-right: 1px solid var(--border); }
 .cmp tbody td { text-align: center; vertical-align: top; padding: 15px 12px; }
 .cmp tbody tr:last-child th { border-bottom: 0; }
-.cmp tbody tr:hover th { background: var(--bg-alt); }
+.cmp tbody tr:hover th { background: color-mix(in srgb, var(--brand) 7%, var(--bg-alt)); }
 .cmp th.is-us, .cmp td.is-us {
   background: color-mix(in srgb, var(--brand) 7%, var(--bg-elev));
   box-shadow: inset 1px 0 0 color-mix(in srgb, var(--brand) 22%, transparent),
