@@ -498,6 +498,7 @@ strong, b { color: var(--text); font-weight: 640; }
 .hero__lede { font-size: 1.12rem; line-height: 1.62; color: var(--text-muted); max-width: 48ch; margin-bottom: 1.6rem; }
 
 .hero__pills { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 1.7rem; }
+.hero__pills .pill { border-radius: .5rem; }
 
 .badgerow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 1.5rem; }
 .badgerow img { height: 20px; display: inline-block; }
