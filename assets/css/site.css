@@ -687,6 +687,15 @@ a.card:hover .card__more svg { transform: translateX(3px); }
 .mark--y { background: var(--pass); }
 .mark--n { background: var(--fail); }
 .mark--n svg { width: 10.5px; height: 10.5px; }
+
+/* Section bands inside the comparison table. */
+.cmp__sec th {
+  background: var(--bg-sunken); color: var(--text-faint);
+  font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  padding: 9px 15px; text-align: left;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.cmp tbody tr.cmp__sec:hover th { background: var(--bg-sunken); }
 /* The dark palette's green and red are light; the glyph flips to ink on them. */
 :root[data-theme="dark"] .mark { color: var(--text-invert); box-shadow: none; }
 
