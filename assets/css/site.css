@@ -691,8 +691,8 @@ a.card:hover .card__more svg { transform: translateX(3px); }
 .mark svg { width: 12px; height: 12px; }
 .mark--y { background: var(--pass); }
 .mark--n { background: var(--fail); }
-/* Not verified against a primary source — neither a yes nor a no. */
-.mark--u { background: var(--text-faint); }
+/* A yes that arrives through a separate integration — neither a plain yes nor a no. */
+.mark--p { background: var(--skip-ink); }
 .mark--n svg { width: 10.5px; height: 10.5px; }
 
 /* The section name is a column of its own, spanning the rows it covers. */

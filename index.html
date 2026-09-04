@@ -275,7 +275,7 @@ report_screenshots = failed</code></pre>
       <span class="eyebrow">How it compares</span>
       <h2>One file, or a pipeline</h2>
       <p class="lede">
-        Three ways to get a report out of pytest, across fifty-three things a report is asked to do.
+        Three ways to get a report out of pytest, across fifty-seven things a report is asked to do.
         Where a tool can do something only with a flag or a line of your own code, the cell says
         which one.
       </p>
@@ -435,7 +435,7 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
             </tr>
             <tr>
-              <th scope="rowgroup" rowspan="2" class="cmp__sec">API debugging</th>
+              <th scope="rowgroup" rowspan="3" class="cmp__sec">API debugging</th>
               <th scope="row">Attach request and response payloads</th>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>through the extras hook</small></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>four helpers</small></td>
@@ -446,6 +446,19 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>both bodies, both header sets</small></td>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
+            </tr>
+            <tr>
+              <th scope="row">A structured request and response viewer</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>an attachment, or code of your own</small></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>an API Logs tab: headers, bodies, status, timing and the cURL</small></td>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>not in <code>allure-pytest</code>; HTTP-exchange viewers come from integrations such as Axios or Fetch</small></td>
+            </tr>
+            <tr>
+              <th scope="rowgroup" rowspan="1" class="cmp__sec">Security</th>
+              <th scope="row">Sensitive API values redacted for you</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>no built-in API redaction</small></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>authorization, cookies, tokens, secrets, passwords and API keys</small></td>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>not automatic in <code>allure-pytest</code>; some HTTP-client integrations do redact</small></td>
             </tr>
             <tr>
               <th scope="rowgroup" rowspan="4" class="cmp__sec">Step diagnostics</th>
@@ -476,8 +489,8 @@ report_screenshots = failed</code></pre>
               <th scope="rowgroup" rowspan="2" class="cmp__sec">BDD &amp; markers</th>
               <th scope="row">Gherkin scenarios with no changes to the test</th>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
-              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>pytest-bdd arrives as steps</small></td>
-              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>a separate plugin</small></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>the scenario and its Gherkin steps, captured automatically</small></td>
+              <td><span class="mark mark--p" role="img" aria-label="Yes, with a separate integration"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.4v7.2"/><path d="M12 17.8h.01"/></svg></span><small>the separate Allure pytest-bdd integration</small></td>
             </tr>
             <tr>
               <th scope="row">Markers shown with the scope they came from</th>
@@ -582,6 +595,13 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>pytest's own <code>--junitxml</code></small></td>
             </tr>
             <tr>
+              <th scope="rowgroup" rowspan="1" class="cmp__sec">Machine-readable output</th>
+              <th scope="row">Machine-readable results beside the report</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>not from pytest-html itself</small></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>output.json</code>, written for every build</small></td>
+              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>the raw Allure JSON result files</small></td>
+            </tr>
+            <tr>
               <th scope="rowgroup" rowspan="2" class="cmp__sec">Traceability / TMS</th>
               <th scope="row">Issue ids turned into links</th>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
@@ -621,6 +641,13 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>attachments, steps and labels</small></td>
             </tr>
             <tr>
+              <th scope="rowgroup" rowspan="1" class="cmp__sec">Quality gates</th>
+              <th scope="row">Quality gates enforced by the reporting layer</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
+              <td class="is-us"><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
+              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>Allure 3 has configurable quality-gate rules</small></td>
+            </tr>
+            <tr>
               <th scope="rowgroup" rowspan="2" class="cmp__sec">CI integration</th>
               <th scope="row">A first-party GitHub Action</th>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
@@ -640,7 +667,8 @@ report_screenshots = failed</code></pre>
       <p class="cmp__source">
         Checked in September 2026 against the source of pytest-html 4.2.0 and allure-pytest 2.16.0,
         and the Allure Report 2 and 3 documentation. A cell that needs a flag, a helper or a
-        particular Allure version names it.
+        particular Allure version names it; an amber mark is a yes that arrives through a
+        separate integration.
       </p>
     </div>
   </div>
