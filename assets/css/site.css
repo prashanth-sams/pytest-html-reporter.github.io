@@ -660,6 +660,9 @@ a.card:hover .card__more svg { transform: translateX(3px); }
   box-shadow: inset 1px 0 0 color-mix(in srgb, var(--brand) 22%, transparent),
               inset -1px 0 0 color-mix(in srgb, var(--brand) 22%, transparent);
 }
+/* --border-hair all but disappears against the tinted column, so its row rules
+   are drawn in the tint's own colour instead. */
+.cmp tbody td.is-us { border-bottom-color: color-mix(in srgb, var(--brand) 11%, transparent); }
 .cmp tbody tr:hover td.is-us { background: color-mix(in srgb, var(--brand) 11%, var(--bg-elev)); }
 .cmp thead th.is-us { color: var(--brand); text-align: center; }
 .cmp__tag {
