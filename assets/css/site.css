@@ -826,6 +826,12 @@ a.card:hover .card__more svg { transform: translateX(3px); }
 .pill--skip   { background: var(--skip-soft);   color: var(--skip-ink);    border-color: color-mix(in srgb, var(--skip) 28%, transparent); }
 .pill--purple { background: var(--purple-soft); color: var(--purple-ink);  border-color: color-mix(in srgb, var(--purple) 28%, transparent); }
 .pill--teal   { background: var(--teal-soft);   color: var(--teal-ink);    border-color: color-mix(in srgb, var(--teal) 28%, transparent); }
+/* Decorative chips that carry no status: a flat grey fill, no outline, so a
+   row of them reads as one texture instead of five competing signals. Set as
+   a tint rather than a hex so it sits correctly on the hero's soft gradient. */
+.pill--muted { background: rgba(16,32,48,.06); color: var(--text-muted); border-color: transparent; }
+:root[data-theme="dark"] .pill--muted { background: rgba(255,255,255,.07); }
+
 .pill--new::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
 /* ------------------------------------------------------------ 11. Code */
