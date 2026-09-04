@@ -640,11 +640,15 @@ a.card:hover .card__more svg { transform: translateX(3px); }
 .cmp thead th { vertical-align: bottom; }
 .cmp thead th:nth-child(1) { width: 31%; }
 .cmp thead th:nth-child(n+2) { width: 23%; text-align: center; }
+/* The row labels are the question, not the answer: a shade softer than the
+   headings above them, and fenced off from the columns doing the answering. */
 .cmp tbody th {
-  text-align: left; font-weight: 620; color: var(--text);
+  text-align: left; font-weight: 600; color: var(--text-body);
   padding: 14px 15px; border-bottom: 1px solid var(--border-hair);
+  border-right: 1px solid var(--border);
   vertical-align: middle; font-size: .875rem; line-height: 1.4;
 }
+.cmp thead th:first-child { border-right: 1px solid var(--border); }
 .cmp tbody td { text-align: center; vertical-align: top; padding: 15px 12px; }
 .cmp tbody tr:last-child th { border-bottom: 0; }
 .cmp tbody tr:hover th { background: var(--bg-alt); }
