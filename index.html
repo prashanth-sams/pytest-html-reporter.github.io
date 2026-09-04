@@ -275,66 +275,149 @@ report_screenshots = failed</code></pre>
       <span class="eyebrow">What is in the page</span>
       <h2>Everything a failing build makes you ask</h2>
       <p class="lede">
-        A pass/fail count tells you how much went wrong. The rest of the report tells you
-        <em>what</em> went wrong, whether it has been going wrong for a while, and where to look next.
+        A pass/fail count tells you how much went wrong. Here is the whole of what the report tells
+        you instead — thirty-nine of them, in one HTML file, with nothing to switch on.
       </p>
     </div>
 
-    <div class="grid grid--3">
-      <article class="card reveal">
-        <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
-        <h3>Overview &amp; trends</h3>
-        <p>Totals, pass rate, run duration, the environment the suite ran in, the most-failed suite, and the failure delta since the last build.</p>
-      </article>
+    <div class="fgroups">
 
-      <article class="card reveal" data-delay="60">
-        <div class="card__icon is-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 20h20L12 2z"/><path d="M12 9v5M12 17h.01"/></svg></div>
-        <h3>Why this run failed</h3>
-        <p>Failures grouped by the exception each came out of, biggest group first — <code>12 failures, 9 are TimeoutException</code> — with the share of the run each group holds and how it has moved since last build.</p>
-      </article>
+      <section class="fgroup tint-brand reveal">
+        <div class="fgroup__head">
+          <span class="fgroup__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
+          <h3>The page itself</h3>
+          <span class="fgroup__n">5</span>
+        </div>
+        <ul class="flist">
+          <li><a href="docs/features.html#the-report-itself"><b>One static HTML file</b><span>No server, no asset folder, no build step. Mail it, publish it, open it off a stick.</span></a></li>
+          <li><a href="docs/features.html#opening-the-report"><b>It opens itself</b><span>After a local run the finished report is in your browser. CI is detected, not guessed at.</span></a></li>
+          <li><a href="docs/features.html#themes"><b>Light and dark themes</b><span>Follows the machine, remembers the choice, and prints legibly either way.</span></a></li>
+          <li><a href="docs/features.html#the-report-itself"><b>Titled and badged</b><span><code>--title</code> names the report, <code>--environment</code> puts a badge beside it.</span></a></li>
+          <li><a href="docs/features.html#side-nav-links"><b>Links of your own in the side nav</b><span>Point at annotated coverage, a CI job or a wiki page. Repeat the flag as often as you like.</span></a></li>
+        </ul>
+      </section>
 
-      <article class="card reveal" data-delay="120">
-        <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
-        <h3>Test steps</h3>
-        <p>The named, timed pieces a test is made of, nested from the suite down to the test to what it actually did — with the failing step carrying the screenshot that explains it.</p>
-      </article>
+      <section class="fgroup tint-brand reveal" data-delay="40" data-delay="40" data-delay="40">
+        <div class="fgroup__head">
+          <span class="fgroup__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></span>
+          <h3>Reading a run</h3>
+          <span class="fgroup__n">6</span>
+        </div>
+        <ul class="flist">
+          <li><a href="docs/features.html#overview"><b>Overview</b><span>The donut, the PASS / FAIL / SKIP / XPASS / XFAIL / ERROR counts, and the time it took.</span></a></li>
+          <li><a href="docs/features.html#trends"><b>Trends</b><span>Passed, failed and skipped plotted across this run and the five builds before it.</span></a></li>
+          <li><a href="docs/features.html#highlights"><b>Highlights</b><span>The suite that failed most, and which way the failure count has moved.</span></a></li>
+          <li><a href="docs/features.html#test-suite-details"><b>Test suite details</b><span>Every suite with its own counts, so a failure concentrated in one file shows up early.</span></a></li>
+          <li><a href="docs/features.html#the-test-metrics-table"><b>The Test Metrics table</b><span>Search, sort, ten columns, and exports to copy, CSV, Excel, print and column visibility.</span></a></li>
+          <li><a href="docs/features.html#environment-and-build-details"><b>Environment &amp; build details</b><span>What the run was, what it was told about the build, and what it kept of the output.</span></a></li>
+        </ul>
+      </section>
 
-      <article class="card reveal">
-        <div class="card__icon is-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="m8 6 1.5-2.5h5L16 6"/><circle cx="12" cy="13" r="3.4"/></svg></div>
-        <h3>Automatic screenshots</h3>
-        <p>A test that fails while holding a Selenium driver or a Playwright page is photographed for you. No hook, no fixture, no import, no <code>conftest.py</code>.</p>
-      </article>
+      <section class="fgroup tint-pass reveal" data-delay="80" data-delay="80">
+        <div class="fgroup__head">
+          <span class="fgroup__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M21 8a9 9 0 0 0-5-4.6"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg></span>
+          <h3>Coverage</h3>
+          <span class="fgroup__n">3</span>
+        </div>
+        <ul class="flist">
+          <li><a href="docs/features.html#coverage"><b>A Coverage tab, if it was measured</b><span>The ring, the counts, a row per file with its missing lines, least covered first.</span></a></li>
+          <li><a href="docs/features.html#coverage"><b>The trend, and the project's own bar</b><span>+0.8 since the last build, coloured at <code>--cov-fail-under</code> rather than at a guess.</span></a></li>
+          <li><a href="docs/features.html#coverage-measured-elsewhere"><b>Coverage measured somewhere else</b><span>Cobertura XML, <code>coverage.json</code> or a data file, recognised by content, not by name.</span></a></li>
+        </ul>
+      </section>
 
-      <article class="card reveal" data-delay="60">
-        <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 3v6h6"/><path d="M12 7v5l3.5 2"/></svg></div>
-        <h3>Archives &amp; history</h3>
-        <p>Every previous build kept in the same page, with retention by count, by age or by date. Flaky tests and standing failures are read straight out of that history.</p>
-      </article>
+      <section class="fgroup tint-purple reveal" data-delay="80" data-delay="40">
+        <div class="fgroup__head">
+          <span class="fgroup__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span>
+          <h3>Steps, Gherkin &amp; markers</h3>
+          <span class="fgroup__n">4</span>
+        </div>
+        <ul class="flist">
+          <li><a href="docs/features.html#steps-gherkin-and-markers"><b>Named, timed, nested steps</b><span>Suite down to test down to what it did, with the failing step carrying the message.</span></a></li>
+          <li><a href="docs/features.html#steps-gherkin-and-markers"><b>A tree even without steps</b><span>Set up, body and tear down are timed for every test, whether or not you named anything.</span></a></li>
+          <li><a href="docs/features.html#gherkin-scenarios"><b>Gherkin scenarios</b><span>A pytest-bdd scenario arrives already named, badged, and filled in from the row that ran.</span></a></li>
+          <li><a href="docs/features.html#markers-in-full"><b>Markers, and where they came from</b><span>Including the module-level and class-level ones nobody remembers applying.</span></a></li>
+        </ul>
+      </section>
 
-      <article class="card reveal" data-delay="120">
-        <div class="card__icon is-pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></div>
-        <h3>Deep links</h3>
-        <p>Every test row has an address of its own. Copy it from the button beside the failure and it opens the report on that row, whatever page of the table the sort has put it on.</p>
-      </article>
+      <section class="fgroup tint-fail reveal" data-delay="40" data-delay="80">
+        <div class="fgroup__head">
+          <span class="fgroup__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 20h20L12 2z"/><path d="M12 9v5M12 17h.01"/></svg></span>
+          <h3>Reading a failure</h3>
+          <span class="fgroup__n">5</span>
+        </div>
+        <ul class="flist">
+          <li><a href="docs/features.html#why-this-run-failed"><b>Why this run failed</b><span>Failures grouped by exception, biggest first — 12 failures, 9 are TimeoutException.</span></a></li>
+          <li><a href="docs/features.html#the-failure-delta"><b>The failure delta</b><span>&#9650; +3 failures since last build, red when it is going the wrong way.</span></a></li>
+          <li><a href="docs/features.html#copy-buttons"><b>Copy the error, or the rerun command</b><span>The full message, or <code>pytest path::test</code> built from the node id and quoted for a shell.</span></a></li>
+          <li><a href="docs/features.html#deep-links"><b>Deep links to a single row</b><span>An address per test that survives a re-sort, a search and a page of the table.</span></a></li>
+          <li><a href="docs/features.html#status-filter-chips"><b>Status filter chips</b><span>One click for "show me only the failures", driven off the Dashboard counts.</span></a></li>
+        </ul>
+      </section>
+
+      <section class="fgroup tint-purple reveal" data-delay="80" data-delay="40">
+        <div class="fgroup__head">
+          <span class="fgroup__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M6 20v-6M18 20V4"/></svg></span>
+          <h3>How a test behaves</h3>
+          <span class="fgroup__n">5</span>
+        </div>
+        <ul class="flist">
+          <li><a href="docs/features.html#stability-score"><b>Stability score</b><span>One number out of 100 for the suite, charged for flipping as well as for failing.</span></a></li>
+          <li><a href="docs/features.html#flaky-tests"><b>Flaky tests</b><span>Tests that have flipped, or needed a retry to pass — kept apart from the rest.</span></a></li>
+          <li><a href="docs/features.html#always-failing"><b>Always failing</b><span>Failed every build they were in. A bug with an owner, not a race worth hunting.</span></a></li>
+          <li><a href="docs/features.html#pass-rate-across-builds"><b>Pass rate across builds</b><span>On an axis that is not pinned to 0–100, so a two-point drop is visible.</span></a></li>
+          <li><a href="docs/features.html#where-the-time-goes"><b>Where the time goes</b><span>This run's tests bucketed by duration — what a slowest-tests list cannot tell you.</span></a></li>
+        </ul>
+      </section>
+
+      <section class="fgroup tint-teal reveal" data-delay="80">
+        <div class="fgroup__head">
+          <span class="fgroup__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="m8 6 1.5-2.5h5L16 6"/><circle cx="12" cy="13" r="3.4"/></svg></span>
+          <h3>Evidence</h3>
+          <span class="fgroup__n">5</span>
+        </div>
+        <ul class="flist">
+          <li><a href="docs/features.html#screenshots"><b>Screenshots, taken for you</b><span>A failing Selenium or Playwright test is photographed. No hook, no fixture, no import.</span></a></li>
+          <li><a href="docs/features.html#attachments-and-api-logs"><b>Attachments &amp; API logs</b><span>Both bodies, both sets of headers, and the curl that repeats the call.</span></a></li>
+          <li><a href="docs/features.html#attachments-and-api-logs"><b>Credentials blanked out</b><span>Tokens, cookies and auth headers are redacted — a report is a build artifact.</span></a></li>
+          <li><a href="docs/features.html#captured-output"><b>Captured stdout, stderr &amp; logging</b><span>Kept per test and on by default, opened section by section with a copy button.</span></a></li>
+          <li><a href="docs/features.html#truncation-that-says-so"><b>Truncation that says so</b><span>A cut message fades rather than lying by omission in a file read a week later.</span></a></li>
+        </ul>
+      </section>
+
+      <section class="fgroup tint-accent reveal" data-delay="40" data-delay="40" data-delay="40">
+        <div class="fgroup__head">
+          <span class="fgroup__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 3v6h6"/><path d="M12 7v5l3.5 2"/></svg></span>
+          <h3>History</h3>
+          <span class="fgroup__n">3</span>
+        </div>
+        <ul class="flist">
+          <li><a href="docs/features.html#history-and-archives"><b>Every build kept in the page</b><span>Roughly 5KB each, and the source of Trends, the delta and the whole Analytics tab.</span></a></li>
+          <li><a href="docs/features.html#history-and-archives"><b>Retention by count, age or date</b><span>The three limits intersect, and are usually better written down in the ini file.</span></a></li>
+          <li><a href="docs/features.html#history-and-archives"><b>Dated by the run, not the file</b><span>An age limit still measures the right thing after CI copies the reports elsewhere.</span></a></li>
+        </ul>
+      </section>
+
+      <section class="fgroup tint-teal reveal" data-delay="80" data-delay="80" data-delay="80">
+        <div class="fgroup__head">
+          <span class="fgroup__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+          <h3>Running it at scale</h3>
+          <span class="fgroup__n">3</span>
+        </div>
+        <ul class="flist">
+          <li><a href="docs/features.html#parallel-runs"><b>One report from an xdist run</b><span>Workers are merged into a single build, listed in collection order. Nothing to configure.</span></a></li>
+          <li><a href="docs/features.html#reruns"><b>Reruns and retries</b><span>Evidence survives a green retry, and a retried test keeps its history straight.</span></a></li>
+          <li><a href="docs/features.html#matrix-runs"><b>Matrix runs</b><span>A job per Python version or per browser, each writing where you tell it to.</span></a></li>
+        </ul>
+      </section>
     </div>
 
-    <div class="btnrow center" style="margin-top:32px">
-      <a class="btn btn--ghost" href="docs/features.html">
+    <div class="btnrow center" style="margin-top:34px">
+      <a class="btn btn--primary" href="docs/features.html">
         See all features
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
-    </div>
-  </div>
-</section>
-
-<!-- ========================================================== NUMBERS -->
-<section class="section section--sunken" style="padding-block: clamp(38px,4.5vw,58px)">
-  <div class="wrap">
-    <div class="stats">
-      <div class="stat"><b>1</b><span>HTML file, no assets</span></div>
-      <div class="stat"><b>0</b><span>lines of configuration</span></div>
-      <div class="stat"><b>7+</b><span>report sections</span></div>
-      <div class="stat"><b>3</b><span>ways to use it</span></div>
+      <a class="btn btn--ghost" href="docs/report-tour.html">Take the report tour</a>
     </div>
   </div>
 </section>

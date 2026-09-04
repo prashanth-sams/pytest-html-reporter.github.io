@@ -631,6 +631,62 @@ a.card:hover h3 { color: var(--brand); }
 .card__more svg { width: 13px; height: 13px; transition: transform .18s var(--ease); }
 a.card:hover .card__more svg { transform: translateX(3px); }
 
+/* Feature list — the whole of what the report holds, grouped and scannable.
+   Each group takes a --tint from the .tint-* classes below, which colour the
+   group's icon and the marker on every row inside it. */
+.tint-brand  { --tint: var(--brand); }
+.tint-fail   { --tint: var(--fail); }
+.tint-pass   { --tint: var(--pass); }
+.tint-purple { --tint: var(--purple); }
+.tint-teal   { --tint: var(--teal); }
+.tint-accent { --tint: var(--accent-deep); }
+
+/* Columns rather than a grid: a grid row is as tall as its tallest group and
+   leaves holes under the short ones, while columns pack the groups. */
+.fgroups { columns: 1; column-gap: 40px; }
+@media (min-width: 820px)  { .fgroups { columns: 2; } }
+@media (min-width: 1240px) { .fgroups { columns: 3; column-gap: 46px; } }
+.fgroup { break-inside: avoid; margin-bottom: 34px; }
+.fgroup:last-child { margin-bottom: 0; }
+
+.fgroup__head {
+  display: flex; align-items: center; gap: 11px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+.fgroup__head h3 { margin: 0; font-size: 1.02rem; letter-spacing: -.015em; }
+.fgroup__icon {
+  width: 32px; height: 32px; border-radius: 9px; flex: none;
+  display: grid; place-items: center;
+  color: var(--tint);
+  background: color-mix(in srgb, var(--tint) 11%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tint) 26%, transparent);
+}
+.fgroup__icon svg { width: 17px; height: 17px; }
+.fgroup__n {
+  margin-left: auto; flex: none; font-size: .74rem; font-weight: 620;
+  color: var(--text-faint); font-variant-numeric: tabular-nums;
+}
+
+.flist { list-style: none; margin: 0; padding: 0; }
+.flist li { margin: 0; }
+.flist li + li { border-top: 1px solid var(--border-hair); }
+.flist a {
+  display: block; position: relative; color: inherit;
+  padding: 11px 10px 11px 19px; margin-inline: -10px;
+  border-radius: var(--r-sm); transition: background .16s var(--ease);
+}
+.flist a::before {
+  content: ""; position: absolute; left: 9px; top: 1.15em;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--tint); opacity: .5; transition: opacity .16s var(--ease);
+}
+.flist a:hover { background: var(--bg-alt); }
+.flist a:hover::before { opacity: 1; }
+.flist b { display: block; font-size: .93rem; font-weight: 640; color: var(--text); letter-spacing: -.005em; }
+.flist a:hover b { color: var(--brand); }
+.flist span { display: block; margin-top: 2px; font-size: .845rem; line-height: 1.5; color: var(--text-muted); }
+.flist code { font-size: .78rem; }
+
 /* Product cards (three-repo ecosystem) */
 .prod {
   display: flex; flex-direction: column;
