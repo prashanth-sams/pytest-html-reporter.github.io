@@ -634,9 +634,10 @@ a.card:hover .card__more svg { transform: translateX(3px); }
 /* Comparison table. A tick or a cross per cell, with the qualifier underneath
    when a tool can do the thing only with a flag or a line of your own code. */
 .cmpwrap { max-width: 1120px; margin-inline: auto; }
-.cmp table { font-size: .865rem; }
+/* Fixed layout so the three tool columns stay equal whatever a cell holds;
+   the min-width is what makes the table scroll on a narrow screen instead. */
+.cmp table { font-size: .865rem; table-layout: fixed; min-width: 780px; }
 .cmp thead th { vertical-align: bottom; }
-.cmp tbody td, .cmp tbody th, .cmp thead th { min-width: 19ch; }
 .cmp thead th:nth-child(1) { width: 31%; }
 .cmp thead th:nth-child(n+2) { width: 23%; text-align: center; }
 .cmp tbody th {
@@ -669,15 +670,20 @@ a.card:hover .card__more svg { transform: translateX(3px); }
 }
 .cmp + .cmp__source + .note { margin-top: 22px; }
 
-/* The verdict marks. A bare tick and cross — no badge, the weight and the
-   colour carry them. The cross is drawn a shade smaller and softer than the
-   tick: two strokes crossing read heavier than one bent stroke at the same
-   size, and a table of negatives should not shout louder than the positives. */
-.mark { display: inline-grid; place-items: center; line-height: 0; }
-.mark svg { width: 23px; height: 23px; }
-.mark--y { color: var(--pass); }
-.mark--n { color: color-mix(in srgb, var(--fail) 90%, var(--text-faint)); }
-.mark--n svg { width: 19px; height: 19px; }
+/* The verdict marks. A filled rounded square — green tick, red cross — in the
+   palette's own green and red rather than a stock vivid pair, so the table
+   still belongs to the rest of the page. */
+.mark {
+  display: inline-grid; place-items: center;
+  width: 20px; height: 20px; border-radius: 6px;
+  color: #fff; box-shadow: var(--shadow-xs);
+}
+.mark svg { width: 12px; height: 12px; }
+.mark--y { background: var(--pass); }
+.mark--n { background: var(--fail); }
+.mark--n svg { width: 10.5px; height: 10.5px; }
+/* The dark palette's green and red are light; the glyph flips to ink on them. */
+:root[data-theme="dark"] .mark { color: var(--text-invert); box-shadow: none; }
 
 /* Feature list — the whole of what the report holds, grouped and scannable.
    Each group takes a --tint from the .tint-* classes below, which colour the
