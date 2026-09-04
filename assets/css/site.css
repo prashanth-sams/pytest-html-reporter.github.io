@@ -659,8 +659,8 @@ a.card:hover .card__more svg { transform: translateX(3px); }
   letter-spacing: .08em; color: var(--text-faint);
 }
 .cmp td small {
-  display: block; margin-top: 6px; font-size: .74rem; line-height: 1.4;
-  color: var(--text-faint); text-wrap: balance;
+  display: block; margin-top: 8px; font-size: .76rem; line-height: 1.4;
+  color: var(--text-muted); text-wrap: balance;
 }
 .cmp td small code { font-size: .7rem; }
 .cmp__source {
@@ -669,14 +669,15 @@ a.card:hover .card__more svg { transform: translateX(3px); }
 }
 .cmp + .cmp__source + .note { margin-top: 22px; }
 
-/* The verdict marks. Green tick, red cross, nothing else to interpret. */
-.mark {
-  display: inline-grid; place-items: center; width: 26px; height: 26px;
-  border-radius: 50%; border: 1px solid transparent;
-}
-.mark svg { width: 14px; height: 14px; }
-.mark--y { color: var(--pass); background: var(--pass-soft); border-color: color-mix(in srgb, var(--pass) 30%, transparent); }
-.mark--n { color: var(--fail); background: var(--fail-soft); border-color: color-mix(in srgb, var(--fail) 30%, transparent); }
+/* The verdict marks. A bare tick and cross — no badge, the weight and the
+   colour carry them. The cross is drawn a shade smaller and softer than the
+   tick: two strokes crossing read heavier than one bent stroke at the same
+   size, and a table of negatives should not shout louder than the positives. */
+.mark { display: inline-grid; place-items: center; line-height: 0; }
+.mark svg { width: 23px; height: 23px; }
+.mark--y { color: var(--pass); }
+.mark--n { color: color-mix(in srgb, var(--fail) 90%, var(--text-faint)); }
+.mark--n svg { width: 19px; height: 19px; }
 
 /* Feature list — the whole of what the report holds, grouped and scannable.
    Each group takes a --tint from the .tint-* classes below, which colour the
