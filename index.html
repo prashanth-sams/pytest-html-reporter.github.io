@@ -275,7 +275,7 @@ report_screenshots = failed</code></pre>
       <span class="eyebrow">How it compares</span>
       <h2>One file, or a pipeline</h2>
       <p class="lede">
-        Three ways to get a report out of pytest, across thirty-five things a report is asked to do.
+        Three ways to get a report out of pytest, across thirty-nine things a report is asked to do.
         Where a tool can do something only with a flag or a line of your own code, the cell says
         which one.
       </p>
@@ -295,7 +295,7 @@ report_screenshots = failed</code></pre>
           </thead>
           <tbody>
             <tr>
-              <th scope="rowgroup" rowspan="5" class="cmp__sec">Getting a report out</th>
+              <th scope="rowgroup" rowspan="4" class="cmp__sec">Ease of setup</th>
               <th scope="row">The pytest run writes the finished report</th>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td>
@@ -306,12 +306,6 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>needs <code>--html=path</code></small></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>a plain <code>pytest</code> run writes one</small></td>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>needs <code>--alluredir</code>, then a render</small></td>
-            </tr>
-            <tr>
-              <th scope="row">One self-contained HTML file</th>
-              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>with <code>--self-contained-html</code>; otherwise an <code>assets/</code> folder</small></td>
-              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>always; everything is inlined</small></td>
-              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
             </tr>
             <tr>
               <th scope="row">Nothing to install beyond Python</th>
@@ -326,7 +320,26 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>through <code>allure serve</code></small></td>
             </tr>
             <tr>
-              <th scope="rowgroup" rowspan="5" class="cmp__sec">Reading a run</th>
+              <th scope="rowgroup" rowspan="3" class="cmp__sec">Report portability</th>
+              <th scope="row">One self-contained HTML file</th>
+              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>with <code>--self-contained-html</code>; otherwise an <code>assets/</code> folder</small></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>always; everything is inlined</small></td>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
+            </tr>
+            <tr>
+              <th scope="row">No second tool to render it</th>
+              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>the <code>allure</code> CLI does the rendering</small></td>
+            </tr>
+            <tr>
+              <th scope="row">A deep link to one test</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>survives a re-sort, a search and a page</small></td>
+              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>a URL per test case</small></td>
+            </tr>
+            <tr>
+              <th scope="rowgroup" rowspan="4" class="cmp__sec">Dashboard UX</th>
               <th scope="row">Status counts and run duration</th>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td>
@@ -351,13 +364,7 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>the Suites tab</small></td>
             </tr>
             <tr>
-              <th scope="row">Environment and build metadata</th>
-              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>its environment table</small></td>
-              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>--environment</code> and <code>--build-info</code></small></td>
-              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>environment.properties</code></small></td>
-            </tr>
-            <tr>
-              <th scope="rowgroup" rowspan="5" class="cmp__sec">When something fails</th>
+              <th scope="rowgroup" rowspan="3" class="cmp__sec">Failure triage</th>
               <th scope="row">Failures grouped by the exception behind them</th>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>biggest group first, tests named</small></td>
@@ -376,37 +383,46 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
             </tr>
             <tr>
-              <th scope="row">A deep link to one test</th>
-              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
-              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>survives a re-sort, a search and a page</small></td>
-              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>a URL per test case</small></td>
-            </tr>
-            <tr>
-              <th scope="row">Screenshots with no hook or fixture of your own</th>
+              <th scope="rowgroup" rowspan="2" class="cmp__sec">Screenshots</th>
+              <th scope="row">Taken with no hook or fixture of your own</th>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>you take and attach them</small></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>a failing Selenium or Playwright test is photographed</small></td>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>you take and attach them</small></td>
             </tr>
             <tr>
-              <th scope="rowgroup" rowspan="6" class="cmp__sec">Evidence kept with the test</th>
-              <th scope="row">Attach your own images, JSON or text</th>
-              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>through the extras hook</small></td>
-              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>four helpers</small></td>
-              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>through <code>allure.attach</code></small></td>
+              <th scope="row">A gallery of every picture the run took</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>inline on the row</small></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>a tab of its own, and a thumbnail on the row</small></td>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>per test, as attachments</small></td>
             </tr>
             <tr>
-              <th scope="row">HTTP calls logged with curl, credentials blanked</th>
-              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
-              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>both bodies, both header sets</small></td>
-              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
-            </tr>
-            <tr>
+              <th scope="rowgroup" rowspan="2" class="cmp__sec">Logs</th>
               <th scope="row">Captured stdout, stderr and logging</th>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>as attachments</small></td>
             </tr>
             <tr>
+              <th scope="row">How many lines each test produced</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>a column, opening the output section by section</small></td>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
+            </tr>
+            <tr>
+              <th scope="rowgroup" rowspan="2" class="cmp__sec">API debugging</th>
+              <th scope="row">Attach request and response payloads</th>
+              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>through the extras hook</small></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>four helpers</small></td>
+              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>through <code>allure.attach</code></small></td>
+            </tr>
+            <tr>
+              <th scope="row">The curl that repeats the call, credentials blanked</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>both bodies, both header sets</small></td>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
+            </tr>
+            <tr>
+              <th scope="rowgroup" rowspan="3" class="cmp__sec">Test steps &amp; BDD</th>
               <th scope="row">Named, timed, nested steps</th>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>step()</code>, as a block or a decorator</small></td>
@@ -425,7 +441,7 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>its own decorators instead</small></td>
             </tr>
             <tr>
-              <th scope="rowgroup" rowspan="4" class="cmp__sec">Behaviour over many builds</th>
+              <th scope="rowgroup" rowspan="4" class="cmp__sec">Flaky analysis</th>
               <th scope="row">History across builds</th>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>reports one run</small></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>archived in the page itself</small></td>
@@ -450,7 +466,7 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
             </tr>
             <tr>
-              <th scope="rowgroup" rowspan="2" class="cmp__sec">Coverage</th>
+              <th scope="rowgroup" rowspan="2" class="cmp__sec">Test coverage</th>
               <th scope="row">A Coverage tab when pytest-cov ran</th>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>ring, per-file rows, trend</small></td>
@@ -463,7 +479,7 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
             </tr>
             <tr>
-              <th scope="rowgroup" rowspan="4" class="cmp__sec">Running it at scale</th>
+              <th scope="rowgroup" rowspan="3" class="cmp__sec">xdist &amp; scale</th>
               <th scope="row">One report from a pytest-xdist run</th>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>merged in collection order</small></td>
@@ -482,13 +498,14 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>copy the result dirs together</small></td>
             </tr>
             <tr>
-              <th scope="row">JUnit XML from the same run</th>
+              <th scope="rowgroup" rowspan="1" class="cmp__sec">JUnit XML</th>
+              <th scope="row">Written by the same run</th>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>pytest's own <code>--junitxml</code></small></td>
-              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>--report-junit</code>, built from the same records</small></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>--report-junit</code>, from the same records</small></td>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>pytest's own <code>--junitxml</code></small></td>
             </tr>
             <tr>
-              <th scope="rowgroup" rowspan="4" class="cmp__sec">Around the report</th>
+              <th scope="rowgroup" rowspan="2" class="cmp__sec">Traceability / TMS</th>
               <th scope="row">Issue ids turned into links</th>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>--report-link-pattern</code></small></td>
@@ -501,6 +518,20 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
             </tr>
             <tr>
+              <th scope="rowgroup" rowspan="2" class="cmp__sec">Enterprise metadata</th>
+              <th scope="row">Environment and build details</th>
+              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>its environment table</small></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>--environment</code> and <code>--build-info</code></small></td>
+              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small><code>environment.properties</code></small></td>
+            </tr>
+            <tr>
+              <th scope="row">Severity, epic and story labels</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
+              <td class="is-us"><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small>markers, but no severity model</small></td>
+              <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>labels are part of its model</small></td>
+            </tr>
+            <tr>
+              <th scope="rowgroup" rowspan="2" class="cmp__sec">CI integration</th>
               <th scope="row">A first-party GitHub Action</th>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>publishes it and comments on the PR</small></td>
