@@ -498,7 +498,6 @@ strong, b { color: var(--text); font-weight: 640; }
 .hero__lede { font-size: 1.12rem; line-height: 1.62; color: var(--text-muted); max-width: 48ch; margin-bottom: 1.6rem; }
 
 .hero__pills { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 1.7rem; }
-.hero__pills .pill { border-radius: .5rem; }
 
 .badgerow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 1.5rem; }
 .badgerow img { height: 20px; display: inline-block; }
@@ -804,7 +803,7 @@ a.card:hover .card__more svg { transform: translateX(3px); }
 .pill {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: .76rem; font-weight: 600; padding: 4px 11px;
-  border-radius: var(--r-pill); border: 1px solid var(--border-strong);
+  border-radius: .5rem; border: 1px solid var(--border-strong);
   background: var(--bg-elev); color: var(--text-muted); white-space: nowrap;
 }
 .pill svg { width: 12px; height: 12px; }
