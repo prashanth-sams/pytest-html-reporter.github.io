@@ -494,9 +494,21 @@ strong, b { color: var(--text); font-weight: 640; }
 }
 .hero > .wrap { position: relative; z-index: 1; }
 
+/* The visual takes the larger share: it is a live screenshot of the report at
+   3380px wide, and the copy beside it is capped at 48ch anyway, so width spent
+   on the left column past that point only lengthens the pill rows. The right
+   column also eats most of the wrap's 24px gutter on a wide screen — a bleed
+   inside the padding, so the page never scrolls sideways for it. */
 .hero__grid {
   display: grid; grid-template-columns: minmax(0,1.06fr) minmax(0,.94fr);
-  gap: clamp(32px, 4vw, 64px); align-items: center;
+  gap: clamp(28px, 3.4vw, 56px); align-items: center;
+}
+/* Only once there is room to spend. Below this the tilted frame's own overhang
+   already reaches the edge of the viewport, and widening its column crops the
+   right-hand side of the report off the screen. */
+@media (min-width: 1280px) {
+  .hero__grid { grid-template-columns: minmax(0,1fr) minmax(0,1.14fr); }
+  .hero__visual { margin-right: -16px; }
 }
 .hero h1 { margin-bottom: .45em; }
 /* Blue-to-blue only. Interpolating brand blue straight into the brand yellow
