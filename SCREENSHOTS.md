@@ -75,7 +75,7 @@ rule — the src just has to point at something that exists.
 
 - [ ] **`environment-panel-flags.png`** &nbsp;·&nbsp; PNG
   - section: *Output location and identity*
-  - shows: The Environment panel of a report at 1440px wide, light theme, run with --environment=staging --build-info branch=main --build-info team=payments. Show the rows in order — Environment, branch, team, Captured output, Host, Platform, Python, pytest, Plugins, Arguments, Root, Generated — with callouts naming which flag produced the first three.
+  - shows: The Environment panel of a report at 1440px wide, light theme, run with --environment=staging --build-info branch=main --build-info team=payments. Show the rows in order — Environment, branch, team, CI, Pipeline, Commit, Captured output, Host, Platform, Python, Interpreter, pytest, Plugins, Arguments, Root, Generated — with callouts naming which flag produced the first three and which rows were detected without one.
 - [ ] **`shard-layout.png`** &nbsp;·&nbsp; PNG
   - section: *Sharded runs*
   - shows: A file-tree diagram of a merged report folder: report/ holding pytest_html_report.html, output.json, archive/, pytest_screenshots/ and shards/1-4 … 4-4, each with records.json and pytest_screenshots/. Draw four arrows from four CI jobs into the four shard folders, and one arrow from the merge command into the four top-level files. Both themes.

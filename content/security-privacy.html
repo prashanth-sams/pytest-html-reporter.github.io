@@ -42,6 +42,16 @@ page.</div>
         <td>No — but it is a complete inventory of your test toolchain.</td>
       </tr>
       <tr>
+        <td class="t-nowrap">The CI system, the pipeline URL, the branch and the commit</td>
+        <td>Environment panel</td>
+        <td>Not directly &mdash; but from 0.4.2 a published report names the pipeline it came from and the revision under test, without anybody having asked. A private repository's branch names and commit shas are in a report published to Pages.</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap">The interpreter path, and the worker count under <code>-n</code></td>
+        <td>Environment panel</td>
+        <td>The path names a virtualenv, and on a laptop usually a home directory.</td>
+      </tr>
+      <tr>
         <td class="t-nowrap">The full pytest command line</td>
         <td>Environment panel, <code>Arguments</code></td>
         <td><strong>Yes.</strong> Whatever you passed is printed as you passed it.</td>
@@ -85,10 +95,17 @@ page.</div>
   </table>
 </div>
 
+<div class="note note--warn"><span class="note__title">Careful</span>One row is opt-in and worth
+knowing about before you turn it on: <a href="configuration.html#report-packages"><code>--report-packages</code></a>
+adds a <code>Packages</code> row holding every installed distribution and its version. That is a complete
+dependency inventory of the machine, published into a file that gets attached to tickets and passed
+around. It is off by default for exactly that reason.</div>
+
 <h3 id="the-environment-block">The environment block</h3>
 
-<p><code>generate_environment_info()</code> in <code>util.py</code> writes a fixed set of rows in
-a fixed order. Two of them are worth reading twice.</p>
+<p><code>environment_entries()</code> in <code>util.py</code> writes a fixed set of rows in a fixed
+order: what ran, then what it ran on, then what it was told to do. Several of them are worth reading
+twice.</p>
 
 <div class="codeblock">
   <div class="codeblock__head">
@@ -101,16 +118,23 @@ a fixed order. Two of them are worth reading twice.</p>
     </button>
   </div>
   <pre><code data-lang="output">Environment       staging                       # only when --environment is set
-commit            9f2c1ab                       # one row per --build-info entry
+team              payments                      # one row per --build-info entry
+CI                GitHub Actions #482           # detected, unless build_info said ci=
+Pipeline          https://github.com/acme/payments-api/actions/runs/1234/attempts/2
+Branch            release/9.2                   # from the CI system, else from git
+Commit            9f2c1ab
 Captured output   all tests: stdout, stderr and logging, logging from WARNING
 Host              fv-az1024-473                 # platform.uname().node
-Platform          Linux 6.8.0-1017-azure
-Python            3.12.7
+Platform          Ubuntu 22.04.4 LTS &middot; Linux 6.8.0-1017-azure (x86_64)
+Python            3.12.7 (CPython, 64-bit)
+Interpreter       /home/runner/work/payments-api/.venv/bin/python
 pytest            8.3.4
-Plugins           cov-6.0.0, html-reporter-0.4.1, xdist-3.6.1
+Plugins           cov-6.0.0, html-reporter-0.4.2, xdist-3.6.1
+Workers           8                             # only under -n
 Arguments         tests/ --html-report=report/index.html -q
 Root              /home/runner/work/payments-api/payments-api
-Generated         Sep 03 2026, 11:04:18</code></pre>
+Packages (214)    attrs==24.2.0, boto3==1.35.0, ...   # only with --report-packages
+Generated         Sep 05 2026, 11:04:18</code></pre>
 </div>
 
 <p><strong>Arguments</strong> is <code>config.invocation_params.args</code> — the command line
@@ -118,6 +142,15 @@ pytest was started with, minus the executable, joined with spaces. A credential 
 pytest argument is in the report. <strong>Root</strong> is <code>config.rootpath</code>, an
 absolute path: on a CI runner it usually spells out the org and the repository, and on a laptop
 it spells out the user's home directory.</p>
+
+<p><strong>Pipeline</strong>, <strong>Branch</strong> and <strong>Commit</strong> are detected
+rather than configured, so a report that used to say nothing about where it came from now names the
+build and the revision. Nothing is fetched to do it &mdash; the values come from the CI system's own
+environment variables, and from <code>git</code> when it is not a CI run. If that is more than you want
+published, name the rows yourself through <code>--build-info</code>: a <code>branch</code>,
+<code>commit</code>, <code>ci</code> or <code>pipeline</code> you have given wins, and the detected value
+is dropped rather than shown beside it. <strong>Interpreter</strong> is <code>sys.executable</code>,
+which on a laptop spells out a home directory the same way <code>Root</code> does.</p>
 
 <p><strong>Plugins</strong> comes from <code>pluginmanager.list_plugin_distinfo()</code>, with the
 <code>pytest-</code> prefix stripped and the version appended. It is not a secret, but it is a

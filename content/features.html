@@ -163,8 +163,8 @@ failures, and whether the suite is moving in the right direction.</p>
   <article class="card">
     <div class="card__icon is-pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg></div>
     <h3 id="the-environment-panel">Environment panel</h3>
-    <p>What the run was, what it was told about the build, and what it kept of the output —
-    opened from a chip on the summary card.</p>
+    <p>What the run was, where it ran, which pipeline and commit it came from, and what it kept of
+    the output — opened from a chip on the summary card. Most of it needs no flag.</p>
   </article>
 </div>
 
@@ -182,6 +182,7 @@ the <code>Test Steps</code> tab rather than as an eleventh.</p>
       <tr><td class="t-nowrap"><code>Data</code></td><td>How many payloads the test attached. Clicking it crosses to the <code>API Logs</code> tab with the list already narrowed to that one test.</td></tr>
       <tr><td class="t-nowrap"><code>Screens</code></td><td>A thumbnail of the screenshot taken for that test, next to the error it explains, opening full size when clicked.</td></tr>
       <tr><td class="t-nowrap"><code>Steps</code></td><td>Crosses to the test's step tree on the <code>Test Steps</code> tab.</td></tr>
+      <tr><td class="t-nowrap"><code>Rerun</code></td><td>How many attempts the test took. From 0.4.2 a non-zero count is a button, opening the trail of what each attempt did. A test that ran once shows a plain, disabled <code>0</code>.</td></tr>
       <tr><td class="t-nowrap"><code>Error Message</code></td><td>The failure, truncated in the cell and expandable in place, with the copy buttons beside it.</td></tr>
     </tbody>
   </table>
@@ -213,9 +214,24 @@ replacing them.</p>
   <pre><code data-lang="shell">$ pytest tests/ --environment=prod --build-info branch=main --build-info sha=$GITHUB_SHA</code></pre>
 </div>
 
-<p>The same panel states what the run kept of the output and from which log level — for example
+<p>The same panel states what the run kept of the output and from which log level &mdash; for example
 <code>all tests: stdout, stderr and logging, logging from WARNING</code> — so there is always
 somewhere to check which mode you are in.</p>
+
+<div class="note note--new"><span class="note__title">New in 0.4.2</span>Most of the panel now needs no
+flag at all. A report is read a week later by somebody who cannot re-run it, so everything answerable
+without being asked is answered: the <strong>CI system</strong> and a <strong>Pipeline</strong> link back
+to the build, the <strong>branch</strong> and <strong>commit</strong> under test, the operating system
+named the way its own users name it, the <strong>interpreter</strong> that actually ran, and &mdash; under
+<code>-n</code> &mdash; how many <code>xdist</code> <strong>workers</strong> reported results. Nothing you
+have already named through <code>--build-info</code> is overruled. See
+<a href="ci-integrations.html#environment-detection">CI integrations</a>.</div>
+
+<p>One row is opt-in: <a href="configuration.html#report-packages"><code>--report-packages</code></a> adds
+a <code>Packages</code> row listing every installed distribution and its version, the way
+<code>pip freeze</code> reads. It is off by default because it is a few hundred entries nobody reads until
+the day the report is the only surviving record of what was installed &mdash; and it publishes a full
+dependency inventory into a file that gets passed around.</p>
 
 <h3 id="the-failure-delta">The failure delta</h3>
 
@@ -931,8 +947,20 @@ not in the report. pytest reports the crash itself.</div>
 
 <h3 id="reruns">Reruns</h3>
 
-<p>The plugin reacts to <code>pytest-rerunfailures</code>; there is no rerun-specific flag to set.
-Two behaviours are worth knowing, and they deliberately differ:</p>
+<p>The plugin reacts to <code>pytest-rerunfailures</code>; there is no rerun-specific flag to set. A
+retried test is <strong>one row carrying the outcome that stuck</strong>, with the attempts it took in the
+<code>Rerun</code> column.</p>
+
+<div class="note note--new"><span class="note__title">New in 0.4.2</span>That count is also a button, and
+the panel behind it lists every attempt in order &mdash; what each one did, how long it took and the full
+error it raised &mdash; ending on the attempt the row itself is showing, marked <code>kept</code>. A test
+that failed twice and then passed used to read <code>PASS&nbsp;&nbsp;2</code> with nothing anywhere in the
+report saying what it had failed with; two failures for two different reasons is a different bug report
+from the same failure twice. The panel's <strong>Copy</strong> button hands the trail over in the shape
+somebody pastes into an issue. See <a href="ci-integrations.html#the-attempt-trail">the attempt
+trail</a>.</div>
+
+<p>Two more behaviours are worth knowing, and they deliberately differ:</p>
 
 <ul class="featlist">
   <li>

@@ -1,4 +1,4 @@
-<!--META {"title": "Changelog", "eyebrow": "Project", "description": "Every released version of pytest-html-reporter, newest first, with what changed and what changes under you when you upgrade.", "lede": "Twenty-seven releases, read from the project's own CHANGELOG.txt. The plugin shipped fifteen small releases between July 2020 and February 2022, went quiet for four and a half years, then shipped twelve releases in seven days to reach 0.4.1."} -->
+<!--META {"title": "Changelog", "eyebrow": "Project", "description": "Every released version of pytest-html-reporter, newest first, with what changed and what changes under you when you upgrade.", "lede": "Twenty-eight releases, read from the project's own CHANGELOG.txt. The plugin shipped fifteen small releases between July 2020 and February 2022, went quiet for four and a half years, then shipped thirteen releases in eight days to reach 0.4.2."} -->
 
 <h2 id="published-releases">Where releases are published</h2>
 
@@ -10,11 +10,13 @@ inside the package, so a rendered report has no JavaScript or CDN dependency at 
 
 <div class="note note--new">
   <span class="note__title">Current release</span>
-  <strong>0.4.1</strong>, 4 September 2026 &mdash; the version <code>setup.py</code> declares. It turns
-  a marker holding an id into a link, adds the built-in <code>owner</code> and <code>severity</code>
-  markers with a filter row and an Analytics panel each, writes all three into the JUnit xml as
-  testcase properties, and makes <code>step</code> work in <code>async</code> tests. It also raises
-  <code>python_requires</code> to <code>&gt;=3.7</code>.
+  <strong>0.4.2</strong>, 5 September 2026 &mdash; the version <code>setup.py</code> declares. It turns
+  the <code>Rerun</code> count into a button opening the trail of every attempt the test made, and fills the
+  <code>Environment</code> panel in on its own: the CI system detected from its own variables with a
+  <code>Pipeline</code> link back to the build, the branch and commit under test, the operating system named
+  the way its own users name it, the interpreter that actually ran and, on a parallel run, how many
+  <code>xdist</code> workers reported results. The new <code>--report-packages</code> adds a full
+  <code>pip freeze</code> inventory for the runs that want one.
 </div>
 
 <p>Upgrades within the 0.3.x line change behaviour as well as adding features, so pin the version if
@@ -31,7 +33,7 @@ upgrade</a> below before moving off 0.2.x.</p>
       <span class="copybtn__label">Copy</span>
     </button>
   </div>
-  <pre><code data-lang="shell">$ pip install pytest-html-reporter==0.4.1
+  <pre><code data-lang="shell">$ pip install pytest-html-reporter==0.4.2
 $ pip install --upgrade pytest-html-reporter</code></pre>
 </div>
 
@@ -43,13 +45,109 @@ released and undocumented or never used, so they are absent here rather than rec
 
 <h2 id="release-timeline">Release timeline</h2>
 
-<p>The 2026 line, newest first. Twelve releases between 29 August and 4 September 2026, several
+<p>The 2026 line, newest first. Thirteen releases between 29 August and 5 September 2026, several
 landing on the same day, each of them larger than anything in the plugin's first era.</p>
 
 <div class="tl">
 
   <div class="tl__item is-latest">
-    <div class="tl__head"><span class="tl__ver">0.4.1</span><span class="tl__date">4 Sep 2026</span><span class="pill pill--brand">latest</span></div>
+    <div class="tl__head"><span class="tl__ver">0.4.2</span><span class="tl__date">5 Sep 2026</span><span class="pill pill--brand">latest</span></div>
+    <ul>
+      <li><strong>The <code>Rerun</code> count is now a button, and behind it is every attempt the test
+        made.</strong> A retried test has always been reported as one row carrying the outcome that stuck
+        &mdash; which is the honest shape &mdash; but the row shows the message of <em>that</em> attempt,
+        and an attempt that stuck by passing has no message, so a test that failed twice and then passed
+        said <code>PASS&nbsp;&nbsp;2</code> and nothing anywhere in the report said what it had failed
+        with. The panel lists the attempts in order with what each one did, how long it took and the full
+        error it raised, and ends on the attempt the row itself is showing, marked <code>kept</code>:
+        ending on the last attempt that was thrown away would leave a panel whose final line disagrees
+        with the row that opened it. Two failures for two different reasons is a different bug report from
+        the same failure twice, and neither is visible from a count, so the panel's <strong>Copy</strong>
+        button hands the trail over as one line per attempt followed by that attempt's message &mdash; the
+        shape somebody pastes into an issue. See <a href="report-tour.html#the-rerun-trail">Report
+        tour</a>.</li>
+      <li><strong>The count and the trail always agree, across both folds.</strong> A row saying three
+        reruns beside a panel showing two attempts is worse than either alone: it says the report lost one.
+        A retry inside one process and a node id that ran in two shards are separate mechanisms &mdash; the
+        second deliberately does not go through the first, since which plugins are installed on the merging
+        machine is not a fact about the matrix &mdash; so both now keep what they drop, and a test retried
+        twice on a shard that then ran again on another machine reports four attempts and shows four. Under
+        <code>-n</code> each attempt says which xdist worker ran it; a worker sends back records it has
+        already folded itself, so the controller keeps both sides' attempts and puts the record being
+        replaced between them, where it belongs. <code>first</code>, <code>last</code> and <code>worst</code>
+        leave the trail alone &mdash; those policies mean <em>this shard's answer</em> rather than a fold, and
+        manufacturing a trail under them would report attempts the chosen record never made. See
+        <a href="ci-integrations.html#reruns-and-retries">CI integrations</a>.</li>
+      <li><strong>An attempt keeps four fields and not the record it came from</strong> &mdash; status,
+        message, duration, worker. A shard bundle is the record list exactly as it stands in memory, so
+        keeping whole attempts would multiply every bundle a matrix uploads by the number of times its
+        flakiest tests were retried, and put a copy of each discarded attempt's logs and screenshots in it.
+        The count is still rendered exactly once in its cell, because the cell's text is what the table's
+        search index and every CSV, Excel and print export take. A test that ran once keeps the plain
+        <code>0</code> the column has always shown, and so does a build archived before this version: the
+        count was stored, the attempts behind it were not, and an empty panel would be worse than none. The
+        button is disabled rather than only styled flat, so it is not a tab stop either. Nothing needs
+        enabling &mdash; <code>--reruns</code>, the <code>reruns</code> ini key,
+        <code>@pytest.mark.flaky(reruns=n)</code> and <code>--only-rerun</code> are all read the way the
+        count already read them, by counting the attempts that actually happened.</li>
+      <li><strong>The <code>Environment</code> panel now fills itself in.</strong> It could name the host,
+        the Python and the pytest &mdash; the easy half of what a report is asked a week later &mdash; while
+        the half that explains a red build was left to whoever remembered to write a <code>--build-info</code>
+        flag before the run. The CI system is now detected from its own variables and a <code>Pipeline</code>
+        row links straight back to the build that produced the report. GitHub Actions, GitLab CI, Jenkins,
+        CircleCI, Buildkite, Azure Pipelines, Travis CI, AppVeyor, Drone, Bitbucket Pipelines, Semaphore,
+        AWS CodeBuild and TeamCity are named individually; anything else that sets <code>CI</code> is still
+        recorded as a build agent rather than passed off as somebody's laptop. Where a system publishes its
+        own build url it is used as given rather than assembled, so a self-hosted install, a reverse proxy or
+        a renamed domain is linked correctly and not to a page on the vendor's hosting that does not exist. A
+        re-run GitHub Actions workflow links its own attempt: <code>GITHUB_RUN_ID</code> deliberately does
+        not change on a re-run, so the bare run url opens the <em>latest</em> attempt, and a report written by
+        attempt 1 would have linked somebody else's failure. See
+        <a href="ci-integrations.html#environment-detection">CI integrations</a>.</li>
+      <li><strong><code>Branch</code> and <code>Commit</code> are read from the CI system where it publishes
+        them and from <code>git</code> otherwise.</strong> That order matters: a CI checkout is a detached
+        <code>HEAD</code>, where git itself answers <code>HEAD</code>, which is true and useless, while the
+        system knows the branch somebody clicked. A folder that is not a checkout gets no rows rather than a
+        traceback. Detection never overrules you either &mdash; a <code>branch</code>, <code>commit</code>,
+        <code>ci</code> or <code>pipeline</code> already named through <code>--build-info</code> or the
+        <code>build_info</code> ini key is the answer shown, and the detected one is dropped rather than
+        rendered beside it disagreeing.</li>
+      <li><strong>Three rows say what actually ran the tests.</strong> <code>Platform</code> names the
+        operating system the way its own users do &mdash; <code>Ubuntu 22.04.4 LTS &middot; Linux 5.15.0
+        (x86_64)</code>, <code>macOS 15.6 (arm64)</code> &mdash; rather than the kernel string: nobody reading
+        a report thinks in <code>Darwin 24.6.0</code>, and the architecture is the difference between two
+        machines that agree about every other row and installed different wheels. <code>Python</code> carries
+        the implementation and word size, and a new <code>Interpreter</code> row names the <code>python</code>
+        that actually ran &mdash; the row that ends an argument about which virtualenv was active. A parallel
+        run gets a <code>Workers</code> row counting the <code>xdist</code> workers that reported results,
+        counted rather than taken from <code>-n</code>, and it says <code>3 of 8 requested</code> when they
+        differ: xdist quietly runs fewer workers than asked for when there are fewer tests than workers, and
+        a report claiming eight when three ran reads as five crashes. A serial run gets no row, since
+        &quot;1 worker&quot; answers a question nobody asked.</li>
+      <li><strong><code>--report-packages</code> lists every installed distribution and its version</strong>,
+        the way <code>pip freeze</code> reads, in a <code>Packages</code> row that carries the count in its
+        label. <code>report_packages</code> in the ini does the same, and is usually where it belongs: an
+        inventory is a property of the job rather than of one run. It is off by default on purpose &mdash; it
+        is a few hundred entries nobody reads until the day the report is the only surviving record of what
+        was installed, and it publishes a dependency inventory into a file that gets attached to tickets. The
+        <code>Plugins</code> row answers a much smaller question, and the library whose new minor version
+        broke the suite last night is almost never a pytest plugin. See
+        <a href="configuration.html#report-packages">Configuration</a>.</li>
+      <li><strong>All of it survives a merge</strong>, because a shard collects it on the machine that ran
+        the tests. A merging job that asked its own environment which CI run this was would answer with the
+        merge job, and one running on a laptop would answer with nothing at all. The merged panel says it once
+        when the legs agree and says both when they do not: two legs naming two pipelines link neither
+        &mdash; a link to the first would be read as the whole build's &mdash; and two legs that ran different
+        commits are both named, since that is the one fact explaining why half a matrix failed. Each shard's
+        row now carries the distribution it ran on and how many workers split it. Bundles written by an
+        earlier version merge unchanged: every new key reads back as &quot;this leg never said&quot;, which is
+        exactly what an older leg means by leaving it out, so a matrix half-upgraded mid-migration needs no
+        version bump and loses nothing.</li>
+    </ul>
+  </div>
+
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.4.1</span><span class="tl__date">4 Sep 2026</span></div>
     <ul>
       <li><strong>A marker holding an id can now be a link.</strong>
         <code>report_link_pattern</code> takes one <code>MARKER=URL</code> per line &mdash;
@@ -573,6 +671,16 @@ in a substantially different plugin, so the notes are grouped by what will actua
     <thead><tr><th>Since</th><th>What changes</th><th>How to keep the old behaviour</th></tr></thead>
     <tbody>
       <tr>
+        <td class="t-nowrap"><code>0.4.2</code></td>
+        <td>The <code>Rerun</code> cell is a button on any test that was retried, and opens a panel of the attempts behind it. The number in the cell is unchanged, and so is the cell's text, so search and the exports read exactly as before.</td>
+        <td>&mdash;</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>0.4.2</code></td>
+        <td>The <code>Environment</code> panel grows rows nobody asked for: <code>CI</code>, <code>Pipeline</code>, <code>Branch</code>, <code>Commit</code>, <code>Interpreter</code> and, under <code>-n</code>, <code>Workers</code>. <code>Platform</code> changes wording, naming the operating system rather than the kernel. A published report therefore now names the branch, the commit and the pipeline it came from.</td>
+        <td>Name them yourself with <code>--build-info</code>, which wins</td>
+      </tr>
+      <tr>
         <td class="t-nowrap"><code>0.4.1</code></td>
         <td><code>python_requires</code> rose from <code>&gt;=3.5</code> to <code>&gt;=3.7</code>, which is what <code>contextvars</code> needs. <code>pip</code> on 3.5 or 3.6 will resolve to 0.4.0 rather than refusing.</td>
         <td class="t-nowrap"><code>pytest-html-reporter==0.4.0</code></td>
@@ -639,6 +747,13 @@ in a substantially different plugin, so the notes are grouped by what will actua
 <h3 id="content-and-exports">Report content and exports that change shape</h3>
 
 <ul>
+  <li><strong>0.4.2</strong> &mdash; nothing in the metrics table's text changes: the attempt trail is parked
+    outside the table the way step trees (0.3.8), captured logs (0.3.3) and attachments (0.3.5) already are, so
+    it is absent from the table's search index and from its CSV, Excel and print exports, and the
+    <code>Rerun</code> column still exports the single number it always did. The <code>Environment</code> panel
+    gains the detected <code>CI</code>, <code>Pipeline</code>, <code>Branch</code>, <code>Commit</code>,
+    <code>Interpreter</code> and <code>Workers</code> rows, plus a <code>Packages</code> row when
+    <code>--report-packages</code> asked for one.</li>
   <li><strong>0.4.1</strong> &mdash; the JUnit xml gains a <code>&lt;properties&gt;</code> element on each
     testcase that carries <code>owner</code>, <code>severity</code> or a marker named in
     <code>report_link_pattern</code>, written ahead of the outcome where pytest's own writer puts
@@ -669,6 +784,11 @@ line &mdash; are built by reading back the <code>output.json</code> each build w
 builds is usually written by more than one version of the plugin.</p>
 
 <ul>
+  <li><strong>0.4.2</strong> &mdash; the attempt trail is <em>not</em> archived. A build written before this
+    version stored the rerun count and not the attempts behind it, so its rows keep the count and offer no
+    panel &mdash; an empty one would be worse than none. Shard bundles written by an earlier version merge
+    unchanged: every key added in this version reads back as &quot;this leg never said&quot;, which is what an
+    older leg means by leaving it out.</li>
   <li><strong>0.4.1</strong> &mdash; <code>output.json</code> gained each test's <code>owner</code> and
     <code>severity</code>, which is what lets the two new Analytics panels read across builds at all. Builds
     archived by an earlier version carry neither key and are read as unclaimed and unrated rather than as

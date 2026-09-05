@@ -706,8 +706,8 @@ version lives in exactly two places that must agree:</p>
   <table>
     <thead><tr><th>File</th><th>Line</th></tr></thead>
     <tbody>
-      <tr><td class="t-nowrap"><code>setup.py</code></td><td><code>version=&quot;0.4.1&quot;</code></td></tr>
-      <tr><td class="t-nowrap"><code>pytest_html_reporter/__init__.py</code></td><td><code>__version__ = &quot;0.4.1&quot;</code> — what <code>pytest-html-reporter --version</code> prints</td></tr>
+      <tr><td class="t-nowrap"><code>setup.py</code></td><td><code>version=&quot;0.4.2&quot;</code></td></tr>
+      <tr><td class="t-nowrap"><code>pytest_html_reporter/__init__.py</code></td><td><code>__version__ = &quot;0.4.2&quot;</code> — what <code>pytest-html-reporter --version</code> prints</td></tr>
     </tbody>
   </table>
 </div>
@@ -728,8 +728,8 @@ $ python -m build
 $ twine check dist/*
 $ twine upload --repository testpypi dist/*     # optional
 $ twine upload dist/*
-$ git tag -a v0.4.1 -m &quot;Release version 0.4.1&quot;
-$ git push origin v0.4.1</code></pre>
+$ git tag -a v0.4.2 -m &quot;Release version 0.4.2&quot;
+$ git push origin v0.4.2</code></pre>
 </div>
 
 <p>Then draft a GitHub release from the tag, with <code>CHANGELOG.txt</code> as the description.</p>
@@ -744,8 +744,15 @@ ship a package that generates a blank white page.</div>
 <p><code>MANIFEST.in</code> also prunes <code>tests/</code>, <code>test_draft/</code> and
 <code>venv/</code>, and excludes <code>CHANGELOG.txt</code> and <code>requirements.txt</code>.</p>
 
-<p>One manual step that is easy to miss: the PyPI badge in <code>README.rst</code> carries a
-cache-buster, <code>badge.fury.io/py/pytest-html-reporter.svg?v=0.4.1</code>. It has to be bumped
+<div class="note"><span class="note__title">Note</span>The long description shipped in the package
+is not the file on disk. <code>setup.py</code> rewrites every relative <code>images/&hellip;</code> path in
+<code>README.md</code> to an absolute <code>raw.githubusercontent.com</code> URL before handing it to
+<code>long_description</code>, because PyPI renders the description on its own domain with no base URL &mdash;
+a path that resolves on GitHub 404s there, and the project page shows broken images. The file in the repository
+stays relative.</div>
+
+<p>One manual step that is easy to miss: the PyPI badge in <code>README.md</code> carries a
+cache-buster, <code>badge.fury.io/py/pytest-html-reporter.svg?v=0.4.2</code>. It has to be bumped
 by hand at release time, so a stale badge is a slip in this process rather than a broken
 publish.</p>
 

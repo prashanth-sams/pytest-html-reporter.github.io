@@ -57,7 +57,7 @@ commands = pytest tests/ --html-report=./report --title=&quot;Payments Regressio
   </div>
 </div>
 
-<p>Twenty-five of the twenty-six options also have an ini key, so most of this page has a second, quieter form in <a href="configuration.html">the configuration reference</a>. <code>--title</code> is the one exception: it is command-line only.</p>
+<p>Twenty-six of the twenty-seven options also have an ini key, so most of this page has a second, quieter form in <a href="configuration.html">the configuration reference</a>. <code>--title</code> is the one exception: it is command-line only.</p>
 
 <h2 id="quick-reference">Quick reference</h2>
 
@@ -71,6 +71,7 @@ commands = pytest tests/ --html-report=./report --title=&quot;Payments Regressio
       <tr><td class="t-nowrap"><code>--title</code></td><td>text</td><td class="t-nowrap"><code>PYTEST REPORT</code></td><td>The report title. The displayed copy is cut at 20 characters.</td></tr>
       <tr><td class="t-nowrap"><code>--environment</code></td><td>text</td><td class="t-nowrap">unset</td><td>Names the environment under test; badge cut at 10 characters.</td></tr>
       <tr><td class="t-nowrap"><code>--build-info</code></td><td><code>KEY=VALUE</code>, repeatable</td><td class="t-nowrap">none</td><td>Extra rows in the Environment panel.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-packages</code></td><td>flag</td><td class="t-nowrap">off</td><td>Add a <code>Packages</code> row listing every installed distribution.</td></tr>
       <tr><td class="t-nowrap"><code>--report-link</code></td><td><code>LABEL=URL</code>, repeatable</td><td class="t-nowrap">none</td><td>Extra entries in the report&#039;s side nav.</td></tr>
       <tr><td class="t-nowrap"><code>--report-link-pattern</code></td><td><code>MARKER=URL</code>, repeatable</td><td class="t-nowrap">none</td><td>Turns a marker into a link on the test it is written on.</td></tr>
       <tr><td class="t-nowrap"><code>--report-open</code></td><td><code>auto</code> | <code>always</code> | <code>none</code></td><td class="t-nowrap"><code>auto</code></td><td>Whether the finished report is handed to a browser.</td></tr>
@@ -168,7 +169,7 @@ html_report = ./reports/%Y%m%d/report_%H%M.html</code></pre>
 
 <h2 id="output-location-and-identity">Output location and identity</h2>
 
-<p>Four options that decide where the build is written and what the page says about itself.</p>
+<p>Five options that decide where the build is written and what the page says about itself.</p>
 
 <div class="def">
   <div class="def__head">
@@ -282,10 +283,40 @@ $ pytest --html-report=./reports/%%Y%%m%%d.html  # ./reports/20260903.html</code
   </div>
 </div>
 
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-packages</span>
+    <div class="def__meta">
+      <span class="pill">flag</span>
+      <span class="pill pill--brand">default: off</span>
+      <span class="pill">ini: report_packages</span>
+      <span class="pill pill--brand">new in 0.4.2</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Adds one more row to the Environment panel: <code>Packages</code>, holding every installed distribution and its version the way <code>pip freeze</code> reads them, with the count in the label &mdash; <code>Packages (214)</code>. Names sort case-insensitively, and a distribution whose metadata cannot be read is skipped rather than costing the other two hundred.</p>
+    <p>It is off by default on purpose. It is a few hundred entries nobody reads until the day the report is the only surviving record of what was installed &mdash; and it publishes a full dependency inventory into a file that gets attached to tickets and passed around. The <code>Plugins</code> row answers a much smaller question, and the library whose new minor version broke the suite last night is almost never a pytest plugin.</p>
+    <p>It is a <strong>switch</strong> rather than a value, like <code>--report-shard-merge</code> and <code>--report-shard-reset</code>: the flag turns it on, and so does a truthy <code>report_packages</code> ini key (<code>1</code>, <code>true</code>, <code>yes</code>, <code>on</code>). There is nothing on the command line that turns off an ini file which has already said yes. Listing what was installed is a property of the job rather than of one run, so the ini file is usually where it belongs.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">One run's inventory, on demand</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/ --html-report=./report --report-packages</code></pre>
+    </div>
+    <p>On a <a href="#sharded-runs">sharded run</a> each leg collects the list for itself, on the machine that actually imported those versions. The merged report shows one list when every leg agrees and one row per leg when they do not, which is the case the row exists for.</p>
+  </div>
+</div>
+
 <figure class="imgslot" data-shot="environment-panel-flags.png">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
   <b>Screenshot: assets/img/shots/environment-panel-flags.png</b>
-  <span>The Environment panel of a report at 1440px wide, light theme, run with <code>--environment=staging --build-info branch=main --build-info team=payments</code>. Show the rows in order — Environment, branch, team, Captured output, Host, Platform, Python, pytest, Plugins, Arguments, Root, Generated — with callouts naming which flag produced the first three.</span>
+  <span>The Environment panel of a report at 1440px wide, light theme, run with <code>--environment=staging --build-info branch=main --build-info team=payments</code>. Show the rows in order — Environment, branch, team, CI, Pipeline, Commit, Captured output, Host, Platform, Python, Interpreter, pytest, Plugins, Arguments, Root, Generated — with callouts naming which flag produced the first three and which rows were detected without one.</span>
 </figure>
 
 <h2 id="navigation-and-opening">Navigation and opening the report</h2>
@@ -1599,11 +1630,11 @@ $ python -m pytest_html_reporter --version</code></pre>
 }</code></pre>
 </div>
 
-<p><code>install_requires</code> is <code>pytest</code> and <code>Pillow</code>, neither pinned, and <code>python_requires</code> is <code>&gt;=3.5</code>. <code>coverage</code> is the one optional dependency, imported lazily and only by <code>--coverage-data</code>. Everything else the plugin integrates with — pytest-xdist, pytest-rerunfailures, pytest-bdd, pytest-cov — is detected at runtime and never declared.</p>
+<p><code>install_requires</code> is <code>pytest</code> and <code>Pillow</code>, neither pinned, and <code>python_requires</code> is <code>&gt;=3.7</code>, raised from <code>&gt;=3.5</code> in 0.4.1 because the async step machinery is <code>contextvars</code>. <code>coverage</code> is the one optional dependency, imported lazily and only by <code>--coverage-data</code>. Everything else the plugin integrates with — pytest-xdist, pytest-rerunfailures, pytest-bdd, pytest-cov — is detected at runtime and never declared.</p>
 
 <h2 id="environment-variables">Environment variables</h2>
 
-<p>The plugin reads no configuration of its own from the environment. It reads three sets of variables that other things set, plus whatever the shell puts into a path.</p>
+<p>The plugin reads no configuration of its own from the environment. It reads four sets of variables that other things set, plus whatever the shell puts into a path.</p>
 
 <h3 id="ci-detection-variables">Is this a build agent? (<code>--report-open=auto</code>)</h3>
 
@@ -1612,6 +1643,40 @@ $ python -m pytest_html_reporter --version</code></pre>
 <p><code>CI</code>, <code>CONTINUOUS_INTEGRATION</code>, <code>BUILD_ID</code>, <code>BUILD_NUMBER</code>, <code>GITHUB_ACTIONS</code>, <code>GITLAB_CI</code>, <code>JENKINS_URL</code>, <code>HUDSON_URL</code>, <code>TEAMCITY_VERSION</code>, <code>TF_BUILD</code>, <code>CIRCLECI</code>, <code>TRAVIS</code>, <code>BUILDKITE</code>, <code>APPVEYOR</code>, <code>DRONE</code>, <code>BITBUCKET_BUILD_NUMBER</code>, <code>CODEBUILD_BUILD_ID</code>.</p>
 
 <p>A variable set to <code>&quot;&quot;</code>, <code>0</code>, <code>false</code>, <code>no</code> or <code>off</code> counts as <em>not</em> CI. <code>CI=false</code> is a real thing to write, and reading it as &quot;this is CI&quot; gets it exactly backwards.</p>
+
+<h3 id="build-detection-variables">Which build was this? (the Environment panel)</h3>
+
+<div class="note note--new"><span class="note__title">New in 0.4.2</span>A second, larger set of variables fills in the panel's <code>CI</code>, <code>Pipeline</code>, <code>Branch</code> and <code>Commit</code> rows. This is a different question from the one above &mdash; that one asks only <em>is this a build agent</em>, and this one asks <em>which build</em>.</div>
+
+<p>The system is identified by the variable that actually names it, tested in this order, and the first that answers wins:</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>System</th><th>Identified by</th><th>Pipeline URL from</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap">GitHub Actions</td><td class="t-nowrap"><code>GITHUB_ACTIONS</code></td><td>Assembled from <code>GITHUB_SERVER_URL</code>, <code>GITHUB_REPOSITORY</code>, <code>GITHUB_RUN_ID</code> and <code>GITHUB_RUN_ATTEMPT</code></td></tr>
+      <tr><td class="t-nowrap">GitLab CI</td><td class="t-nowrap"><code>GITLAB_CI</code></td><td><code>CI_PIPELINE_URL</code>, else <code>CI_JOB_URL</code></td></tr>
+      <tr><td class="t-nowrap">CircleCI</td><td class="t-nowrap"><code>CIRCLECI</code></td><td><code>CIRCLE_BUILD_URL</code></td></tr>
+      <tr><td class="t-nowrap">Buildkite</td><td class="t-nowrap"><code>BUILDKITE</code></td><td><code>BUILDKITE_BUILD_URL</code></td></tr>
+      <tr><td class="t-nowrap">Azure Pipelines</td><td class="t-nowrap"><code>TF_BUILD</code></td><td>Assembled from the collection URI, project and build id</td></tr>
+      <tr><td class="t-nowrap">Travis CI</td><td class="t-nowrap"><code>TRAVIS</code></td><td><code>TRAVIS_BUILD_WEB_URL</code></td></tr>
+      <tr><td class="t-nowrap">AppVeyor</td><td class="t-nowrap"><code>APPVEYOR</code></td><td>Assembled from the account, project slug and build id, on <code>APPVEYOR_URL</code></td></tr>
+      <tr><td class="t-nowrap">Drone</td><td class="t-nowrap"><code>DRONE</code></td><td><code>DRONE_BUILD_LINK</code></td></tr>
+      <tr><td class="t-nowrap">Bitbucket Pipelines</td><td class="t-nowrap"><code>BITBUCKET_BUILD_NUMBER</code></td><td>Assembled from the repository and build number</td></tr>
+      <tr><td class="t-nowrap">Semaphore</td><td class="t-nowrap"><code>SEMAPHORE</code></td><td>Assembled from <code>SEMAPHORE_ORGANIZATION_URL</code> and <code>SEMAPHORE_WORKFLOW_ID</code></td></tr>
+      <tr><td class="t-nowrap">AWS CodeBuild</td><td class="t-nowrap"><code>CODEBUILD_BUILD_ID</code></td><td><code>CODEBUILD_PUBLIC_BUILD_URL</code></td></tr>
+      <tr><td class="t-nowrap">TeamCity</td><td class="t-nowrap"><code>TEAMCITY_VERSION</code></td><td><code>BUILD_URL</code></td></tr>
+      <tr><td class="t-nowrap">Jenkins</td><td class="t-nowrap"><code>JENKINS_URL</code>, else <code>HUDSON_URL</code></td><td><code>BUILD_URL</code>, else the job's own page &mdash; a self-hosted controller with no root url configured sets the pieces and not the url</td></tr>
+      <tr><td class="t-nowrap">Anything else</td><td class="t-nowrap"><code>CI</code>, else <code>CONTINUOUS_INTEGRATION</code></td><td><code>BUILD_URL</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>Jenkins is tested last on purpose. <code>BUILD_NUMBER</code> and <code>BUILD_URL</code> are set by several of the systems above, and <code>JENKINS_URL</code> is what actually says Jenkins. Where a system publishes its own build url that url is used as given rather than assembled, so a self-hosted install or a reverse proxy is linked correctly; the rest are built from the documented variables. A GitHub Actions re-run links its own attempt, because <code>GITHUB_RUN_ID</code> does not change on a re-run and the bare run url would open the latest one.</p>
+
+<p><strong>Branch</strong> is read from the first of <code>GITHUB_HEAD_REF</code>, <code>GITHUB_REF_NAME</code>, <code>CI_COMMIT_REF_NAME</code>, <code>CIRCLE_BRANCH</code>, <code>BUILDKITE_BRANCH</code>, <code>BUILD_SOURCEBRANCHNAME</code>, <code>TRAVIS_PULL_REQUEST_BRANCH</code>, <code>TRAVIS_BRANCH</code>, <code>APPVEYOR_REPO_BRANCH</code>, <code>DRONE_BRANCH</code>, <code>BITBUCKET_BRANCH</code>, <code>SEMAPHORE_GIT_BRANCH</code>, <code>GIT_BRANCH</code> and <code>BRANCH_NAME</code> that is set, and <strong>Commit</strong> from <code>GITHUB_SHA</code>, <code>CI_COMMIT_SHA</code>, <code>CIRCLE_SHA1</code>, <code>BUILDKITE_COMMIT</code>, <code>BUILD_SOURCEVERSION</code>, <code>TRAVIS_COMMIT</code>, <code>APPVEYOR_REPO_COMMIT</code>, <code>DRONE_COMMIT_SHA</code>, <code>BITBUCKET_COMMIT</code>, <code>SEMAPHORE_GIT_SHA</code>, <code>CODEBUILD_RESOLVED_SOURCE_VERSION</code>, <code>GIT_COMMIT</code> and <code>BUILD_VCS_NUMBER</code>. Only when none of them answers is <code>git</code> asked &mdash; a CI checkout is a detached <code>HEAD</code>, where git itself answers <code>HEAD</code>, which is true and useless.</p>
+
+<div class="note"><span class="note__title">Note</span>None of this overrules you. A <code>branch</code>, <code>commit</code>, <code>ci</code> or <code>pipeline</code> already named through <code>--build-info</code> or the <code>build_info</code> ini key is the answer shown, and the detected value is dropped rather than rendered beside it disagreeing.</div>
 
 <h3 id="display-variables">Is there a screen? (<code>--report-open=auto</code>)</h3>
 
@@ -1665,7 +1730,7 @@ $ python -m pytest_html_reporter --version</code></pre>
 
 <h2 id="the-ini-form">The same settings in an ini file</h2>
 
-<p>Twenty-five of these twenty-six options have an ini key, so a project can settle them once instead of typing them on every run. The keys are read wherever pytest reads ini options: <code>[pytest]</code> in <code>pytest.ini</code> or <code>tox.ini</code>, <code>[tool:pytest]</code> in <code>setup.cfg</code>, and <code>[tool.pytest.ini_options]</code> in <code>pyproject.toml</code>.</p>
+<p>Twenty-six of these twenty-seven options have an ini key, so a project can settle them once instead of typing them on every run. The keys are read wherever pytest reads ini options: <code>[pytest]</code> in <code>pytest.ini</code> or <code>tox.ini</code>, <code>[tool:pytest]</code> in <code>setup.cfg</code>, and <code>[tool.pytest.ini_options]</code> in <code>pyproject.toml</code>.</p>
 
 <p><a href="configuration.html">Configuration</a> lists every key with its type and its effective default, including the three — <code>build_info</code>, <code>report_link</code> and <code>report_link_pattern</code> — that are line lists and combine with the flag rather than being overridden by it.</p>
 
@@ -1673,7 +1738,7 @@ $ python -m pytest_html_reporter --version</code></pre>
   <a class="card" href="configuration.html">
     <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div>
     <h3 id="card-configuration">Configuration</h3>
-    <p>All 25 ini keys, in ini, cfg and TOML form.</p>
+    <p>All 26 ini keys, in ini, cfg and TOML form.</p>
     <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
   </a>
   <a class="card" href="ci-integrations.html">

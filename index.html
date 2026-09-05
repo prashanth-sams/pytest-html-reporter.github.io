@@ -85,7 +85,7 @@ document.documentElement.classList.add('js');})();
   <div class="wrap">
     <div class="hero__grid">
       <div class="hero__copy">
-        <span class="eyebrow">pytest-html-reporter &middot; v0.4.1</span>
+        <span class="eyebrow">pytest-html-reporter &middot; v0.4.2</span>
         <h1>One file.<br><span class="grad">The whole test run</span><span class="dot">.</span></h1>
         <p class="hero__lede">
           <strong>pytest-html-reporter</strong> turns a pytest run into a single, self-contained
@@ -123,6 +123,7 @@ document.documentElement.classList.add('js');})();
           <span class="pill pill--muted">Build archives</span>
           <span class="pill pill--muted">Coverage</span>
           <span class="pill pill--muted">Deep links</span>
+          <span class="pill pill--muted">Environment snapshot</span>
           <span class="pill pill--muted">xdist</span>
           <span class="pill pill--muted">Rerun</span>
           <span class="pill pill--muted">Sharded runs, merged</span>
@@ -134,7 +135,7 @@ document.documentElement.classList.add('js');})();
         <div class="badgerow">
           <a href="https://pypi.org/project/pytest-html-reporter/" target="_blank" rel="noopener"><img src="https://badge.fury.io/py/pytest-html-reporter.svg" alt="PyPI version" loading="lazy"></a>
           <a href="https://pepy.tech/project/pytest-html-reporter" target="_blank" rel="noopener"><img src="https://pepy.tech/badge/pytest-html-reporter" alt="Downloads" loading="lazy"></a>
-          <a href="https://coveralls.io/github/prashanth-sams/pytest-html-reporter?branch=0.4.1" target="_blank" rel="noopener"><img src="https://coveralls.io/repos/github/prashanth-sams/pytest-html-reporter/badge.svg?branch=0.4.1" alt="Coverage" loading="lazy"></a>
+          <a href="https://coveralls.io/github/prashanth-sams/pytest-html-reporter?branch=0.4.2" target="_blank" rel="noopener"><img src="https://coveralls.io/repos/github/prashanth-sams/pytest-html-reporter/badge.svg?branch=0.4.2" alt="Coverage" loading="lazy"></a>
           <a href="https://github.com/prashanth-sams/pytest-html-reporter/blob/master/LICENSE" target="_blank" rel="noopener"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT licence" loading="lazy"></a>
         </div>
       </div>
@@ -259,7 +260,7 @@ report_screenshots = failed</code></pre>
       <span class="eyebrow">How it compares</span>
       <h2>One file, or a pipeline</h2>
       <p class="lede">
-        Three ways to get a report out of pytest, across sixty things a report is asked to do.
+        Three ways to get a report out of pytest, across sixty-one things a report is asked to do.
         Where a tool can do something only with a flag or a line of your own code, the cell says
         which one.
       </p>
@@ -565,7 +566,7 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
             </tr>
             <tr>
-              <th scope="rowgroup" rowspan="2" class="cmp__sec">xdist</th>
+              <th scope="rowgroup" rowspan="3" class="cmp__sec">xdist</th>
               <th scope="row">One report from a pytest-xdist run</th>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>merged in collection order</small></td>
@@ -576,6 +577,12 @@ report_screenshots = failed</code></pre>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td>
               <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>evidence survives a green retry</small></td>
               <td><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td>
+            </tr>
+            <tr>
+              <th scope="row">What each attempt failed with</th>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
+              <td class="is-us"><span class="mark mark--y" role="img" aria-label="Yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><small>the <code>Rerun</code> count opens the trail</small></td>
+              <td><span class="mark mark--n" role="img" aria-label="No"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></td>
             </tr>
             <tr>
               <th scope="rowgroup" rowspan="2" class="cmp__sec">Multi-machine sharding</th>
@@ -717,7 +724,7 @@ report_screenshots = failed</code></pre>
           <li><a href="docs/features.html#highlights"><b>Highlights</b><span>The suite that failed most, and which way the failure count has moved.</span></a></li>
           <li><a href="docs/features.html#test-suite-details"><b>Test suite details</b><span>Every suite with its own counts, so a failure concentrated in one file shows up early.</span></a></li>
           <li><a href="docs/features.html#the-test-metrics-table"><b>The Test Metrics table</b><span>Search, sort, ten columns, and exports to copy, CSV, Excel, print and column visibility.</span></a></li>
-          <li><a href="docs/features.html#environment-and-build-details"><b>Environment &amp; build details</b><span>What the run was, what it was told about the build, and what it kept of the output.</span></a></li>
+          <li><a href="docs/features.html#environment-and-build-details"><b>Environment &amp; build details</b><span>The CI run, the pipeline, the branch and the commit, the platform and the interpreter — detected, not configured.</span></a></li>
         </ul>
       </section>
 
@@ -818,7 +825,7 @@ report_screenshots = failed</code></pre>
         </div>
         <ul class="flist">
           <li><a href="docs/features.html#parallel-runs"><b>One report from an xdist run</b><span>Workers are merged into a single build, listed in collection order. Nothing to configure.</span></a></li>
-          <li><a href="docs/features.html#reruns"><b>Reruns and retries</b><span>Evidence survives a green retry, and a retried test keeps its history straight.</span></a></li>
+          <li><a href="docs/features.html#reruns"><b>Reruns and retries</b><span>Evidence survives a green retry, and the <code>Rerun</code> count opens the trail of what each attempt failed with.</span></a></li>
           <li><a href="docs/features.html#matrix-runs"><b>Matrix runs</b><span>A job per Python version or per browser, each writing where you tell it to.</span></a></li>
         </ul>
       </section>

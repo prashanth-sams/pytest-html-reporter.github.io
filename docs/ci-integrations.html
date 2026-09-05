@@ -144,6 +144,62 @@ document.documentElement.classList.add('js');})();
 
 <div class="note note--tip"><span class="note__title">Tip</span>If your pipeline is GitHub Actions and you want the report published to the job summary, a pull request comment, an artifact and GitHub Pages, the <a href="github-action.html">dedicated GitHub Action</a> does all of that in one step. This page is the underlying machinery, and the two compose.</div>
 
+<h2 id="environment-detection">What the report works out about the run</h2>
+
+<div class="note note--new"><span class="note__title">New in 0.4.2</span>The <code>Environment</code> panel fills itself in. The CI system, a <code>Pipeline</code> link back to the build, the branch and the commit under test, the operating system, the interpreter and the worker count all arrive without a flag.</div>
+
+<p>A report is a build artifact: it is read a week later, by somebody who cannot re-run it and cannot ask the machine anything. The panel could already name the host, the Python and the pytest &mdash; the easy half &mdash; while the half that explains a red build was left to whoever remembered to write a <code>--build-info</code> flag before the run.</p>
+
+<h3 id="the-panel-rows">The rows, and where each comes from</h3>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Row</th><th>What it says</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>CI</code></td><td>The CI system, named from its own variables, with the build number where one is published.</td></tr>
+      <tr><td class="t-nowrap"><code>Pipeline</code></td><td>A link straight back to the build that produced the report.</td></tr>
+      <tr><td class="t-nowrap"><code>Branch</code>, <code>Commit</code></td><td>The revision under test, from the CI system where it publishes them and from <code>git</code> otherwise.</td></tr>
+      <tr><td class="t-nowrap"><code>Host</code></td><td>The machine that ran the tests.</td></tr>
+      <tr><td class="t-nowrap"><code>Platform</code></td><td>The operating system as its own users name it &mdash; <code>Ubuntu 22.04.4 LTS &middot; Linux 5.15.0 (x86_64)</code>, <code>macOS 15.6 (arm64)</code> &mdash; rather than the kernel string.</td></tr>
+      <tr><td class="t-nowrap"><code>Python</code></td><td>Version, implementation and word size: <code>3.11.7 (CPython, 64-bit)</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>Interpreter</code></td><td>The <code>python</code> that actually ran &mdash; the row that ends an argument about which virtualenv was active.</td></tr>
+      <tr><td class="t-nowrap"><code>pytest</code>, <code>Plugins</code></td><td>The framework and every plugin version active for the run.</td></tr>
+      <tr><td class="t-nowrap"><code>Workers</code></td><td>How many <code>xdist</code> workers reported results. Only on a parallel run.</td></tr>
+      <tr><td class="t-nowrap"><code>Packages</code></td><td>Every installed distribution and its version, when <a href="configuration.html#report-packages"><code>--report-packages</code></a> asked for it.</td></tr>
+      <tr><td class="t-nowrap"><code>Arguments</code>, <code>Root</code></td><td>The command line the run was started with, and where it ran.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="ci-systems-detected">The systems detected by name</h3>
+
+<p>GitHub Actions, GitLab CI, CircleCI, Buildkite, Azure Pipelines, Travis CI, AppVeyor, Drone, Bitbucket Pipelines, Semaphore, AWS CodeBuild, TeamCity and Jenkins are each named individually, from the variable that actually identifies them &mdash; <code>GITHUB_ACTIONS</code>, <code>GITLAB_CI</code>, <code>CIRCLECI</code>, <code>TF_BUILD</code>, <code>JENKINS_URL</code> and so on. Jenkins is tested last on purpose: <code>BUILD_NUMBER</code> and <code>BUILD_URL</code> are set by several of the others, and <code>JENKINS_URL</code> is what actually says Jenkins. Anything else that sets <code>CI</code> or <code>CONTINUOUS_INTEGRATION</code> is still recorded as a build agent rather than passed off as somebody's laptop.</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A published build url is used as given</b>GitLab, Jenkins, CircleCI, Buildkite, Travis and Drone each publish their own, so a self-hosted install, a reverse proxy or a renamed domain is linked correctly rather than to a page on the vendor's hosting that does not exist. The rest are assembled from the documented variables.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A re-run GitHub Actions workflow links its own attempt</b><code>GITHUB_RUN_ID</code> deliberately does not change on a re-run, so the bare run url opens the <em>latest</em> attempt &mdash; a report written by attempt 1 would have linked somebody else's failure.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>CI before git, for the revision</b>A CI checkout is a detached <code>HEAD</code>, where git itself answers <code>HEAD</code> &mdash; true and useless &mdash; while the system knows the branch somebody clicked. A folder that is not a checkout gets no such rows rather than a traceback.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Detection never overrules you</b>A <code>branch</code>, <code>commit</code>, <code>ci</code> or <code>pipeline</code> already named through <code>--build-info</code> or the <code>build_info</code> ini key is the answer shown, and the detected one is dropped rather than rendered beside it disagreeing.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Workers are counted, not requested</b>The row says <code>3 of 8 requested</code> when the two differ: xdist quietly runs fewer workers than asked for when there are fewer tests than workers, and a report claiming eight when three ran reads as five crashes. A serial run gets no row at all.</span>
+  </li>
+</ul>
+
+<div class="note"><span class="note__title">Note</span>On a <a href="#sharding-across-machines">sharded run</a> every one of these is collected by the leg, on the machine that ran the tests. A merging job that asked its own environment which CI run this was would answer with the merge job, and one running on a laptop would answer with nothing at all. The merged panel says it once when the legs agree and says both when they do not &mdash; two legs naming two pipelines link neither, since a link to the first would be read as the whole build's. Bundles written before 0.4.2 merge unchanged: every new key reads back as &quot;this leg never said&quot;.</div>
+
 <h2 id="parallel-runs-with-xdist">Parallel runs with pytest-xdist</h2>
 
 <p>Runs distributed with <code>pytest-xdist</code> are gathered into a single report with no configuration at all — one build in <code>Archives</code>, one set of totals, one row per test, whichever way the tests were distributed.</p>
@@ -199,7 +255,7 @@ $ pytest tests/ -n auto --dist loadfile --html-report=./report</code></pre>
 <ul class="featlist">
   <li>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
-    <span><b>Attempts are summed, not listed</b>The surviving record's <code>rerun</code> becomes the superseded record's count plus its own plus one, because the record being replaced is an attempt itself and either side may already stand for several.</span>
+    <span><b>Attempts are summed, and kept</b>The surviving record's <code>rerun</code> becomes the superseded record's count plus its own plus one, because the record being replaced is an attempt itself and either side may already stand for several. From 0.4.2 the record also carries the <a href="#the-attempt-trail">trail</a> of what each of those attempts did.</span>
   </li>
   <li>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
@@ -219,7 +275,19 @@ $ pytest tests/ -n auto --dist loadfile --html-report=./report</code></pre>
 
 <p>The count then travels everywhere — into <code>output.json</code> as a per-test string and a per-suite total, into the JUnit <code>&lt;properties&gt;</code> as <code>reruns</code> and into each testcase's <code>&lt;system-out&gt;</code> as a <code>reruns: N</code> line, and into <a href="analytics.html">Analytics</a>, where a non-zero rerun count is by itself enough to mark a test flaky. A retry inside a single build is the least ambiguous flake evidence there is: same code, same build, two different answers.</p>
 
-<div class="note note--warn"><span class="note__title">Careful</span>On a merge this folding is switched off entirely. A cross-shard duplicate must not be folded by rules that depend on what happens to be installed on the merging machine, and the fold pins the survivor to a per-process index that means nothing once several machines are involved. The merge has <a href="#duplicate-node-ids">its own duplicate policy</a> instead.</div>
+<h3 id="the-attempt-trail">The attempt trail</h3>
+
+<div class="note note--new"><span class="note__title">New in 0.4.2</span>The <code>Rerun</code> count is a button, and the panel behind it lists every attempt the test made &mdash; status, message, duration and, under <code>-n</code>, the worker that ran it &mdash; ending on the attempt the row itself is showing, marked <code>kept</code>.</div>
+
+<p>One row carrying the outcome that stuck is the honest shape, but on its own it throws the interesting half away: the row shows the message of <em>that</em> attempt, and an attempt that stuck by passing has no message. A test that failed twice and then passed read <code>PASS&nbsp;&nbsp;2</code>, and nothing anywhere in the report said what it had failed with &mdash; while two failures for two different reasons is a different bug report from the same failure twice.</p>
+
+<p>Each attempt keeps four fields and not the record it came from: <code>status</code>, <code>message</code>, <code>duration</code> and <code>worker</code>. A <a href="#the-records-bundle">shard bundle</a> is the record list exactly as it stands in memory, so keeping whole attempts would multiply every bundle a matrix uploads by the number of times its flakiest tests were retried, and put a copy of each discarded attempt's logs and screenshots in it.</p>
+
+<p>Under <code>-n</code> a worker sends back records it has already folded itself, so the controller keeps both sides' attempts and puts the record being replaced between them &mdash; it ran after its own attempts and before the one replacing it. The trail is parked outside the metrics table, so it is absent from the table's search index and from its CSV, Excel and print exports, and the <code>Rerun</code> column still exports the single number it always did.</p>
+
+<p>A test that ran once has no trail and keeps the plain <code>0</code> the column has always shown, with the button disabled rather than only styled flat so it is not a tab stop either. So does a build <a href="analytics.html">archived</a> before 0.4.2: the count was stored, the attempts behind it were not, and an empty panel would be worse than none.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span>On a merge this folding is switched off entirely. A cross-shard duplicate must not be folded by rules that depend on what happens to be installed on the merging machine, and the fold pins the survivor to a per-process index that means nothing once several machines are involved. The merge has <a href="#duplicate-node-ids">its own duplicate policy</a> instead &mdash; which, under <code>merge</code>, builds a trail of its own, so a test retried twice on one shard that then ran again on another machine reports four attempts and shows four.</div>
 
 <h2 id="sharding-across-machines">Sharding a run across machines</h2>
 
@@ -343,7 +411,7 @@ $ pytest tests/ --html-report=./report --report-shard=4/4</code></pre>
   <pre><code data-lang="json">{
   &quot;schema&quot;: &quot;pytest-html-reporter/records&quot;,
   &quot;version&quot;: 1,
-  &quot;generator&quot;: &quot;pytest-html-reporter 0.4.1&quot;,
+  &quot;generator&quot;: &quot;pytest-html-reporter 0.4.2&quot;,
   &quot;shard&quot;: { &quot;id&quot;: &quot;1-4&quot;, &quot;label&quot;: &quot;1/4&quot;, &quot;assets&quot;: &quot;pytest_screenshots&quot; },
   &quot;run&quot;: {
     &quot;session_start&quot;: 1788426000.11,
@@ -355,7 +423,7 @@ $ pytest tests/ --html-report=./report --report-shard=4/4</code></pre>
     &quot;platform&quot;: &quot;Linux 6.5.0-1024-azure&quot;,
     &quot;python&quot;: &quot;3.11.9&quot;,
     &quot;pytest&quot;: &quot;8.2.0&quot;,
-    &quot;plugins&quot;: [&quot;cov-5.0.0&quot;, &quot;html-reporter-0.4.1&quot;, &quot;xdist-3.5.0&quot;],
+    &quot;plugins&quot;: [&quot;cov-5.0.0&quot;, &quot;html-reporter-0.4.2&quot;, &quot;xdist-3.5.0&quot;],
     &quot;arguments&quot;: &quot;tests/ -n 4 --html-report=./report --report-shard=1/4&quot;,
     &quot;rootdir&quot;: &quot;/home/runner/work/proj/proj&quot;,
     &quot;environment&quot;: &quot;staging&quot;,
@@ -994,7 +1062,7 @@ $ pytest tests/ --html-report=./report --report-junit=./report/junit.xml --repor
   &lt;testsuite name=&quot;pytest&quot; tests=&quot;3&quot; failures=&quot;1&quot; errors=&quot;1&quot; skipped=&quot;0&quot; time=&quot;724.000&quot;
              timestamp=&quot;2026-09-03T13:00:00&quot; hostname=&quot;merged&quot;&gt;
     &lt;properties&gt;
-      &lt;property name=&quot;pytest-html-reporter&quot; value=&quot;0.4.1&quot; /&gt;
+      &lt;property name=&quot;pytest-html-reporter&quot; value=&quot;0.4.2&quot; /&gt;
       &lt;property name=&quot;shards&quot; value=&quot;4&quot; /&gt;
       &lt;property name=&quot;shard.ids&quot; value=&quot;1-4,2-4,3-4,4-4&quot; /&gt;
       &lt;property name=&quot;shard.hosts&quot; value=&quot;runner-1,runner-2,runner-3,runner-4&quot; /&gt;
@@ -1467,6 +1535,7 @@ archive_days = 30</code></pre>
   <div class="toc__title">On this page</div>
   <ul>
 <li class="lvl-2"><a href="#one-run-one-build">One run, one build</a></li>
+<li class="lvl-2"><a href="#environment-detection">What the report works out about the run</a></li>
 <li class="lvl-2"><a href="#parallel-runs-with-xdist">Parallel runs with pytest-xdist</a></li>
 <li class="lvl-2"><a href="#reruns-and-retries">Reruns: how retries are represented</a></li>
 <li class="lvl-2"><a href="#sharding-across-machines">Sharding a run across machines</a></li>

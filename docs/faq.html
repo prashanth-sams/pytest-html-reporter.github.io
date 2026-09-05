@@ -756,6 +756,64 @@ archive_count = 60</code></pre>
 <h2 id="ci">CI</h2>
 
 <details class="acc">
+  <summary>Can the report say which pipeline, branch and commit it came from?</summary>
+  <div class="acc__body">
+    <p>From 0.4.2 it does that on its own. The <code>Environment</code> panel gains a <code>CI</code>
+    row naming the system, a <code>Pipeline</code> row linking straight back to the build, and
+    <code>Branch</code> and <code>Commit</code> rows for the revision under test. Nothing has to be
+    passed and nothing is fetched — the values come from the CI system's own environment variables,
+    and from <code>git</code> when it is not a CI run.</p>
+
+    <p>GitHub Actions, GitLab CI, Jenkins, CircleCI, Buildkite, Azure Pipelines, Travis CI, AppVeyor,
+    Drone, Bitbucket Pipelines, Semaphore, AWS CodeBuild and TeamCity are named individually, and
+    anything else that sets <code>CI</code> is recorded as a build agent rather than passed off as
+    somebody's laptop. See <a href="cli-reference.html#build-detection-variables">the variables each
+    one is read from</a>.</p>
+
+    <p>If you already publish these through <code>--build-info</code>, yours wins: a
+    <code>branch</code>, <code>commit</code>, <code>ci</code> or <code>pipeline</code> you have named
+    is the answer shown, and the detected one is dropped rather than rendered beside it disagreeing.</p>
+  </div>
+</details>
+
+<details class="acc">
+  <summary>A flaky test says <code>PASS 2</code>. What did it fail with?</summary>
+  <div class="acc__body">
+    <p>Click the count. From 0.4.2 a non-zero <code>Rerun</code> cell is a button, and the panel
+    behind it lists every attempt the test made — what each one did, how long it took and the full
+    error it raised — ending on the attempt the row itself is showing, marked <code>kept</code>. The
+    panel's <strong>Copy</strong> button hands the whole trail over in the shape you would paste into
+    an issue.</p>
+
+    <p>Nothing needs enabling: <code>--reruns</code>, the <code>reruns</code> ini key,
+    <code>@pytest.mark.flaky(reruns=n)</code> and <code>--only-rerun</code> are all read by counting
+    the attempts that actually happened. Under <code>-n</code> each attempt also says which xdist
+    worker ran it, and a test retried on one shard that then ran again on another machine reports
+    every attempt from both.</p>
+
+    <p>Two things have no trail and show a plain, disabled <code>0</code>: a test that ran once, and a
+    build archived before 0.4.2 — the count was stored, the attempts behind it were not, and an empty
+    panel would be worse than none. See <a href="ci-integrations.html#the-attempt-trail">the attempt
+    trail</a>.</p>
+  </div>
+</details>
+
+<details class="acc">
+  <summary>Can the report record everything that was installed?</summary>
+  <div class="acc__body">
+    <p>Yes, with <code>--report-packages</code> (or <code>report_packages = true</code> in the ini
+    file). It adds a <code>Packages</code> row to the Environment panel holding every installed
+    distribution and its version, the way <code>pip freeze</code> reads, with the count in the label.</p>
+
+    <p>It is off by default, and worth leaving off unless you want it: it is a few hundred entries
+    nobody reads until the day the report is the only surviving record of what was installed — and it
+    publishes a full dependency inventory into a file that gets attached to tickets. The
+    <code>Plugins</code> row answers a much smaller question. See
+    <a href="configuration.html#report-packages">the packages inventory</a>.</p>
+  </div>
+</details>
+
+<details class="acc">
   <summary>It opens a browser on my build agent</summary>
   <div class="acc__body">
     <p>It should not, and <code>--report-open=auto</code> — the default — needs <strong>all

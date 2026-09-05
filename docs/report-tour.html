@@ -413,6 +413,54 @@ zero-count button.</p>
   <figcaption>Test Metrics — every test case in the run, with its error message truncated behind an ellipsis button and a live thumbnail in Screens.</figcaption>
 </figure>
 
+<h3 id="the-rerun-trail">The Rerun trail</h3>
+
+<div class="note note--new"><span class="note__title">New in 0.4.2</span>A non-zero <strong>Rerun</strong>
+count is a button, and the panel behind it lists every attempt the test made.</div>
+
+<p>A retried test is one row carrying the outcome that stuck. That is the honest shape, but the row shows
+the message of <em>that</em> attempt &mdash; and an attempt that stuck by passing has no message, so a test
+that failed twice and then passed said <code>PASS&nbsp;&nbsp;2</code> and nothing anywhere in the report
+said what it had failed with.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">output</span>
+    <span class="codeblock__cap">Behind a Rerun count of 2</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="output">Attempt 1   FAIL   0.31s
+    AssertionError: connection refused: could not connect to postgres on localhost:5432
+      the container was still starting when the fixture handed back
+
+Attempt 2   FAIL   0.28s
+    ValueError: stale cache handed back order #7 after the write to #8
+
+Attempt 3   PASS   0.30s                                                    KEPT</code></pre>
+</div>
+
+<p>The list ends on the attempt the row itself is showing, marked <code>kept</code>: ending on the last
+attempt that was thrown away would leave a panel whose final line disagrees with the row that opened it.
+Two failures for two different reasons is a different bug report from the same failure twice, and neither
+is visible from a count &mdash; so the panel's <strong>Copy</strong> button hands the whole trail over as
+one line per attempt followed by that attempt's message, which is the shape somebody pastes into an issue.
+Under <code>-n</code>, each attempt also says which xdist worker ran it.</p>
+
+<p>The count and the trail always agree, and that holds across both folds &mdash; a retry inside one
+process, and a node id that ran in two shards &mdash; so a test retried twice on a shard that then ran
+again on another machine reports four attempts and shows four. The trail is parked outside the table, so
+it never reaches the search index or the CSV, Excel and print exports, and the <code>Rerun</code> column
+still exports the single number it always did.</p>
+
+<div class="note"><span class="note__title">Note</span>A test that ran once keeps the plain <code>0</code>
+the column has always shown, with the button disabled rather than only styled flat, so it is not a tab stop
+either. A build <a href="#archives">archived</a> before 0.4.2 does the same: the count was stored, the
+attempts behind it were not, and an empty panel would be worse than none.</div>
+
 <h3 id="the-status-filter-chips">The status filter chips</h3>
 
 <p>The chips above the table are filters, not decoration. Clicking any outcome chip filters the
@@ -818,7 +866,15 @@ labelled values, closed by its &times; button, by clicking the backdrop, or by E
   </li>
   <li>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
-    <span><b>Host, Platform, Python, pytest</b>Where and what this ran on.</span>
+    <span><b>CI, Pipeline, Branch, Commit</b>Which build this was and what it was cut from. Detected from the CI system's own variables, with <code>Pipeline</code> a link straight back to the run; the branch and commit come from the system where it publishes them and from <code>git</code> otherwise. New in 0.4.2.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Host, Platform, Python, Interpreter, pytest</b>Where and what this ran on. <code>Platform</code> names the operating system the way its own users do &mdash; <code>Ubuntu 22.04.4 LTS &middot; Linux 5.15.0 (x86_64)</code> &mdash; and <code>Interpreter</code> names the <code>python</code> that actually ran.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Workers</b>How many <code>xdist</code> workers reported results, and <code>3 of 8 requested</code> when that is fewer than <code>-n</code> asked for. Only on a parallel run.</span>
   </li>
   <li>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
@@ -828,7 +884,14 @@ labelled values, closed by its &times; button, by clicking the backdrop, or by E
 
 <p>If <code>--environment</code> was given it leads the list and also appears as a badge beside the
 report title on the Dashboard. Any number of <code>--build-info key=value</code> pairs are inserted
-after it — the natural home for a commit SHA, a branch, a CI job URL or a browser version.</p>
+after it &mdash; and they win: a <code>branch</code>, <code>commit</code>, <code>ci</code> or
+<code>pipeline</code> you have named yourself is the answer shown, and the detected one is dropped rather
+than rendered beside it disagreeing.</p>
+
+<p>One row is opt-in. <a href="configuration.html#report-packages"><code>--report-packages</code></a> adds
+a <code>Packages</code> row holding every installed distribution and its version, the way
+<code>pip freeze</code> reads, with the count in the label. It is off by default: a few hundred entries
+nobody reads until the day the report is the only surviving record of what was installed.</p>
 
 <div class="note"><span class="note__title">Note</span>Under a sharded run this panel is filled
 through a seam rather than read directly, so a merged report names every shard's machine and not the
