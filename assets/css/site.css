@@ -287,6 +287,14 @@ strong, b { color: var(--text); font-weight: 640; }
 .navlinks a:hover { color: var(--text); background: var(--bg-alt); }
 .navlinks a.is-active { color: var(--brand); background: var(--brand-soft); }
 
+/* The demo link points at a real generated report rather than a docs page, so
+   it carries a live dot: the one entry in the bar that leaves the site shell. */
+.navlinks__demo { display: inline-flex; align-items: center; gap: 6px; }
+.navlinks__demo::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--pass); box-shadow: 0 0 0 3px var(--pass-soft);
+}
+
 .topbar__spacer { flex: 1; }
 .topbar__right { display: flex; align-items: center; gap: 6px; }
 
