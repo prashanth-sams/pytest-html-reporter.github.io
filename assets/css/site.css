@@ -802,12 +802,17 @@ code, kbd, samp, pre { font-family: var(--mono); font-size: .855em; }
    overflow-wrap: break-word, which only breaks a word that genuinely cannot fit.
    Use .t-nowrap on a table cell that must stay on one line. */
 :not(pre) > code {
-  background: var(--bg-code); border: 1px solid var(--border);
-  border-radius: var(--r-xs); padding: .12em .38em;
-  color: var(--brand-strong); font-size: .845em;
+  background: color-mix(in srgb, var(--brand) 7%, var(--bg-code));
+  border: 1px solid color-mix(in srgb, var(--brand) 18%, var(--border));
+  border-radius: var(--r-xs); padding: .16em .42em;
+  color: var(--brand-strong); font-size: .845em; font-weight: 550;
   overflow-wrap: break-word;
 }
-:root[data-theme="dark"] :not(pre) > code { color: var(--brand); }
+:root[data-theme="dark"] :not(pre) > code {
+  color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 13%, var(--bg-code));
+  border-color: color-mix(in srgb, var(--brand) 26%, var(--border));
+}
 
 kbd {
   background: var(--bg-elev); border: 1px solid var(--border-strong);
@@ -1026,6 +1031,70 @@ tbody td:first-child { color: var(--text); }
 td a, td code, th code { overflow-wrap: anywhere; }
 .t-nowrap { white-space: nowrap; }
 .t-mono { font-family: var(--mono); font-size: .82rem; }
+
+/* Reference tables carry most of their meaning in the code chips — a flag, a
+   value, a default — and at .845em on a near-white cell those chips were the
+   quietest thing in the row. Everything below is contrast: a tinted, striped
+   grid so the eye can follow a row across four columns, a fenced first column
+   so the flag reads as the row's label, and chips that look like objects
+   rather than punctuation. Scoped to .tablewrap:not(.cmp) so the comparison table on the
+   home page, which paints its own columns, is left alone. */
+.tablewrap:not(.cmp) table { background: var(--bg-elev); }
+.tablewrap:not(.cmp) thead th {
+  background: linear-gradient(180deg, var(--bg-alt), var(--bg-sunken));
+  color: var(--text); font-weight: 700; letter-spacing: .06em;
+  border-bottom: 1px solid var(--border-strong);
+  white-space: nowrap;
+}
+.tablewrap:not(.cmp) tbody td { padding: 12px 13px; color: var(--text-body); transition: background .14s var(--ease); }
+.tablewrap:not(.cmp) thead th { padding: 11px 13px; }
+/* On a reference table the last column is the sentence and the ones before it
+   are short values, but `auto` layout shares the surplus evenly and leaves the
+   prose wrapping four words to a line. Handing the surplus to the last column
+   lets the values sit on one line and the sentence breathe. Only for tables of
+   three columns or more, where a prose last column is the pattern. */
+.tablewrap:not(.cmp) thead th:last-child:nth-child(n+3) { width: 100%; }
+.tablewrap:not(.cmp) tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--bg-alt) 55%, var(--bg-elev));
+}
+/* The flag column is the row's name. It gets the elevated rail and a rule to
+   sit behind, so a long "what it does" cell never reads as the row's start. */
+.tablewrap:not(.cmp) tbody td:first-child,
+.tablewrap:not(.cmp) thead th:first-child {
+  border-right: 1px solid var(--border);
+  background: var(--bg-alt);
+  color: var(--text); font-weight: 600;
+}
+.tablewrap:not(.cmp) tbody tr:nth-child(even) td:first-child {
+  background: color-mix(in srgb, var(--bg-sunken) 60%, var(--bg-alt));
+}
+.tablewrap:not(.cmp) tbody tr:hover td { background: color-mix(in srgb, var(--brand) 8%, var(--bg-elev)); }
+.tablewrap:not(.cmp) tbody tr:hover td:first-child { background: color-mix(in srgb, var(--brand) 14%, var(--bg-elev)); }
+/* A flag is an identifier, so it is set in the brand's own ink and given a
+   chip solid enough to survive a hover tint behind it. */
+.tablewrap:not(.cmp) tbody td:first-child > code {
+  background: color-mix(in srgb, var(--brand) 12%, var(--bg-elev));
+  border-color: color-mix(in srgb, var(--brand) 30%, transparent);
+  color: var(--brand-strong); font-weight: 600;
+  padding: .2em .45em;
+}
+/* Every other chip in the row is a value. A hairline shadow lifts it off the
+   striped cell so it reads as an object rather than as coloured punctuation. */
+.tablewrap:not(.cmp) tbody td > code { box-shadow: var(--shadow-xs); }
+
+:root[data-theme="dark"] .tablewrap:not(.cmp) thead th {
+  background: linear-gradient(180deg, var(--bg-alt), var(--bg-sunken));
+}
+:root[data-theme="dark"] .tablewrap:not(.cmp) tbody tr:hover td,
+:root[data-theme="dark"] .tablewrap:not(.cmp) tbody tr:hover td:first-child {
+  background: color-mix(in srgb, var(--brand) 12%, var(--bg-elev));
+}
+:root[data-theme="dark"] .tablewrap:not(.cmp) tbody td:first-child > code {
+  color: var(--brand-strong);
+  background: color-mix(in srgb, var(--brand) 18%, var(--bg-elev));
+  border-color: color-mix(in srgb, var(--brand) 36%, transparent);
+}
+:root[data-theme="dark"] .tablewrap:not(.cmp) tbody td > code { box-shadow: none; }
 
 /* ------------------------------------------------------------ 15. Docs shell */
 
