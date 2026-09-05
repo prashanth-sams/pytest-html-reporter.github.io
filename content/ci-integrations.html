@@ -237,7 +237,7 @@ $ pytest tests/ --html-report=./report --report-shard=4/4</code></pre>
   <pre><code data-lang="json">{
   &quot;schema&quot;: &quot;pytest-html-reporter/records&quot;,
   &quot;version&quot;: 1,
-  &quot;generator&quot;: &quot;pytest-html-reporter 0.4.0&quot;,
+  &quot;generator&quot;: &quot;pytest-html-reporter 0.4.1&quot;,
   &quot;shard&quot;: { &quot;id&quot;: &quot;1-4&quot;, &quot;label&quot;: &quot;1/4&quot;, &quot;assets&quot;: &quot;pytest_screenshots&quot; },
   &quot;run&quot;: {
     &quot;session_start&quot;: 1788426000.11,
@@ -249,7 +249,7 @@ $ pytest tests/ --html-report=./report --report-shard=4/4</code></pre>
     &quot;platform&quot;: &quot;Linux 6.5.0-1024-azure&quot;,
     &quot;python&quot;: &quot;3.11.9&quot;,
     &quot;pytest&quot;: &quot;8.2.0&quot;,
-    &quot;plugins&quot;: [&quot;cov-5.0.0&quot;, &quot;html-reporter-0.4.0&quot;, &quot;xdist-3.5.0&quot;],
+    &quot;plugins&quot;: [&quot;cov-5.0.0&quot;, &quot;html-reporter-0.4.1&quot;, &quot;xdist-3.5.0&quot;],
     &quot;arguments&quot;: &quot;tests/ -n 4 --html-report=./report --report-shard=1/4&quot;,
     &quot;rootdir&quot;: &quot;/home/runner/work/proj/proj&quot;,
     &quot;environment&quot;: &quot;staging&quot;,
@@ -861,6 +861,7 @@ $ pytest tests/ --html-report=./report --report-junit=./report/junit.xml --repor
     <tbody>
       <tr><td class="t-nowrap"><code>--report-junit</code></td><td>pytest</td><td><code>""</code></td><td>Write a JUnit XML of this run. strftime placeholders are expanded, as with <code>--html-report</code>. Ignored on a shard that is not also the merging leg. ini key: <code>report_junit</code>.</td></tr>
       <tr><td class="t-nowrap"><code>--report-junit-xpass</code></td><td>pytest</td><td><code>pass</code></td><td>How an xPASS is written down. An invalid value fails the run rather than falling back, because the whole point of setting it is that the team disagrees with the default. ini key: <code>report_junit_xpass</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-link-pattern</code></td><td>pytest, merge</td><td>none</td><td>Names a marker that carries an id rather than a label. On top of turning it into a link in the html report, it puts the id in the XML as a <code>&lt;property&gt;</code> on the testcase. Repeatable; ini key: <code>report_link_pattern</code>.</td></tr>
       <tr><td class="t-nowrap"><code>--junit-xml</code></td><td>merge</td><td><code>""</code></td><td>Also write the merged XML here.</td></tr>
       <tr><td class="t-nowrap"><code>-o</code>, <code>--output</code></td><td>junit</td><td>required</td><td>Where the XML is written. This subcommand exists to produce it, so failing to write it is exit 2.</td></tr>
       <tr><td class="t-nowrap"><code>--junit-suite-name</code></td><td>merge, junit</td><td><code>pytest</code></td><td>The <code>&lt;testsuite&gt;</code> name; the root element is named after it.</td></tr>
@@ -887,7 +888,7 @@ $ pytest tests/ --html-report=./report --report-junit=./report/junit.xml --repor
   &lt;testsuite name=&quot;pytest&quot; tests=&quot;3&quot; failures=&quot;1&quot; errors=&quot;1&quot; skipped=&quot;0&quot; time=&quot;724.000&quot;
              timestamp=&quot;2026-09-03T13:00:00&quot; hostname=&quot;merged&quot;&gt;
     &lt;properties&gt;
-      &lt;property name=&quot;pytest-html-reporter&quot; value=&quot;0.4.0&quot; /&gt;
+      &lt;property name=&quot;pytest-html-reporter&quot; value=&quot;0.4.1&quot; /&gt;
       &lt;property name=&quot;shards&quot; value=&quot;4&quot; /&gt;
       &lt;property name=&quot;shard.ids&quot; value=&quot;1-4,2-4,3-4,4-4&quot; /&gt;
       &lt;property name=&quot;shard.hosts&quot; value=&quot;runner-1,runner-2,runner-3,runner-4&quot; /&gt;
@@ -895,6 +896,12 @@ $ pytest tests/ --html-report=./report --report-junit=./report/junit.xml --repor
       &lt;property name=&quot;duplicates-folded&quot; value=&quot;0&quot; /&gt;
     &lt;/properties&gt;
     &lt;testcase classname=&quot;tests.test_login&quot; name=&quot;test_valid_user&quot; time=&quot;1.204&quot;&gt;
+      &lt;properties&gt;
+        &lt;property name=&quot;owner&quot; value=&quot;payments-team&quot; /&gt;
+        &lt;property name=&quot;jira&quot; value=&quot;PROJ-123&quot; /&gt;
+        &lt;property name=&quot;jira&quot; value=&quot;PROJ-987&quot; /&gt;
+        &lt;property name=&quot;severity&quot; value=&quot;blocker&quot; /&gt;
+      &lt;/properties&gt;
       &lt;system-out&gt;[[ATTACHMENT|pytest_screenshots/1-4/1788426639123-1.png]]
 shard: 1/4 (runner-1)
 reruns: 2&lt;/system-out&gt;
@@ -912,6 +919,22 @@ reruns: 2&lt;/system-out&gt;
 </div>
 
 <p>The order inside <code>&lt;system-out&gt;</code> is fixed: attachments first, because a collector scans for them; then the shard and the rerun count, the two facts that would otherwise only live in properties nobody reads; then the captured output, which is the longest and least machine-read part. There is at most one <code>&lt;system-out&gt;</code> and one <code>&lt;system-err&gt;</code> per testcase, because a document with two of them is one whose second some parsers drop and others concatenate.</p>
+
+<h3 id="junit-testcase-properties">Traceability ids on the testcase</h3>
+
+<div class="note note--new"><span class="note__title">New in 0.4.1</span>A testcase carrying <code>owner</code>, <code>severity</code> or a marker named in <code>report_link_pattern</code> gets a <code>&lt;properties&gt;</code> block of its own, written ahead of the outcome, which is where pytest's own writer puts a <code>record_property</code> block and therefore where every consumer that reads one already looks.</div>
+
+<p>This is the machine-readable half of traceability. Xray, Zephyr and TestRail all ingest a test's issue key from a testcase property, and none of them opens an html report, so an id that only ever reaches a badge is invisible to exactly the tools that were supposed to consume it.</p>
+
+<ul>
+  <li><strong>The property name is the marker name.</strong> A suite that has to emit <code>test_key</code> for Xray writes <code>@pytest.mark.test_key(&quot;ACME-42&quot;)</code> and gets <code>test_key</code>, rather than a vocabulary this plugin chose.</li>
+  <li><strong>Only <code>owner</code>, <code>severity</code> and the markers you named are written.</strong> A document that started listing every user marker would change what a collector reports for suites that asked for nothing.</li>
+  <li><strong>A marker with empty brackets writes no property.</strong> An empty one is a row every consumer displays and none can use.</li>
+  <li><strong>Two <code>jira</code> markers are two properties.</strong> Every traceability marker is a set — a test that closes two tickets belongs in both.</li>
+  <li><strong>Severity is written once, already resolved.</strong> It is the one exception to that, because a testcase carrying both <code>normal</code> and <code>critical</code> is one no consumer can rank; the report has already picked between them by the time the XML is written.</li>
+</ul>
+
+<p><code>owner</code> and <code>severity</code> need no configuration, so they are written by the <code>merge</code> and <code>junit</code> subcommands as well. Pattern markers need to be named, and only <code>merge</code> takes <code>--report-link-pattern</code> — it reads them off its own argv, having no ini file to ask. See <a href="steps-and-bdd.html#link-patterns">markers that link</a> for the html side of the same configuration.</p>
 
 <h3 id="junit-status-mapping">How each status becomes an element</h3>
 

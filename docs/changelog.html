@@ -104,21 +104,23 @@ document.documentElement.classList.add('js');})();
 <header class="doc-hero">
   <span class="eyebrow">Project</span>
   <h1>Changelog</h1>
-  <p class="lede">Twenty-six releases, read from the project's own CHANGELOG.txt. The plugin shipped fifteen small releases between July 2020 and February 2022, went quiet for four and a half years, then shipped eleven releases in six days to reach 0.4.0.</p>
+  <p class="lede">Twenty-seven releases, read from the project's own CHANGELOG.txt. The plugin shipped fifteen small releases between July 2020 and February 2022, went quiet for four and a half years, then shipped twelve releases in seven days to reach 0.4.1.</p>
 </header>
 <h2 id="published-releases">Where releases are published</h2>
 
 <p>Every version is published to PyPI as <code>pytest-html-reporter</code>. The project is MIT
 licensed (Copyright &copy; 2020 Prashanth Sams), <code>setup.py</code> declares
-<code>python_requires=&quot;&gt;=3.5&quot;</code>, and the only runtime dependencies are
+<code>python_requires=&quot;&gt;=3.7&quot;</code> as of 0.4.1, and the only runtime dependencies are
 <code>pytest</code> and <code>Pillow</code> &mdash; since 0.3.7 everything the report draws with ships
 inside the package, so a rendered report has no JavaScript or CDN dependency at all.</p>
 
 <div class="note note--new">
   <span class="note__title">Current release</span>
-  <strong>0.4.0</strong>, 3 September 2026 &mdash; the version <code>setup.py</code> declares. It adds
-  per-row copy-command and copy-link buttons, stable deep links into Test Metrics, screenshots filed
-  on the step that threw, and the <em>Why this run failed</em> exception-grouping panel on Analytics.
+  <strong>0.4.1</strong>, 4 September 2026 &mdash; the version <code>setup.py</code> declares. It turns
+  a marker holding an id into a link, adds the built-in <code>owner</code> and <code>severity</code>
+  markers with a filter row and an Analytics panel each, writes all three into the JUnit xml as
+  testcase properties, and makes <code>step</code> work in <code>async</code> tests. It also raises
+  <code>python_requires</code> to <code>&gt;=3.7</code>.
 </div>
 
 <p>Upgrades within the 0.3.x line change behaviour as well as adding features, so pin the version if
@@ -135,7 +137,7 @@ upgrade</a> below before moving off 0.2.x.</p>
       <span class="copybtn__label">Copy</span>
     </button>
   </div>
-  <pre><code data-lang="shell">$ pip install pytest-html-reporter==0.4.0
+  <pre><code data-lang="shell">$ pip install pytest-html-reporter==0.4.1
 $ pip install --upgrade pytest-html-reporter</code></pre>
 </div>
 
@@ -147,13 +149,101 @@ released and undocumented or never used, so they are absent here rather than rec
 
 <h2 id="release-timeline">Release timeline</h2>
 
-<p>The 2026 line, newest first. Eleven releases between 29 August and 3 September 2026, several
+<p>The 2026 line, newest first. Twelve releases between 29 August and 4 September 2026, several
 landing on the same day, each of them larger than anything in the plugin's first era.</p>
 
 <div class="tl">
 
   <div class="tl__item is-latest">
-    <div class="tl__head"><span class="tl__ver">0.4.0</span><span class="tl__date">3 Sep 2026</span><span class="pill pill--brand">latest</span></div>
+    <div class="tl__head"><span class="tl__ver">0.4.1</span><span class="tl__date">4 Sep 2026</span><span class="pill pill--brand">latest</span></div>
+    <ul>
+      <li><strong>A marker holding an id can now be a link.</strong>
+        <code>report_link_pattern</code> takes one <code>MARKER=URL</code> per line &mdash;
+        <code>jira = https://acme.atlassian.net/browse/{}</code> &mdash; and every test carrying that
+        marker gets a badge that opens the ticket. <code>--report-link-pattern</code> does the same from
+        the command line and adds to the ini rather than replacing it. The ids are grouped under the
+        marker they were written as, so a <em>Jira</em> row and a <em>Testcase</em> row each say which
+        system their ids belong to while the badges themselves stay as short as <code>PROJ-123</code>;
+        a test that closes two tickets gets two badges in one row. Nothing is fetched and no token is
+        needed &mdash; a report is a static file that gets mailed, published and opened off a disk months
+        later, and a badge that needs credentials is blank in exactly those cases. Ids are
+        percent-encoded on the way into the url, and the template is substituted rather than formatted:
+        <code>str.format</code> reads every brace in a string, and a url is a place people put them, so a
+        templated Confluence link threw <code>KeyError</code> instead of rendering. A scheme the report
+        will not render &mdash; <code>javascript:</code>, <code>data:</code> &mdash; is dropped rather than
+        linked. A marker with no pattern is untouched. See <a href="configuration.html">Configuration</a>.</li>
+      <li><strong><code>@pytest.mark.owner(&quot;payments-team&quot;)</code> is a built-in marker</strong>,
+        shown ahead of the tags in a row of its own. It answers <em>who do I tell</em>, which is not the
+        question the rest of the markers answer, and burying it in a row where <code>smoke</code> and
+        <code>slow</code> catch the eye answers neither. Give <code>owner</code> a pattern of its own and it
+        links too. Ownership is also a dimension you can filter on: once anything carries an
+        <code>owner</code>, the <a href="steps-and-bdd.html">Test Steps</a> rail grows a second row of pills
+        &mdash; one per team, counted, busiest first, with an <code>Unowned</code> pill at the end. The counts
+        are counted inside the current kind, so <em>Failed</em> then a team gives that team's failures and the
+        pill's number is what the rail will show. The row is not drawn at all for a run with no owners.</li>
+      <li><strong><code>@pytest.mark.severity(&quot;blocker&quot;)</code> is the second built-in marker</strong>,
+        and it answers the question asked before <em>whose is this</em>: forty failures at <code>trivial</code>
+        and two at <code>blocker</code> are the same number on every other tab and are not remotely the same
+        run. The five levels are Allure's, worst first &mdash; <code>blocker</code>, <code>critical</code>,
+        <code>normal</code>, <code>minor</code>, <code>trivial</code> &mdash; and case is ignored, so
+        <code>severity(&quot;Critical&quot;)</code> is not a sixth level splitting a suite's counts in half.
+        One test, one level: where two markers claim one test the nearest wins, and two at the same scope are
+        read as the worse of them. The overridden one is still shown, struck through beside the one that won,
+        its tooltip saying where each was written. A test nobody rated is <em>unrated</em> rather than
+        <code>normal</code>, and a word outside the five is kept but sorts after <code>trivial</code>. The rail
+        grows a third row of pills for it, drawn in ladder order and counted inside both the kind and the owner
+        above it.</li>
+      <li><strong>Two new Analytics panels read those markers across builds.</strong> <em>Who owns what</em>
+        is one row per owner, worst first, with the tests they hold, the share of the suite that is, their mean
+        pass rate, how many are failing now, how many are flaky and where their minutes go &mdash; a run with
+        forty failures spread over six teams and a run with forty in one team read identically everywhere else
+        on the page. A test with two owners counts for both; only tests this run actually ran are counted;
+        ownership is read from the most recent build that named one rather than unioned across history, because
+        a test that moved teams last month should page the team that has it today. The pass rate is the mean of
+        the tests' own rates, so a team holding one test that has run two hundred times does not have it decide
+        their number. <em>How much it matters</em> sits beside it: one row per level in ladder order with
+        <em>Unrated</em> last, led by what somebody came to the tab to find out &mdash; <code>1 critical test
+        failing</code>. See <a href="analytics.html">Analytics</a>.</li>
+      <li><strong>The ids reach the JUnit xml</strong> as <code>&lt;property&gt;</code> elements on the testcase
+        itself, which is the half Xray, Zephyr and TestRail actually read, none of them having any way to open an
+        html report. The property name is the marker name, so a suite that must emit <code>test_key</code> writes
+        <code>@pytest.mark.test_key</code> and gets exactly that. Only <code>owner</code>, <code>severity</code>
+        and the markers named in <code>report_link_pattern</code> are written, so nothing starts appearing in a
+        file your CI parses without having been asked for, and a marker with empty brackets writes no property.
+        Severity is written once and already resolved: every other traceability marker is a set, but a testcase
+        carrying both <code>normal</code> and <code>critical</code> is one no consumer can rank. See
+        <a href="ci-integrations.html">CI integrations</a>.</li>
+      <li><strong>Both markers are registered with pytest</strong>, so <code>--strict-markers</code> accepts them
+        and no run prints <code>PytestUnknownMarkWarning</code> for markers this plugin asked you to write. The
+        pattern markers are registered from your configuration rather than from a list in the plugin, because
+        which names mean something is your decision.</li>
+      <li><strong><code>step</code> now works in an <code>async</code> test</strong> the way it always has in a
+        sync one: <code>async with step(...)</code>, and <code>@step</code> on an <code>async def</code>. Nothing
+        has to be installed and no setting turns it on &mdash; <code>pytest-asyncio</code>, <code>anyio</code> and
+        <code>trio</code> are all driven the same way. <code>async with</code> was a <code>TypeError</code> before
+        this, and <strong><code>@step</code> on an <code>async def</code> was worse than unsupported: it reported a
+        failing step green.</strong> Calling an <code>async def</code> only builds a coroutine, so the wrapper
+        closed the step on that &mdash; nought milliseconds, PASS &mdash; and the work ran, and raised, long after
+        the step said it had finished. It is now timed across the call, and the coroutine is found through
+        <code>functools.wraps</code>, so a retry or a rate limiter stacked above the step no longer hides it.</li>
+      <li><strong>Work run concurrently comes back as the siblings it was.</strong> Steps were kept on a
+        per-thread stack and asyncio runs every task on the one thread, so three gathered legs came back nested
+        three deep inside one another &mdash; a tree that never existed. The stack moved from a
+        <code>threading.local</code> to a <code>ContextVar</code> holding an immutable tuple, and every step now
+        records the step it is a step <em>of</em>, which fixes the same misreading for threads, where it has been
+        wrong since steps shipped. An attachment made inside one leg is filed under that leg rather than on
+        whichever sibling happened to be open. A step left open by a cancelled task is swept at the end of the
+        test; a step held open across a <code>yield</code> in an async fixture closes where the fixture resumes;
+        and a pooled worker thread that leaked an open step no longer indents the next test underneath it. See
+        <a href="steps-and-bdd.html">Steps &amp; BDD</a>.</li>
+      <li><strong><code>python_requires</code> says <code>&gt;=3.7</code></strong>, which is what
+        <code>contextvars</code> needs. It said <code>&gt;=3.5</code> before, which no supported pytest has run
+        on for years.</li>
+    </ul>
+  </div>
+
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.4.0</span><span class="tl__date">3 Sep 2026</span></div>
     <ul>
       <li><strong>Copy the command that reruns one test.</strong> A third button beside a failure message
         copies <code>pytest tests/test_a.py::test_one</code>. It is built from the test's node id rather
@@ -589,6 +679,31 @@ in a substantially different plugin, so the notes are grouped by what will actua
     <thead><tr><th>Since</th><th>What changes</th><th>How to keep the old behaviour</th></tr></thead>
     <tbody>
       <tr>
+        <td class="t-nowrap"><code>0.4.1</code></td>
+        <td><code>python_requires</code> rose from <code>&gt;=3.5</code> to <code>&gt;=3.7</code>, which is what <code>contextvars</code> needs. <code>pip</code> on 3.5 or 3.6 will resolve to 0.4.0 rather than refusing.</td>
+        <td class="t-nowrap"><code>pytest-html-reporter==0.4.0</code></td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>0.4.1</code></td>
+        <td>The JUnit xml gains a <code>&lt;properties&gt;</code> block on any testcase carrying <code>owner</code>, <code>severity</code> or a marker named in <code>report_link_pattern</code>. A collector that reports unknown properties will start reporting these.</td>
+        <td>Drop the markers, or the pattern that names them</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>0.4.1</code></td>
+        <td><code>owner</code> and <code>severity</code> are registered markers, so a suite already using either name for something else now inherits this plugin's meaning of it &mdash; a badge, a filter row and an Analytics panel.</td>
+        <td>Rename the marker</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>0.4.1</code></td>
+        <td>A step tree built by concurrent work changes shape: gathered legs that used to nest three deep inside one another now sit beside each other, and threads that interleaved into one buffer are no longer drawn under whichever step was last opened.</td>
+        <td>&mdash; the old shape was wrong</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>0.4.1</code></td>
+        <td><code>@step</code> on an <code>async def</code> used to report a failing step as passing in nought milliseconds. Such steps now show their real duration, and a step that raises is recorded failed &mdash; so a run that read green may now read red.</td>
+        <td>&mdash;</td>
+      </tr>
+      <tr>
         <td class="t-nowrap"><code>0.3.9</code></td>
         <td>A test failing with a live Selenium driver or Playwright page is photographed automatically. A test that took its own picture is not photographed again.</td>
         <td class="t-nowrap"><code>--report-screenshots=none</code></td>
@@ -630,6 +745,11 @@ in a substantially different plugin, so the notes are grouped by what will actua
 <h3 id="content-and-exports">Report content and exports that change shape</h3>
 
 <ul>
+  <li><strong>0.4.1</strong> &mdash; the JUnit xml gains a <code>&lt;properties&gt;</code> element on each
+    testcase that carries <code>owner</code>, <code>severity</code> or a marker named in
+    <code>report_link_pattern</code>, written ahead of the outcome where pytest's own writer puts
+    <code>record_property</code>. Markers holding ids are grouped by the marker they were written as rather
+    than shown as one flat row of badges.</li>
   <li><strong>0.4.0</strong> &mdash; Test Metrics rows gained <code>id</code> anchors derived from node ids,
     and the four per-row buttons fold behind a <code>...</code> control by default. Cut messages fade at the
     tail; the ellipsis remains in the cell text, hidden, so CSV, Excel and print exports still show that a
@@ -655,6 +775,10 @@ line &mdash; are built by reading back the <code>output.json</code> each build w
 builds is usually written by more than one version of the plugin.</p>
 
 <ul>
+  <li><strong>0.4.1</strong> &mdash; <code>output.json</code> gained each test's <code>owner</code> and
+    <code>severity</code>, which is what lets the two new Analytics panels read across builds at all. Builds
+    archived by an earlier version carry neither key and are read as unclaimed and unrated rather than as
+    anything invented.</li>
   <li><strong>0.3.6</strong> &mdash; <code>output.json</code> gained the coverage percentage. A build that
     measured nothing leaves a gap in the trend line rather than a drop to zero.</li>
   <li><strong>0.3.7</strong> &mdash; <code>output.json</code> gained each test's duration. Builds archived by

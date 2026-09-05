@@ -378,6 +378,8 @@ def _reads(heading, expected):
 
 <p>Filing a picture on a step takes a little care. An image attached mid-test knows its own step already and says so itself — which is what puts one on a step of a test that <em>passed</em>. An automatic capture runs from the teardown hook with no step open at all, so those are filed against the step carrying the error: a photograph of the browser at the end of a failing test is a photograph of the state that step left behind.</p>
 
+<div class="note note--new"><span class="note__title">New in 0.4.1</span>A picture taken inside one leg of concurrent work is filed under that leg. The question <em>which step is open</em> used to be answered off a stack shared by every task on the thread, so a capture made in one gathered leg arrived on whichever sibling happened to be open at the time. See <a href="steps-and-bdd.html#concurrent-steps">concurrent steps</a>.</div>
+
 <p>A test that named no steps — which is most tests — shows its picture under <strong>Test body</strong>. The body is where it ran, and a picture with nowhere better to go is still worth having on the page.</p>
 
 <figure class="imgslot" data-shot="screenshots-gallery-lightbox.png">

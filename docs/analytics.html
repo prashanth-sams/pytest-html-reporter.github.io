@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Analytics · pytest-html-reporter</title>
-<meta name="description" content="How the Analytics tab reads every retained build: failures grouped by exception, flaky tests, standing failures, pass-rate drift, where the time goes, and the movement between builds.">
+<meta name="description" content="How the Analytics tab reads every retained build: failures grouped by exception, who owns what, how much it matters, flaky tests, standing failures, pass-rate drift, where the time goes, and the movement between builds.">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="../assets/img/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="../assets/img/icon-256.png">
 <meta property="og:title" content="Analytics · pytest-html-reporter">
-<meta property="og:description" content="How the Analytics tab reads every retained build: failures grouped by exception, flaky tests, standing failures, pass-rate drift, where the time goes, and the movement between builds.">
+<meta property="og:description" content="How the Analytics tab reads every retained build: failures grouped by exception, who owns what, how much it matters, flaky tests, standing failures, pass-rate drift, where the time goes, and the movement between builds.">
 <meta property="og:type" content="article">
 <meta property="og:image" content="../assets/img/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -441,6 +441,73 @@ start — and it is four different sentences rather than one with a suffix:</p>
 <strong>counted rather than dropped</strong> — <em>and 4 more types, 7 failures between them</em> —
 and opens in the <a href="#and-n-more">same dialog</a> as everything else on the tab, with the count
 of failures in each.</p>
+
+<h2 id="who-owns-what">Who owns what</h2>
+
+<div class="note note--new"><span class="note__title">New in 0.4.1</span>One row per
+<a href="steps-and-bdd.html#owner-and-severity"><code>owner</code></a>, worst first. A run with forty
+failures spread over six teams and a run with forty in one team read identically everywhere else on
+this page, and they are not the same morning.</div>
+
+<p>The panel is drawn as soon as anything in the run carries <code>@pytest.mark.owner(...)</code>,
+and not at all before that. Each row holds the tests that team owns, the share of the suite that is,
+their mean pass rate, how many are failing now, how many are flaky and where their minutes go.</p>
+
+<ul>
+  <li><strong>A test with two owners counts for both.</strong> Picking one would quietly take a team
+  off the hook for a test they had put their name on.</li>
+  <li><strong>Only tests this run actually ran are counted.</strong> A test deleted three builds ago
+  is nobody's morning, and leaving it in makes a team's numbers impossible to fix.</li>
+  <li><strong>Ownership is read from the most recent build that named one</strong> rather than
+  unioned across history: a test that moved teams last month should page the team that has it today,
+  not both.</li>
+  <li><strong>The pass rate is the mean of the tests' own rates</strong> rather than passes over
+  runs, so a team holding one test that has run two hundred times and forty that ran once does not
+  have the two hundred decide their number.</li>
+  <li><strong>Unclaimed tests are a row, not a gap</strong>, sorted last whatever their numbers —
+  unowned is not a team, and reading it in among them invites somebody to go and find out who
+  <em>Unowned</em> is. The line above the table says how much of the suite it is.</li>
+  <li><strong>Every owner is drawn rather than a top few</strong>, and the panel scrolls: a team cut
+  off the bottom of the list is a team that does not know it has work.</li>
+</ul>
+
+<div class="note"><span class="note__title">Note</span><code>owner</code> is written into
+<a href="#output-json"><code>output.json</code></a> from 0.4.1 on, which is what lets this panel read
+across builds at all. Builds archived by an earlier version carry no key and are read as unclaimed
+rather than as anything invented, so the table fills in as the archive turns over.</div>
+
+<figure class="imgslot" data-shot="analytics-owner-table.png">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+  <b>Screenshot: assets/img/shots/analytics-owner-table.png</b>
+  <span>A close crop of the "Who owns what" panel at 1440px, light theme, from a suite where at least four teams carry tests and some tests carry none. The headline line above the table must be legible, at least three named owner rows must show their test count, share, mean pass rate, failing and flaky counts and time, and the "Unowned" row must be visible at the bottom of the list.</span>
+</figure>
+
+<h2 id="how-much-it-matters">How much it matters</h2>
+
+<div class="note note--new"><span class="note__title">New in 0.4.1</span>One row per
+<a href="steps-and-bdd.html#owner-and-severity"><code>severity</code></a> level, beside <em>Who owns
+what</em>. Forty failures at <code>trivial</code> and two at <code>blocker</code> are the same number
+on every other tab and are not remotely the same run.</div>
+
+<p>The rows carry the same figures as the owner table, and the headline over them leads with what
+somebody came to the tab to find out — <em>1 critical test failing</em> — rather than with the
+totals.</p>
+
+<ul>
+  <li><strong>Ladder order, not its own numbers.</strong> Sorting the table by what is in it would
+  put <code>trivial</code> above <code>blocker</code> and argue with the words in it. The order is
+  <code>blocker</code>, <code>critical</code>, <code>normal</code>, <code>minor</code>,
+  <code>trivial</code>, then anything unrecognised, then <em>Unrated</em> last.</li>
+  <li><strong><em>Unrated</em> is a row of its own.</strong> A test nobody rated is not a
+  <code>normal</code> test, and drawing it as one would bury the four tests somebody did rate under
+  six hundred they did not.</li>
+  <li><strong>The panel is not drawn at all for a run that rated nothing</strong>, so a suite using
+  neither marker sees the tab it had before.</li>
+</ul>
+
+<div class="note"><span class="note__title">Note</span><code>severity</code> is written into
+<a href="#output-json"><code>output.json</code></a> alongside <code>owner</code>. Builds archived by
+an earlier version carry no key and are read as unrated.</div>
 
 <h2 id="flaky-tests">Flaky tests</h2>
 
@@ -926,10 +993,12 @@ empty report. The <a href="ci-integrations.html">merge command</a> reads shard b
         &quot;tests&quot;: {
           &quot;0&quot;: { &quot;status&quot;: &quot;PASS&quot;, &quot;message&quot;: &quot;&quot;,
                  &quot;test_name&quot;: &quot;test_only_a_failure_counts&quot;,
-                 &quot;rerun&quot;: &quot;0&quot;, &quot;duration&quot;: 0.0 },
+                 &quot;rerun&quot;: &quot;0&quot;, &quot;duration&quot;: 0.0,
+                 &quot;owner&quot;: [], &quot;severity&quot;: &quot;&quot; },
           &quot;1&quot;: { &quot;status&quot;: &quot;FAIL&quot;, &quot;message&quot;: &quot;AssertionError: assert 1 == 2&quot;,
                  &quot;test_name&quot;: &quot;test_totals&quot;,
-                 &quot;rerun&quot;: &quot;2&quot;, &quot;duration&quot;: 1.24 }
+                 &quot;rerun&quot;: &quot;2&quot;, &quot;duration&quot;: 1.24,
+                 &quot;owner&quot;: [&quot;payments-team&quot;], &quot;severity&quot;: &quot;blocker&quot; }
         },
         &quot;status&quot;: { &quot;total_pass&quot;: 1, &quot;total_fail&quot;: 1, &quot;total_skip&quot;: 0,
                     &quot;total_error&quot;: 0, &quot;total_xpass&quot;: 0, &quot;total_xfail&quot;: 0,
@@ -961,6 +1030,8 @@ empty report. The <a href="ci-integrations.html">merge command</a> reads shard b
       <tr><td class="t-nowrap"><code>content.suites</code></td><td>Keyed by <strong>stringified integer index</strong>, not by suite name. Each suite's <code>tests</code> map is keyed the same way, by position within the suite.</td></tr>
       <tr><td class="t-nowrap"><code>tests.&lt;j&gt;.rerun</code></td><td>A <strong>string</strong>. <code>duration</code> beside it is a number.</td></tr>
       <tr><td class="t-nowrap"><code>tests.&lt;j&gt;.duration</code></td><td>Written for the sake of the build <em>after</em> this one: Analytics reads durations back out of the archives, and a number that was never stored is a number no later run can show.</td></tr>
+      <tr><td class="t-nowrap"><code>tests.&lt;j&gt;.owner</code></td><td>A <strong>list</strong>, in the order the markers were written, and empty for a test nobody claimed. New in 0.4.1, and written for the same reason as <code>duration</code>: the owner roll-up is a cross-build table, so ownership has to be in the file before it can be read across files.</td></tr>
+      <tr><td class="t-nowrap"><code>tests.&lt;j&gt;.severity</code></td><td>One <strong>string</strong>, already resolved between markers, or <code>""</code> for a test nobody rated. New in 0.4.1. A build archived before it existed has no key, which reads the same way.</td></tr>
       <tr><td class="t-nowrap"><code>tests.&lt;j&gt;.message</code></td><td>The failure text, stored raw. This is what the exception grouping reads.</td></tr>
       <tr><td class="t-nowrap"><code>status_list</code></td><td>Run-wide totals, and <strong>every value is a string</strong>. So is <code>total_tests</code>. The Trends chart's "Failed" series is <code>fail + error</code>.</td></tr>
       <tr><td class="t-nowrap"><code>status</code></td><td><code>"FAIL"</code> if any suite recorded a non-zero <code>total_fail</code> or <code>total_error</code>; <code>"PASS"</code> otherwise.</td></tr>
@@ -1033,6 +1104,8 @@ better, which is the one you act on.</p>
 <li class="lvl-2"><a href="#history-that-was-already-on-disk">History that was already on disk</a></li>
 <li class="lvl-2"><a href="#the-six-figures">The six figures across the top</a></li>
 <li class="lvl-2"><a href="#why-this-run-failed">Why this run failed</a></li>
+<li class="lvl-2"><a href="#who-owns-what">Who owns what</a></li>
+<li class="lvl-2"><a href="#how-much-it-matters">How much it matters</a></li>
 <li class="lvl-2"><a href="#flaky-tests">Flaky tests</a></li>
 <li class="lvl-2"><a href="#standing-failures">Standing failures</a></li>
 <li class="lvl-2"><a href="#pass-rate-drift">Pass-rate drift</a></li>

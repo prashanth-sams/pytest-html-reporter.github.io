@@ -2,11 +2,13 @@
 
 <h2 id="versions-and-platforms">Versions and platforms</h2>
 
-<p>Nothing in the three repositories states a support policy, and the one machine-readable claim is
-out of date. <code>setup.py</code> declares <code>python_requires=&quot;&gt;=3.5&quot;</code>, but the
-package uses f-strings — in <code>cli.py</code>, <code>junit.py</code>, <code>coverage_report.py</code>
-and <code>report_opener.py</code> — which need 3.6, and nothing in CI has exercised 3.5 or 3.6 in
-years. What follows is the tested matrix rather than the declared one.</p>
+<p>Nothing in the three repositories states a support policy, and the one machine-readable claim
+is now closer to the truth than it was. <code>setup.py</code> declares
+<code>python_requires=&quot;&gt;=3.7&quot;</code> as of 0.4.1, raised from <code>&gt;=3.5</code>
+because the async step support added in that release needs <code>contextvars</code>, which is 3.7.
+The package also uses f-strings — in <code>cli.py</code>, <code>junit.py</code>,
+<code>coverage_report.py</code> and <code>report_opener.py</code> — and nothing in CI has exercised
+3.7 or 3.8 in years. What follows is the tested matrix rather than the declared one.</p>
 
 <div class="tablewrap">
   <table>
@@ -42,9 +44,10 @@ false</code>, so a break on one interpreter does not hide a break on the other. 
 workflow (<code>main.yml</code>) runs the unit suite on whatever Python <code>ubuntu-latest</code>
 provides, on pull requests to <code>master</code> only.</p>
 
-<p>Treat <strong>3.8</strong> as the floor and <strong>3.9–3.13</strong> as the tested band. If you
-need an older interpreter, pin an older plugin release and test it against your own suite — nobody
-else is.</p>
+<p>Treat <strong>3.8</strong> as the floor and <strong>3.9–3.13</strong> as the tested band —
+a step above the <code>&gt;=3.7</code> that <code>setup.py</code> declares, because 3.7 is what the
+code needs rather than what anything runs it on. If you need an older interpreter, pin an older
+plugin release and test it against your own suite — nobody else is.</p>
 
 <div class="note"><span class="note__title">Note</span><code>tox.ini</code> still lists
 <code>py37</code> and <code>pypy3</code>, and an <code>ansi2html</code> factor that no code in the
@@ -82,7 +85,7 @@ Windows are assumed to have a desktop. Everywhere else, <code>DISPLAY</code> or
     <tbody>
       <tr>
         <td class="t-nowrap">Plugin</td>
-        <td><code>0.4.0</code></td>
+        <td><code>0.4.1</code></td>
         <td>Python 3.8+, pytest, Pillow</td>
       </tr>
       <tr>

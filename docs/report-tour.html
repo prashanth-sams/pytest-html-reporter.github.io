@@ -115,7 +115,12 @@ access at any point after generation.</p>
 
 <p>Everything the page draws with is written into the document itself at generation time, in load
 order: jQuery, jsPDF, dom-to-image, Bootstrap, DataTables, JSZip, the DataTables export buttons
-and Chart.js — along with the favicon, the loader and the logo as <code>data:</code> URIs. The
+and Chart.js — along with the favicon and the logo as <code>data:</code> URIs. The loading spinner
+was one of those until 0.4.1, when the 70 KB animated GIF was replaced by a rotate-only CSS
+animation and the jQuery fade by an opacity transition. Both of the old ones were stepped by the
+main thread, and bringing a report up is one long block of main-thread work — so on Firefox and
+WebKit the spinner sat frozen through all of it and the overlay then jumped away rather than faded.
+The new pair run on the compositor and keep moving however long the page behind them takes. The
 icons are Font Awesome 4.7 glyphs shipped as cropped SVGs and painted as CSS masks, so an
 <code>&lt;i class="fa fa-home"&gt;</code> still inherits its size from the surrounding text and
 still takes its colour from <code>currentcolor</code> exactly as the font did — and still draws
@@ -283,6 +288,8 @@ note.</p>
       <tr><td class="t-nowrap"><strong>Pass rate across builds</strong></td><td>Share of decided tests that passed, over the last 20 builds. Barely smoothed, so the curve does not invent movement between points, and deliberately not zero-based — a suite living between 96% and 99% is exactly the one whose two-point drops matter.</td></tr>
       <tr><td class="t-nowrap"><strong>What moved, build to build</strong></td><td>Regressed, Fixed, Added and Dropped as a stacked bar per build step.</td></tr>
       <tr><td class="t-nowrap"><strong>Where the time goes</strong></td><td>This run's tests across seven duration bands, from <code>&lt; 100ms</code> to <code>30s +</code>, in one deepening ramp — the bars are one measure sliced up, not seven things being compared.</td></tr>
+      <tr><td class="t-nowrap"><strong>Who owns what</strong></td><td>One row per <code>owner</code>, worst first: tests held, share of the suite, mean pass rate, failing now, flaky, and time. Drawn only once something in the run carries the marker, with an <em>Unowned</em> row sorted last whatever its numbers.</td></tr>
+      <tr><td class="t-nowrap"><strong>How much it matters</strong></td><td>The same figures per <code>severity</code> level, in ladder order rather than by their own numbers, <em>Unrated</em> last. The line above it leads with what somebody came for — <em>1 critical test failing</em>.</td></tr>
       <tr><td class="t-nowrap"><strong>Test base growth</strong></td><td>Tests collected per build, as a stepped line.</td></tr>
       <tr><td class="t-nowrap"><strong>Slowest tests in this run</strong></td><td>The top 10 as a horizontal bar chart, in seconds, with the test names on the axis.</td></tr>
     </tbody>
@@ -565,11 +572,25 @@ Tests, each carrying a count and each omitted when it would match nothing — an
 holding a match, and clearing the box leaves groups as they are rather than shutting one you opened
 by hand.</p>
 
+<p>From 0.4.1 the pills can run to three rows, because they answer different questions and
+<em>this team's blockers</em> needs all three answered at once. The second row appears once anything
+in the run carries an <code>owner</code>: one pill per team, counted, busiest first, with
+<strong>Unowned</strong> at the end. The third appears once anything carries a <code>severity</code>,
+drawn in ladder order rather than by count, with <strong>Unrated</strong> last. Each row counts
+inside the rows above it, so a pill's number is always what the rail will show if you press it, and
+a row is not drawn at all for a run that wrote none of that marker.</p>
+
 <p><strong>The reading pane on the right</strong> opens with the test's name and suite and a status
 badge reading <code>FAIL &middot; 4.20 s</code>. A BDD test leads with a Feature strip naming the
 feature, the scenario and the file. Then a row of facts — description, markers, parameters,
 fixtures — as badges, with a marker's tooltip saying <em>where it was written</em> ("user marker,
-from the class"), which is the answer when nobody remembers applying it. Then the three phase blocks
+from the class"), which is the answer when nobody remembers applying it. <code>owner</code> and
+<code>severity</code> are pulled out into rows of their own ahead of the tags, because <em>who do I
+tell</em> and <em>how bad is this</em> are not the question the rest of the row answers; a severity
+that was overridden by a nearer marker is still shown, struck through beside the one that won.
+Markers named in <code>report_link_pattern</code> become links, grouped under the marker they were
+written as, so a <em>Jira</em> row and a <em>Testcase</em> row each say which system their ids belong
+to. Then the three phase blocks
 with their own timings and the step lines inside them.</p>
 
 <p>A step line carries a depth rail, a Given/When/Then badge for Gherkin steps only, its title, its

@@ -366,6 +366,20 @@ and nothing extra is collected: the archives already hold a status per test per 
     TimeoutException</em> — with the tests in each group named rather than only counted.</p>
   </article>
   <article class="card">
+    <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg></div>
+    <h3 id="who-owns-what">Who owns what</h3>
+    <p>One row per <code>owner</code>, worst first: the tests they hold, the share of the suite that
+    is, their mean pass rate, what is failing now, what is flaky and where their minutes go. Forty
+    failures over six teams and forty in one team read identically everywhere else.</p>
+  </article>
+  <article class="card">
+    <div class="card__icon is-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+    <h3 id="how-much-it-matters">How much it matters</h3>
+    <p>One row per <code>severity</code> level in ladder order, <em>Unrated</em> last, led by what
+    somebody came to the tab to find out — <em>1 critical test failing</em>. Forty failures at
+    <code>trivial</code> and two at <code>blocker</code> are not the same run.</p>
+  </article>
+  <article class="card">
     <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18l5-5 4 3 4-7 5 5"/></svg></div>
     <h3 id="pass-rate-across-builds">Pass rate across builds</h3>
     <p>The drift, on an axis that is deliberately not pinned to 0–100: a suite that lives between
@@ -474,6 +488,15 @@ login(&quot;amy&quot;)        # the tab shows: Log in as amy, with user=amy kept
   </li>
   <li>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>An <code>async</code> test names steps the same way</b>New in 0.4.1.
+    <code>async with step(&quot;…&quot;)</code>, and <code>@step</code> on an <code>async def</code>,
+    with nothing to install and no setting to turn on — <code>pytest-asyncio</code>,
+    <code>anyio</code> and <code>trio</code> are all driven the same way. Work run concurrently comes
+    back as the siblings it was rather than nested inside whichever leg happened to be open, and each
+    leg keeps its own children and its own attachments.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
     <span><b>Anything attached lands on the open step</b><code>attach_api</code>,
     <code>attach_json</code>, <code>attach_text</code> and <code>attach_file</code> need no extra
     argument to say which step they belong to, and the step shows a paperclip. A failing test's
@@ -507,6 +530,97 @@ changes how a test runs and <code>@smoke</code> only names it. Two are cut down 
 <code>parametrize</code> shows its argument names rather than every row the test will ever run
 with, and a <code>skipif</code> condition — evaluated at import, so it reaches any reporter as a
 bare <code>False</code> — is shown as its reason instead.</p>
+
+<h3 id="traceability">Traceability: owners, severities and markers that link</h3>
+
+<p>A marker holding an id is already collected and already shown, but as a flat badge — nothing in
+the report knows that <code>PROJ-123</code> is an issue rather than a word. A pattern is the missing
+half. Name a marker in <code>report_link_pattern</code>, put <code>{}</code> where its argument goes,
+and every test carrying it gets a badge that opens the ticket.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">ini</span>
+    <span class="codeblock__cap">pytest.ini — one MARKER=URL per line</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="ini">[pytest]
+report_link_pattern =
+    jira = https://acme.atlassian.net/browse/{}
+    testcase = https://acme.testrail.io/index.php?/cases/view/{}
+    owner = https://github.com/orgs/acme/teams/{}</code></pre>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">The markers those patterns read</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">@pytest.mark.owner(&quot;payments-team&quot;)
+@pytest.mark.severity(&quot;blocker&quot;)
+@pytest.mark.jira(&quot;PROJ-123&quot;)
+@pytest.mark.jira(&quot;PROJ-987&quot;)          # two tickets, two badges, one row
+def test_refund_is_idempotent():
+    ...</code></pre>
+</div>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Ids are grouped under the marker they were written as</b>A <em>Jira</em> row and a
+    <em>Testcase</em> row each say which system their ids belong to, so the badges themselves stay
+    as short as <code>PROJ-123</code>. A test that closes two tickets gets two badges in one
+    row.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b><code>owner</code> answers <em>who do I tell</em></b>It gets a row of its own ahead of
+    the tags rather than sitting among <code>smoke</code> and <code>slow</code>, and it is a filter:
+    once anything carries one, the Test Steps rail grows a row of per-team pills, counted, busiest
+    first, with an <code>Unowned</code> pill at the end.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b><code>severity</code> is a ladder, not a tag</b>Allure's five words, worst first —
+    <code>blocker</code>, <code>critical</code>, <code>normal</code>, <code>minor</code>,
+    <code>trivial</code>. One test, one level: the nearest marker wins, two at the same scope are
+    read as the worse of them, and the overridden one is still shown struck through with a tooltip
+    saying where each was written. A test nobody rated is <em>unrated</em>, not
+    <code>normal</code>.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The ids reach the JUnit xml too</b>As <code>&lt;property&gt;</code> elements on the
+    testcase, which is the half Xray, Zephyr and TestRail actually read — none of them opens an html
+    report. The property name is the marker name, so a suite that must emit <code>test_key</code>
+    writes <code>@pytest.mark.test_key</code> and gets exactly that. Only <code>owner</code>,
+    <code>severity</code> and the markers you named are written, so nothing starts appearing in a
+    file your CI parses without having been asked for.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Nothing is fetched and no token is needed</b>A report is a static file that gets mailed,
+    published and opened off a disk months later, and a badge that needs credentials is blank in
+    exactly those cases. Ids are percent-encoded on the way into the url, and a scheme the report
+    will not render is dropped rather than linked.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>All three markers are registered with pytest</b>So <code>--strict-markers</code> accepts
+    them and no run prints <code>PytestUnknownMarkWarning</code> for a marker this plugin asked you to
+    write. The pattern markers are registered from your configuration, because which names mean
+    something is your decision.</span>
+  </li>
+</ul>
 
 <p><a href="steps-and-bdd.html">Test steps, Gherkin and markers in full</a> — including
 <code>--report-steps</code>, <code>--report-step-limit</code>, and what a retry reports.</p>

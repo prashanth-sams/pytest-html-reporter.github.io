@@ -7,7 +7,7 @@
     <span class="codeblock__cap">pytest_html_reporter/__init__.py, in full</span>
     <button class="copybtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg><span class="copybtn__label">Copy</span></button>
   </div>
-  <pre><code data-lang="python">__version__ = &quot;0.4.0&quot;
+  <pre><code data-lang="python">__version__ = &quot;0.4.1&quot;
 
 from .attachments import attach_api, attach_file, attach_json, attach_text
 from .steps import step
@@ -698,7 +698,7 @@ report_attachment_limit = 20000</code></pre>
   <a class="card" href="steps-and-bdd.html">
     <div class="card__icon is-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
     <h3>step()</h3>
-    <p>The sixth export. A <code>with</code> block or a decorator that names and times a piece of a test, plus the Gherkin steps a pytest-bdd scenario contributes on its own.</p>
+    <p>The sixth export. A <code>with</code> block or a decorator that names and times a piece of a test &mdash; from 0.4.1 an <code>async with</code> block or a decorator on an <code>async def</code> as well &mdash; plus the Gherkin steps a pytest-bdd scenario contributes on its own.</p>
     <span class="card__more">Steps &amp; BDD <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
   </a>
   <a class="card" href="screenshots.html">

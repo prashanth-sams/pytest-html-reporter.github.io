@@ -149,6 +149,14 @@ document.documentElement.classList.add('js');})();
 
 <p>The rail has its own search box, matching on the suite, the test, every step title, every marker and — for a Gherkin test — the feature and the scenario. Parameters and error text are deliberately not indexed: they already run to several thousand characters across a run and would roughly double the size of the file for nothing. A test named <code>test_a_declined_card</code> is indexed under that spelling <em>and</em> under <code>test a declined card</code>, because the second is what people type.</p>
 
+<h3 id="filtering-the-rail">Filtering the rail</h3>
+
+<p>Above the search box is a row of pills — <strong>All</strong>, <strong>Failed</strong>, and, when the run has both, <strong>Scenarios</strong> and <strong>Tests</strong> — each carrying its count. A filter that would empty the rail is not offered, and one that was selected before it stopped existing is let go.</p>
+
+<p>From 0.4.1 there are up to three rows, and they answer different questions, which is why they are rows rather than more values on one filter. The second appears once anything in the run carries an <a href="#owner-and-severity"><code>owner</code></a>: one pill per team, counted, busiest first, with an <strong>Unowned</strong> pill at the end for the tests nobody claimed. The third appears once anything carries a <code>severity</code>, drawn in ladder order — <code>blocker</code> first — rather than by how many tests are at each level, with <strong>Unrated</strong> last.</p>
+
+<p>Each row counts inside the ones above it. <em>Failed</em> then a team gives that team's failures, and then a level gives that team's <code>blocker</code> failures; the number on a pill is always what the rail will show if you press it. A row is not drawn at all for a run that wrote none of that marker, so a suite using neither sees exactly the rail it had before.</p>
+
 <p>See <a href="report-tour.html">the report tour</a> for how this tab sits beside the others.</p>
 
 <h2 id="naming-steps">Naming a step</h2>
@@ -303,9 +311,11 @@ def cart():
   <span>The Test Steps pane for one failed browser test, light theme, cropped to the Test body block. Two outer steps marked failed with no message, the innermost failed step carrying its exception text underneath, and the automatically captured screenshot thumbnail sitting on that same step.</span>
 </figure>
 
-<h3 id="threads">Threads</h3>
+<h3 id="threads">Threads and concurrency</h3>
 
-<p>Steps are recorded on the thread that ran the test, and each thread nests within itself. A test that fans work out to a pool would otherwise have every thread pushing onto one stack, and the steps would come back nested inside each other in whatever order the threads happened to interleave — a tree that never existed. A background thread's steps land at the top level, where they belong.</p>
+<p>Steps are recorded in the context that ran them, and each thread nests within itself. A test that fans work out to a pool would otherwise have every thread pushing onto one stack, and the steps would come back nested inside each other in whatever order the threads happened to interleave — a tree that never existed. A background thread's steps land at the top level, where they belong.</p>
+
+<p>Until 0.4.1 that was only half true: the stack was per-thread and correct, but the tab rebuilt the tree by reading depths straight down the buffer, so five threads interleaving their steps into one list drew a tree nobody could follow — the right depths under the wrong parents. Every step now records the step it is a step <em>of</em>, and the tab walks that instead.</p>
 
 <h2 id="attachments-on-steps">Anything attached lands on the step</h2>
 
@@ -326,6 +336,58 @@ def cart():
 </div>
 
 <p>This is read rather than passed, because <code>attach_json</code> is called by code that has no idea a report exists. An image attached inside a step is shown on that step as a thumbnail; a picture belonging to no step is shown against the test body, which is where a test with no named steps ran. The helpers themselves are documented in <a href="python-api.html">the Python API</a>.</p>
+
+<h2 id="async-tests">Steps in an async test</h2>
+
+<div class="note note--new"><span class="note__title">New in 0.4.1</span><code>step</code> works in an <code>async</code> test the way it always has in a sync one. Nothing has to be installed and no setting turns it on — <code>pytest-asyncio</code>, <code>anyio</code> and <code>trio</code> are all driven the same way. This is why <code>setup.py</code> now declares <code>python_requires=&quot;&gt;=3.7&quot;</code>: the machinery is <code>contextvars</code>.</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">Both spellings, in a coroutine</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">import asyncio
+
+import pytest
+
+from pytest_html_reporter import step
+
+
+@step(&quot;Notify {user}&quot;)
+async def notify(user):
+    await mailer.send(user)
+
+
+@pytest.mark.asyncio
+async def test_checkout_notifies_everyone():
+    async with step(&quot;Charge the card&quot;):
+        await gateway.charge(cart)
+
+    # Three legs, run together. They come back as three siblings.
+    await asyncio.gather(notify(&quot;amy&quot;), notify(&quot;bo&quot;), notify(&quot;cy&quot;))</code></pre>
+</div>
+
+<p><code>async with</code> was a <code>TypeError</code> before this — the object had no <code>__aenter__</code> at all — so the only spelling that worked was a plain <code>with</code> block inside the coroutine.</p>
+
+<div class="note note--warn"><span class="note__title">Careful</span><strong><code>@step</code> on an <code>async def</code> was worse than unsupported before 0.4.1: it reported a failing step green.</strong> Calling an <code>async def</code> only builds a coroutine, so the wrapper closed the step on that — nought milliseconds, PASS — and the work ran, and raised, long after the step said it had finished. It is now timed across the call, and a step that raises is recorded failed with its message. If a suite of async tests has been showing instant passing steps, that is what it was.</div>
+
+<h3 id="concurrent-steps">Work run concurrently comes back as the siblings it was</h3>
+
+<p>Steps used to be kept on a per-thread stack, and asyncio runs every task on the one thread: three gathered legs pushed onto that one stack and came back nested three deep inside one another. The stack is now a <code>ContextVar</code> holding an immutable tuple. A task starts from a copy of the context that created it, which is what keeps a leg nesting under the step that fanned it out while keeping its own steps to itself; the tuple is replaced rather than edited, because a mutable one would be the same list in every task and nothing would have changed.</p>
+
+<ul>
+  <li><strong>Each leg keeps its own children.</strong> Steps are buffered as they open, so three concurrent legs all go in before any of their children do; a list read straight down the page would indent every one of those children under the <em>last</em> leg.</li>
+  <li><strong>An attachment made inside a leg is filed under that leg.</strong> <code>attach_json</code>, <code>attach_api</code> and the screenshot capture say nothing about which step they mean, and answering off a shared stack put a picture taken in one leg on whichever sibling happened to be open.</li>
+  <li><strong>A step left open by a cancelled task is closed rather than left behind.</strong> Its context is gone and no stack can be asked, so every open step is registered as it starts and swept at the end of the test — a step that just stops being mentioned reads as a step that never ran.</li>
+  <li><strong>A step held open across a <code>yield</code> in an async fixture closes where the fixture resumes.</strong> pytest-asyncio drives each half of an async generator on a task of its own, so the block is entered in one context and left in another; it is closed on the frame it is holding rather than off a stack that never saw it, because a fixture that worked perfectly must not be reported as the place the test died.</li>
+  <li><strong>A pooled worker thread that leaked an open step no longer indents the next test underneath it.</strong> The thread is handed on still holding whatever it was left with, and the stack it carries names steps that have already been taken and rendered.</li>
+  <li><strong>Threads are unaffected by the move.</strong> A new one starts from an empty context, so a background thread's steps still land at the top level rather than under whatever the main thread had open.</li>
+</ul>
 
 <h2 id="gherkin">Cucumber and Gherkin, with pytest-bdd</h2>
 
@@ -513,6 +575,118 @@ class TestCheckout:
   <li><strong>A <code>skipif</code> condition is evaluated at import.</strong> <code>sys.platform == &quot;win32&quot;</code> reaches any reporter as a bare <code>False</code>, which says nothing, so the reason is shown instead: <code>skipif(reason=POSIX paths only)</code>. A <code>skipif</code> written with a string condition keeps that string.</li>
 </ul>
 
+<h3 id="owner-and-severity">Two markers the plugin gives a meaning to</h3>
+
+<div class="note note--new"><span class="note__title">New in 0.4.1</span><code>owner</code> and <code>severity</code> are collected like any other marker, but they answer questions the rest of the row does not — <em>who do I tell</em> and <em>how bad is this</em> — so each gets a row of its own, a row of filter pills on the rail and a panel on <a href="analytics.html">Analytics</a>. Both need no configuration at all, and both are registered with pytest, so <code>--strict-markers</code> accepts them and no run prints <code>PytestUnknownMarkWarning</code> for them.</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">python</span>
+    <span class="codeblock__cap">Neither needs anything in pytest.ini</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="python">@pytest.mark.owner(&quot;payments-team&quot;)
+@pytest.mark.severity(&quot;blocker&quot;)
+def test_a_refund_reaches_the_ledger():
+    ...</code></pre>
+</div>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b><code>owner</code> is shown ahead of the tags, in a row of its own</b>Burying it in a row where <code>smoke</code> and <code>slow</code> catch the eye answers neither question. A test can carry two, and both are kept: picking one would quietly take a team off the hook for a test they had put their name on.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b><code>severity</code> is a ladder, worst first</b><code>blocker</code>, <code>critical</code>, <code>normal</code>, <code>minor</code>, <code>trivial</code> — Allure's five words rather than five of our own, because whoever writes this marker has almost certainly written it there, and a vocabulary nearly the same as a familiar one is worse than either. Case is ignored, so <code>severity(&quot;Critical&quot;)</code> and <code>severity(&quot;critical&quot;)</code> are one level rather than two spellings splitting a suite's counts in half.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>One test, one level</b>Owners stack; a severity does not. Where two markers claim one test the nearest wins — a class marked <code>critical</code> inside a module marked <code>normal</code> is somebody correcting the outer word — and two written at the same scope are read as the worse of them, because reading a <code>blocker</code> down to <code>minor</code> over the order two decorators sit in is the one mistake here that hides work.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Nothing is hidden by that</b>The overridden marker is still shown, struck through beside the one that won, and its tooltip says where each was written — <em>normal, from the module · overridden by critical</em> — which is the answer when a level nobody typed on this test is the one deciding its colour.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A test nobody rated is <em>unrated</em>, not <code>normal</code></b>Allure defaults an unmarked test; this does not, because a suite where four tests are marked and six hundred are not is a suite with six hundred unrated tests, and drawing them as rated would bury the four. A bare <code>@pytest.mark.severity</code> with no argument names no level and stays the ordinary badge it is.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A word outside the five is kept, but sorts last</b>A filter that silently omits a test is worse than one that shows a typo — but an unrecognised severity is a typo far more often than a sixth level somebody meant, and a typo must not outrank <code>blocker</code>, so it sorts after <code>trivial</code> everywhere.</span>
+  </li>
+</ul>
+
+<h3 id="link-patterns">A marker holding an id can be a link</h3>
+
+<p>A marker holding an issue key has been collected and shown since markers landed, but as a flat badge: nothing in the report knows that <code>PROJ-123</code> is an issue rather than a word. <code>report_link_pattern</code> is the missing half. One <code>MARKER=URL</code> per line, with <code>{}</code> where the marker's argument goes.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">ini</span>
+    <span class="codeblock__cap">pytest.ini</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="ini">[pytest]
+report_link_pattern =
+    jira = https://acme.atlassian.net/browse/{}
+    testcase = https://acme.testrail.io/index.php?/cases/view/{}
+    owner = https://github.com/orgs/acme/teams/{}
+    docs = https://wiki.acme.dev/testing</code></pre>
+</div>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">The same from the command line, added to the ini rather than replacing it</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ pytest --report-link-pattern &#39;jira=https://acme.atlassian.net/browse/{}&#39; \
+         --report-link-pattern &#39;testcase=https://acme.testrail.io/index.php?/cases/view/{}&#39;</code></pre>
+</div>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Ids are grouped under the marker they were written as</b>A <em>Jira</em> row and a <em>Testcase</em> row each say which system their ids belong to, so the badges themselves stay as short as <code>PROJ-123</code>. A test that closes two tickets gets two badges in one row.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A template with no <code>{}</code> is a fixed destination</b>Which is what <code>docs = https://wiki.acme.dev/testing</code> means: the marker's presence links to it. It is not an error and not a placeholder somebody forgot.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Substituted, not formatted</b><code>str.format</code> reads every brace in a string, and a url is a place people put them, so a templated Confluence link threw <code>KeyError</code> instead of rendering. The id is percent-encoded on the way in, because it is pasted from a tracker and arrives with whatever that tracker allows in one.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Nothing is fetched and no token is needed</b>The report is a static file that gets mailed, published and opened off a disk months later, and a badge that needs credentials to render is blank in exactly those cases. A url template needs neither, and a dead link at least says so in the address bar.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A scheme the report will not render is dropped rather than linked</b><code>javascript:</code>, <code>data:</code> — the same sieve <code>--report-link</code> has always gone through, and for a stronger reason: this one is built per test out of whatever a marker said.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A marker with no pattern is untouched</b>So a suite that configures none of this gets exactly the report it had before, and the markers you do name are registered with pytest from your configuration rather than from a list in the plugin.</span>
+  </li>
+</ul>
+
+<p>Naming a marker here also puts it in the <a href="ci-integrations.html#junit-xml">JUnit xml</a>, as a <code>&lt;property&gt;</code> on the testcase — which is the half Xray, Zephyr and TestRail actually read.</p>
+
 <h3 id="parameters-fixtures-and-the-docstring">Parameters, fixtures and the docstring</h3>
 
 <ul class="featlist">
@@ -639,6 +813,7 @@ class TestCheckout:
 <li class="lvl-2"><a href="#decorating-helpers">Decorating the code your tests share</a></li>
 <li class="lvl-2"><a href="#nesting-and-phases">Nesting, phases and failures</a></li>
 <li class="lvl-2"><a href="#attachments-on-steps">Anything attached lands on the step</a></li>
+<li class="lvl-2"><a href="#async-tests">Steps in an async test</a></li>
 <li class="lvl-2"><a href="#gherkin">Cucumber and Gherkin, with pytest-bdd</a></li>
 <li class="lvl-2"><a href="#markers">Markers, and where they were written</a></li>
 <li class="lvl-2"><a href="#keeping-the-file-down">Keeping the file down</a></li>

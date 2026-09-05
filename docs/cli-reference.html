@@ -163,7 +163,7 @@ commands = pytest tests/ --html-report=./report --title=&quot;Payments Regressio
   </div>
 </div>
 
-<p>Twenty-four of the twenty-five options also have an ini key, so most of this page has a second, quieter form in <a href="configuration.html">the configuration reference</a>. <code>--title</code> is the one exception: it is command-line only.</p>
+<p>Twenty-five of the twenty-six options also have an ini key, so most of this page has a second, quieter form in <a href="configuration.html">the configuration reference</a>. <code>--title</code> is the one exception: it is command-line only.</p>
 
 <h2 id="quick-reference">Quick reference</h2>
 
@@ -178,6 +178,7 @@ commands = pytest tests/ --html-report=./report --title=&quot;Payments Regressio
       <tr><td class="t-nowrap"><code>--environment</code></td><td>text</td><td class="t-nowrap">unset</td><td>Names the environment under test; badge cut at 10 characters.</td></tr>
       <tr><td class="t-nowrap"><code>--build-info</code></td><td><code>KEY=VALUE</code>, repeatable</td><td class="t-nowrap">none</td><td>Extra rows in the Environment panel.</td></tr>
       <tr><td class="t-nowrap"><code>--report-link</code></td><td><code>LABEL=URL</code>, repeatable</td><td class="t-nowrap">none</td><td>Extra entries in the report&#039;s side nav.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-link-pattern</code></td><td><code>MARKER=URL</code>, repeatable</td><td class="t-nowrap">none</td><td>Turns a marker into a link on the test it is written on.</td></tr>
       <tr><td class="t-nowrap"><code>--report-open</code></td><td><code>auto</code> | <code>always</code> | <code>none</code></td><td class="t-nowrap"><code>auto</code></td><td>Whether the finished report is handed to a browser.</td></tr>
       <tr><td class="t-nowrap"><code>--archive-count</code></td><td>integer, kept as text</td><td class="t-nowrap"><code>&quot;&quot;</code> (keep every build)</td><td>How many builds the Archives section shows and keeps.</td></tr>
       <tr><td class="t-nowrap"><code>--archive-days</code></td><td>number of days</td><td class="t-nowrap">no age limit</td><td>Delete archived builds older than <code>DAYS</code> days.</td></tr>
@@ -206,7 +207,7 @@ commands = pytest tests/ --html-report=./report --title=&quot;Payments Regressio
 
 <h3 id="precedence">Precedence</h3>
 
-<p>For every setting the command-line flag wins, and the ini key is consulted only when the flag is unset or an empty or whitespace string. Two settings break that rule on purpose: <code>--build-info</code> and <code>--report-link</code> are <strong>additive</strong>. The command-line entries come first, then the ini lines, and both appear in the report. Every other setting is override-only.</p>
+<p>For every setting the command-line flag wins, and the ini key is consulted only when the flag is unset or an empty or whitespace string. Three settings break that rule on purpose: <code>--build-info</code>, <code>--report-link</code> and <code>--report-link-pattern</code> are <strong>additive</strong>. The command-line entries come first, then the ini lines, and both appear in the report. Every other setting is override-only.</p>
 
 <h3 id="when-it-happens">When it happens</h3>
 
@@ -421,6 +422,40 @@ $ pytest --html-report=./reports/%%Y%%m%%d.html  # ./reports/20260903.html</code
     --report-link &#039;Coverage=htmlcov/index.html&#039; \
     --report-link &#039;Runbook=https://wiki.example.com/runbook&#039;</code></pre>
     </div>
+  </div>
+</div>
+
+<div class="def">
+  <div class="def__head">
+    <span class="def__name">--report-link-pattern</span>
+    <div class="def__meta">
+      <span class="pill">MARKER=URL</span>
+      <span class="pill pill--teal">repeatable</span>
+      <span class="pill">ini: report_link_pattern (added to)</span>
+      <span class="pill pill--brand">new in 0.4.1</span>
+    </div>
+  </div>
+  <div class="def__body">
+    <p>Turns a marker into a link on the test it is written on. <code>@pytest.mark.jira(&quot;PROJ-123&quot;)</code> is already collected and already shown, but as a flat badge, because nothing in the report knows that <code>PROJ-123</code> is an issue rather than a word. Name the marker here, put <code>{}</code> where its argument goes, and every test carrying it gets a badge that opens the ticket.</p>
+    <p>The entry is split on the first <code>=</code>, and both halves must be non-empty or it is discarded. A template with <strong>no</strong> <code>{}</code> is a fixed destination that the marker&#039;s presence links to — <code>docs=https://wiki/testing</code> — not an error and not a placeholder somebody forgot.</p>
+    <p>The id is percent-encoded on the way into the URL, because it is pasted from a tracker and arrives with whatever that tracker allows in one. The template is <strong>substituted rather than formatted</strong>: <code>str.format</code> reads every brace in a string, and a URL is a place people put them, so a templated Confluence link would throw <code>KeyError</code> instead of rendering. The scheme goes through the same sieve as <code>--report-link</code>, and for a stronger reason — this URL is built per test out of whatever a marker said.</p>
+    <p>Naming a marker here does two more things. It is <strong>registered with pytest</strong>, so <code>--strict-markers</code> accepts it and no run prints <code>PytestUnknownMarkWarning</code> for it; and its id is written into the <a href="#junit-xml">JUnit XML</a> as a <code>&lt;property&gt;</code> on the testcase, which is the half Xray, Zephyr and TestRail actually read. The built-in <code>owner</code> and <code>severity</code> markers need none of this configuration and are written to the XML anyway.</p>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Two trackers, and a marker whose presence alone links somewhere</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --html-report=./report \
+    --report-link-pattern &#039;jira=https://acme.atlassian.net/browse/{}&#039; \
+    --report-link-pattern &#039;testcase=https://acme.testrail.io/index.php?/cases/view/{}&#039; \
+    --report-link-pattern &#039;docs=https://wiki.example.com/testing&#039;</code></pre>
+    </div>
+    <p>A marker with no pattern keeps the badge it has today, so this is opt-in per marker and nothing changes for a suite that sets none. See <a href="steps-and-bdd.html#link-patterns">markers that link</a>.</p>
   </div>
 </div>
 
@@ -1154,6 +1189,7 @@ $ pytest tests/e2e         --html-report=./report --report-shard=e2e  --report-s
       <tr><td class="t-nowrap"><code>--dry-run</code></td><td>flag</td><td class="t-nowrap">off</td><td class="t-nowrap">merge, junit</td><td>Merge and print the summary, writing nothing.</td></tr>
       <tr><td class="t-nowrap"><code>--html-report</code></td><td>path — <strong>required</strong></td><td class="t-nowrap">—</td><td class="t-nowrap">merge</td><td>Where the merged report is written.</td></tr>
       <tr><td class="t-nowrap"><code>--junit-xml</code></td><td>path</td><td class="t-nowrap">none</td><td class="t-nowrap">merge</td><td>Also write the merged JUnit XML here.</td></tr>
+      <tr><td class="t-nowrap"><code>--report-link-pattern</code></td><td><code>MARKER=URL</code>, repeatable</td><td class="t-nowrap">none</td><td class="t-nowrap">merge</td><td>Turns a marker into a link, and writes its id into the merged XML as a testcase property. Read off argv, there being no ini file here.</td></tr>
       <tr><td class="t-nowrap"><code>--start-time</code></td><td><code>earliest</code> | <code>now</code> | unix timestamp</td><td class="t-nowrap"><code>earliest</code></td><td class="t-nowrap">merge</td><td>The moment this build is filed under.</td></tr>
       <tr><td class="t-nowrap"><code>--report-coverage-file</code></td><td>path</td><td class="t-nowrap">none</td><td class="t-nowrap">merge</td><td>One already-combined coverage report.</td></tr>
       <tr><td class="t-nowrap"><code>--coverage-data</code></td><td>path, repeatable</td><td class="t-nowrap">none</td><td class="t-nowrap">merge</td><td><code>.coverage</code> data files to combine with the <code>coverage</code> package.</td></tr>
@@ -1735,15 +1771,15 @@ $ python -m pytest_html_reporter --version</code></pre>
 
 <h2 id="the-ini-form">The same settings in an ini file</h2>
 
-<p>Twenty-four of these twenty-five options have an ini key, so a project can settle them once instead of typing them on every run. The keys are read wherever pytest reads ini options: <code>[pytest]</code> in <code>pytest.ini</code> or <code>tox.ini</code>, <code>[tool:pytest]</code> in <code>setup.cfg</code>, and <code>[tool.pytest.ini_options]</code> in <code>pyproject.toml</code>.</p>
+<p>Twenty-five of these twenty-six options have an ini key, so a project can settle them once instead of typing them on every run. The keys are read wherever pytest reads ini options: <code>[pytest]</code> in <code>pytest.ini</code> or <code>tox.ini</code>, <code>[tool:pytest]</code> in <code>setup.cfg</code>, and <code>[tool.pytest.ini_options]</code> in <code>pyproject.toml</code>.</p>
 
-<p><a href="configuration.html">Configuration</a> lists every key with its type and its effective default, including the two — <code>build_info</code> and <code>report_link</code> — that are line lists and combine with the flag rather than being overridden by it.</p>
+<p><a href="configuration.html">Configuration</a> lists every key with its type and its effective default, including the three — <code>build_info</code>, <code>report_link</code> and <code>report_link_pattern</code> — that are line lists and combine with the flag rather than being overridden by it.</p>
 
 <div class="grid grid--3">
   <a class="card" href="configuration.html">
     <div class="card__icon is-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div>
     <h3 id="card-configuration">Configuration</h3>
-    <p>All 24 ini keys, in ini, cfg and TOML form.</p>
+    <p>All 25 ini keys, in ini, cfg and TOML form.</p>
     <span class="card__more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
   </a>
   <a class="card" href="ci-integrations.html">

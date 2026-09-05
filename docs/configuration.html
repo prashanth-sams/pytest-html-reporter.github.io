@@ -108,7 +108,7 @@ document.documentElement.classList.add('js');})();
 </header>
 <h2 id="where-configuration-lives">Where configuration lives</h2>
 
-<p>The plugin adds 25 command-line options to <code>pytest</code>, under the option group <em>report generator</em>, and registers 24 ini keys. The ini keys are read wherever pytest reads ini options:</p>
+<p>The plugin adds 26 command-line options to <code>pytest</code>, under the option group <em>report generator</em>, and registers 25 ini keys. The ini keys are read wherever pytest reads ini options:</p>
 
 <ul>
   <li><code>[pytest]</code> in <code>pytest.ini</code></li>
@@ -173,7 +173,9 @@ build_info =
     branch=main
     team=payments
 report_link =
-    Coverage=htmlcov/index.html</code></pre>
+    Coverage=htmlcov/index.html
+report_link_pattern =
+    jira = https://acme.atlassian.net/browse/{}</code></pre>
     </div>
   </div>
 
@@ -181,7 +183,7 @@ report_link =
     <div class="codeblock">
       <div class="codeblock__head">
         <span class="codeblock__lang">toml</span>
-        <span class="codeblock__cap">pyproject.toml — the two list keys become TOML arrays</span>
+        <span class="codeblock__cap">pyproject.toml — the three list keys become TOML arrays</span>
         <button class="copybtn" type="button">
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
@@ -196,7 +198,8 @@ archive_days = &quot;30&quot;
 report_logs = &quot;failed&quot;
 report_open = &quot;none&quot;
 build_info = [&quot;branch=main&quot;, &quot;team=payments&quot;]
-report_link = [&quot;Coverage=htmlcov/index.html&quot;]</code></pre>
+report_link = [&quot;Coverage=htmlcov/index.html&quot;]
+report_link_pattern = [&quot;jira = https://acme.atlassian.net/browse/{}&quot;]</code></pre>
     </div>
   </div>
 
@@ -222,12 +225,14 @@ build_info =
     branch=main
     team=payments
 report_link =
-    Coverage=htmlcov/index.html</code></pre>
+    Coverage=htmlcov/index.html
+report_link_pattern =
+    jira = https://acme.atlassian.net/browse/{}</code></pre>
     </div>
   </div>
 </div>
 
-<p>Every ini key is a plain string key with an empty default, except <code>build_info</code> and <code>report_link</code>, which are declared as pytest linelists: one entry per line in an ini file, a list of strings in TOML. Numbers are quoted in TOML because the keys are strings, not integers.</p>
+<p>Every ini key is a plain string key with an empty default, except <code>build_info</code>, <code>report_link</code> and <code>report_link_pattern</code>, which are declared as pytest linelists: one entry per line in an ini file, a list of strings in TOML. Numbers are quoted in TOML because the keys are strings, not integers.</p>
 
 <h3 id="addopts-and-title">addopts, and the one flag with no ini key</h3>
 
@@ -368,7 +373,7 @@ html_report = ./reports/%Y%m%d/report_%H%M.html</code></pre>
 
 <h2 id="ini-keys">Every ini key</h2>
 
-<p>All 24, with the value you get when the key is absent. Each one mirrors the flag of the same name with underscores for dashes; the long-form explanation of what each does lives in <a href="cli-reference.html">the CLI reference</a>.</p>
+<p>All 25, with the value you get when the key is absent. Each one mirrors the flag of the same name with underscores for dashes; the long-form explanation of what each does lives in <a href="cli-reference.html">the CLI reference</a>.</p>
 
 <div class="tablewrap">
   <table>
@@ -391,6 +396,7 @@ html_report = ./reports/%Y%m%d/report_%H%M.html</code></pre>
       <tr><td class="t-nowrap"><code>report_coverage_file</code></td><td>path</td><td>empty — go looking</td><td>Read coverage from this file — a <code>coverage.json</code>, a Cobertura <code>coverage.xml</code> or a <code>.coverage</code> data file — instead of discovering one.</td></tr>
       <tr><td class="t-nowrap"><code>report_coverage_limit</code></td><td>integer</td><td><code>500</code></td><td>Files listed on the Coverage tab, least-covered first. <code>0</code> lists every one.</td></tr>
       <tr><td class="t-nowrap"><code>report_link</code></td><td>linelist</td><td>empty</td><td>Side-nav entries, one <code>LABEL=URL</code> per line. <strong>Added to</strong> whatever <code>--report-link</code> gave. Relative paths are kept; a scheme that is not <code>http://</code>, <code>https://</code> or <code>mailto:</code> is dropped.</td></tr>
+      <tr><td class="t-nowrap"><code>report_link_pattern</code></td><td>linelist</td><td>empty</td><td>Turns a marker into a link on the test it is written on, one <code>MARKER=URL</code> per line, where <code>{}</code> is the marker's argument &mdash; <code>jira = https://acme.atlassian.net/browse/{}</code>. <strong>Added to</strong> whatever <code>--report-link-pattern</code> gave. The argument is percent-encoded, a template with no <code>{}</code> is a fixed destination, and the same scheme sieve as <code>report_link</code> applies. Naming a marker here also writes it into the JUnit xml and registers it with pytest. See <a href="features.html#traceability">Traceability markers</a>.</td></tr>
       <tr><td class="t-nowrap"><code>report_open</code></td><td><code>auto</code> | <code>always</code> | <code>none</code></td><td><code>auto</code></td><td>Whether the finished report is handed to a browser. <code>auto</code> needs an interactive terminal, no CI variable and a graphical session. A fourth value fails the run.</td></tr>
       <tr><td class="t-nowrap"><code>report_shard</code></td><td>string</td><td>empty — not a shard</td><td>Names this run as one leg of a sharded matrix, e.g. <code>1/4</code>. The leg writes a bundle under <code>&lt;report&gt;/shards/</code> and no report of its own.</td></tr>
       <tr><td class="t-nowrap"><code>report_shard_merge</code></td><td>boolean text</td><td>false</td><td>Whether this leg also merges every bundle beside it and renders one report. Truthy values are <code>1</code>, <code>true</code>, <code>yes</code>, <code>on</code>; anything else is false. Needs <code>report_shard</code> too.</td></tr>
@@ -412,7 +418,7 @@ html_report = ./reports/%Y%m%d/report_%H%M.html</code></pre>
 
 <h2 id="cli-flags">Every command-line flag</h2>
 
-<p>All 25, with the ini key each one overrides. <a href="cli-reference.html">The CLI reference</a> has the long-form entry for each, including the standalone <code>pytest-html-reporter merge</code>, <code>junit</code> and <code>inspect</code> commands, which are a separate surface.</p>
+<p>All 26, with the ini key each one overrides. <a href="cli-reference.html">The CLI reference</a> has the long-form entry for each, including the standalone <code>pytest-html-reporter merge</code>, <code>junit</code> and <code>inspect</code> commands, which are a separate surface.</p>
 
 <div class="tablewrap">
   <table>
@@ -423,6 +429,7 @@ html_report = ./reports/%Y%m%d/report_%H%M.html</code></pre>
       <tr><td class="t-nowrap"><code>--environment</code></td><td>string</td><td>unset</td><td class="t-nowrap"><code>environment</code></td></tr>
       <tr><td class="t-nowrap"><code>--build-info</code></td><td><code>KEY=VALUE</code>, repeatable</td><td>none</td><td class="t-nowrap"><code>build_info</code> — added to</td></tr>
       <tr><td class="t-nowrap"><code>--report-link</code></td><td><code>LABEL=URL</code>, repeatable</td><td>none</td><td class="t-nowrap"><code>report_link</code> — added to</td></tr>
+      <tr><td class="t-nowrap"><code>--report-link-pattern</code></td><td><code>MARKER=URL</code>, repeatable</td><td>none</td><td class="t-nowrap"><code>report_link_pattern</code> &mdash; added to</td></tr>
       <tr><td class="t-nowrap"><code>--report-open</code></td><td><code>auto</code> | <code>always</code> | <code>none</code></td><td><code>auto</code></td><td class="t-nowrap"><code>report_open</code></td></tr>
       <tr><td class="t-nowrap"><code>--archive-count</code></td><td>integer</td><td>every build kept</td><td class="t-nowrap"><code>archive_count</code></td></tr>
       <tr><td class="t-nowrap"><code>--archive-days</code></td><td>number of days</td><td>no age limit</td><td class="t-nowrap"><code>archive_days</code></td></tr>
@@ -562,7 +569,9 @@ report_screenshots = failed
 report_junit = ./report/junit.xml
 archive_days = 30
 report_link =
-    Coverage=htmlcov/index.html</code></pre>
+    Coverage=htmlcov/index.html
+report_link_pattern =
+    jira = https://acme.atlassian.net/browse/{}</code></pre>
 </div>
 
 <div class="codeblock">

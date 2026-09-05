@@ -84,7 +84,7 @@ document.documentElement.classList.add('js');})();
   <div class="wrap">
     <div class="hero__grid">
       <div class="hero__copy">
-        <span class="eyebrow">pytest plugin &middot; v0.4.0</span>
+        <span class="eyebrow">pytest-html-reporter &middot; v0.4.1</span>
         <h1>One file.<br><span class="grad">The whole test run</span><span class="dot">.</span></h1>
         <p class="hero__lede">
           <strong>pytest-html-reporter</strong> turns a pytest run into a single, self-contained
@@ -751,13 +751,15 @@ report_screenshots = failed</code></pre>
         <div class="fgroup__head">
           <span class="fgroup__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span>
           <h3>Steps, Gherkin &amp; markers</h3>
-          <span class="fgroup__n">4</span>
+          <span class="fgroup__n">6</span>
         </div>
         <ul class="flist">
           <li><a href="docs/features.html#steps-gherkin-and-markers"><b>Named, timed, nested steps</b><span>Suite down to test down to what it did, with the failing step carrying the message.</span></a></li>
           <li><a href="docs/features.html#steps-gherkin-and-markers"><b>A tree even without steps</b><span>Set up, body and tear down are timed for every test, whether or not you named anything.</span></a></li>
           <li><a href="docs/features.html#gherkin-scenarios"><b>Gherkin scenarios</b><span>A pytest-bdd scenario arrives already named, badged, and filled in from the row that ran.</span></a></li>
           <li><a href="docs/features.html#markers-in-full"><b>Markers, and where they came from</b><span>Including the module-level and class-level ones nobody remembers applying.</span></a></li>
+          <li><a href="docs/features.html#traceability"><b>Markers that link, and two built in</b><span><code>jira(&quot;PROJ-123&quot;)</code> becomes a badge that opens the ticket; <code>owner</code> and <code>severity</code> need no pattern at all.</span></a></li>
+          <li><a href="docs/steps-and-bdd.html#async-tests"><b>Steps in an async test</b><span><code>async with step(...)</code>, and gathered work that comes back as the siblings it was.</span></a></li>
         </ul>
       </section>
 
@@ -780,7 +782,7 @@ report_screenshots = failed</code></pre>
         <div class="fgroup__head">
           <span class="fgroup__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M6 20v-6M18 20V4"/></svg></span>
           <h3>How a test behaves</h3>
-          <span class="fgroup__n">5</span>
+          <span class="fgroup__n">7</span>
         </div>
         <ul class="flist">
           <li><a href="docs/features.html#stability-score"><b>Stability score</b><span>One number out of 100 for the suite, charged for flipping as well as for failing.</span></a></li>
@@ -788,6 +790,8 @@ report_screenshots = failed</code></pre>
           <li><a href="docs/features.html#always-failing"><b>Always failing</b><span>Failed every build they were in. A bug with an owner, not a race worth hunting.</span></a></li>
           <li><a href="docs/features.html#pass-rate-across-builds"><b>Pass rate across builds</b><span>On an axis that is not pinned to 0–100, so a two-point drop is visible.</span></a></li>
           <li><a href="docs/features.html#where-the-time-goes"><b>Where the time goes</b><span>This run's tests bucketed by duration — what a slowest-tests list cannot tell you.</span></a></li>
+          <li><a href="docs/features.html#who-owns-what"><b>Who owns what</b><span>A row per team: what they hold, what is failing now, and where their minutes go.</span></a></li>
+          <li><a href="docs/features.html#how-much-it-matters"><b>How much it matters</b><span>Forty failures at <code>trivial</code> and two at <code>blocker</code> are not the same run.</span></a></li>
         </ul>
       </section>
 

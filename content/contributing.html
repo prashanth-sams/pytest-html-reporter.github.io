@@ -706,8 +706,8 @@ version lives in exactly two places that must agree:</p>
   <table>
     <thead><tr><th>File</th><th>Line</th></tr></thead>
     <tbody>
-      <tr><td class="t-nowrap"><code>setup.py</code></td><td><code>version=&quot;0.4.0&quot;</code></td></tr>
-      <tr><td class="t-nowrap"><code>pytest_html_reporter/__init__.py</code></td><td><code>__version__ = &quot;0.4.0&quot;</code> — what <code>pytest-html-reporter --version</code> prints</td></tr>
+      <tr><td class="t-nowrap"><code>setup.py</code></td><td><code>version=&quot;0.4.1&quot;</code></td></tr>
+      <tr><td class="t-nowrap"><code>pytest_html_reporter/__init__.py</code></td><td><code>__version__ = &quot;0.4.1&quot;</code> — what <code>pytest-html-reporter --version</code> prints</td></tr>
     </tbody>
   </table>
 </div>
@@ -728,8 +728,8 @@ $ python -m build
 $ twine check dist/*
 $ twine upload --repository testpypi dist/*     # optional
 $ twine upload dist/*
-$ git tag -a v0.4.0 -m &quot;Release version 0.4.0&quot;
-$ git push origin v0.4.0</code></pre>
+$ git tag -a v0.4.1 -m &quot;Release version 0.4.1&quot;
+$ git push origin v0.4.1</code></pre>
 </div>
 
 <p>Then draft a GitHub release from the tag, with <code>CHANGELOG.txt</code> as the description.</p>
@@ -745,7 +745,7 @@ ship a package that generates a blank white page.</div>
 <code>venv/</code>, and excludes <code>CHANGELOG.txt</code> and <code>requirements.txt</code>.</p>
 
 <p>One manual step that is easy to miss: the PyPI badge in <code>README.rst</code> carries a
-cache-buster, <code>badge.fury.io/py/pytest-html-reporter.svg?v=0.4.0</code>. It has to be bumped
+cache-buster, <code>badge.fury.io/py/pytest-html-reporter.svg?v=0.4.1</code>. It has to be bumped
 by hand at release time, so a stale badge is a slip in this process rather than a broken
 publish.</p>
 

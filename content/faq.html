@@ -133,7 +133,72 @@ $ pytest tests/ --html-report=./report/report.html</code></pre>
   </div>
 </details>
 
+<details class="acc">
+  <summary>How do I make a test link to its Jira ticket?</summary>
+  <div class="acc__body">
+    <p>Write the id as a marker and name that marker in <code>report_link_pattern</code>, with
+    <code>{}</code> where the id goes. Any marker will do — <code>jira</code>, <code>testcase</code>,
+    <code>test_key</code>, whatever your tracker calls it.</p>
+
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <span class="codeblock__cap">pytest.ini</span>
+        <button class="copybtn" type="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+          <span class="copybtn__label">Copy</span>
+        </button>
+      </div>
+      <pre><code data-lang="ini">[pytest]
+report_link_pattern =
+    jira = https://acme.atlassian.net/browse/{}</code></pre>
+    </div>
+
+    <p>Then <code>@pytest.mark.jira(&quot;PROJ-123&quot;)</code> on a test gives it a badge that opens
+    the ticket, and the id is written into the JUnit XML as a <code>&lt;property&gt;</code> on the
+    testcase — which is the half Xray, Zephyr and TestRail read, none of them having any way to open
+    an HTML report. Nothing is fetched and no token is needed; the badge is a link, not a lookup, so
+    it still renders in a report opened off a disk months later.</p>
+
+    <p>New in 0.4.1, along with the built-in <code>owner</code> and <code>severity</code> markers,
+    which need no pattern at all. See <a href="steps-and-bdd.html#link-patterns">markers that
+    link</a>.</p>
+  </div>
+</details>
+
+<details class="acc">
+  <summary>pytest warns <code>PytestUnknownMarkWarning</code> for <code>owner</code> or <code>severity</code></summary>
+  <div class="acc__body">
+    <p>Upgrade to 0.4.1. Both markers, and every marker named in <code>report_link_pattern</code>, are
+    registered with pytest at configure time from that version on, so <code>--strict-markers</code>
+    accepts them and no run warns about them.</p>
+
+    <p>Before that they were ordinary user markers as far as pytest was concerned, and the plugin was
+    in the position of telling somebody that the configuration it had asked them to write was a
+    typo.</p>
+  </div>
+</details>
+
 <h2 id="nothing-showing-up">Nothing is showing up</h2>
+
+<details class="acc">
+  <summary>My async test's steps all show 0&nbsp;ms, and one that failed shows as passed</summary>
+  <div class="acc__body">
+    <p>That is 0.4.0 and earlier, and 0.4.1 is the fix. <code>@step</code> on an <code>async def</code>
+    closed the step on the coroutine the call returned rather than on the work it went on to do —
+    nought milliseconds, <code>PASS</code> — and the work ran, and raised, long after the step said it
+    had finished.</p>
+
+    <p><code>async with step(...)</code> did not work at all before 0.4.1 either: the object had no
+    <code>__aenter__</code>, so it raised <code>TypeError</code>, and the only spelling that worked was
+    a plain <code>with</code> block inside the coroutine.</p>
+
+    <p>Both work now, with nothing to install and no setting to turn on. If your gathered work used to
+    come back nested three deep inside itself, that is fixed in the same release. See
+    <a href="steps-and-bdd.html#async-tests">steps in an async test</a>.</p>
+  </div>
+</details>
 
 <details class="acc">
   <summary>The Logs column is empty</summary>
