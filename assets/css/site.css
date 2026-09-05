@@ -84,6 +84,7 @@
   --mono: "JetBrains Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
 
   --ease: cubic-bezier(.22,.61,.36,1);
+  --tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12.5l5.2 5.2L20 6.9'/%3E%3C/svg%3E");
 }
 
 :root[data-theme="dark"] {
@@ -510,7 +511,19 @@ strong, b { color: var(--text); font-weight: 640; }
 :root[data-theme="dark"] .hero h1 .dot { color: var(--accent-deep); }
 .hero__lede { font-size: 1.12rem; line-height: 1.62; color: var(--text-muted); max-width: 48ch; margin-bottom: 1.6rem; }
 
-.hero__pills { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 1.7rem; }
+.hero__pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.7rem; }
+/* Twenty-odd capabilities is a list, not a garnish. At the default pill size
+   the row becomes a grey slab, so the hero's pills run a size smaller, and a
+   brand tick in front of each one says these are things the plugin does rather
+   than tags it was filed under. The tick is a mask, so it takes the brand
+   colour from the theme instead of shipping two SVGs. */
+.hero__pills .pill { font-size: .735rem; padding: 3px 10px 3px 8px; gap: 5px; }
+.hero__pills .pill::before {
+  content: ""; width: 11px; height: 11px; flex: none;
+  background: var(--brand); opacity: .75;
+  -webkit-mask: var(--tick) center / contain no-repeat;
+          mask: var(--tick) center / contain no-repeat;
+}
 
 .badgerow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 1.5rem; }
 .badgerow img { height: 20px; display: inline-block; }
