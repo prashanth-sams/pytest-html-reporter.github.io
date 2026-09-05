@@ -264,10 +264,12 @@ attach_api(response, url=upstream_url)         # override just the one field</co
 <p>Five parts, in this order: <strong>Response body</strong>, <strong>Request body</strong>, <strong>Request headers</strong>, <strong>Response headers</strong>, <strong>cURL</strong>. Parts with no text are dropped, so a GET with no request body simply has no <em>Request body</em> part, and an attachment with no parts at all is never queued &mdash; that is the <code>None</code> return.</p>
 <p>A meta strip above them carries <code>Method</code>, <code>URL</code>, <code>Status</code>, <code>Time</code>, <code>Size</code> and <code>Content-Type</code>, each when it is known.</p>
 <p><strong>Bodies are pretty-printed when they are JSON</strong>, however they arrived: a dict skips the round trip, bytes are decoded, and text is re-serialised only when it really parses. Text that does not open with <code>{</code> or <code>[</code> is not treated as JSON &mdash; a body of <code>123</code> is technically valid JSON and re-serialising it would be a pointless way of saying nothing. A body that does not parse is kept exactly as it came, so half a response is still readable. Otherwise the syntax is implied by the Content-Type: <code>json</code>, <code>xml</code>, <code>html</code>, <code>yaml</code>, and <code>csv</code> falls back to <code>text</code>.</p>
-<figure class="imgslot" data-shot="api-logs-attachment.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/api-logs-attachment.png</b>
-  <span>The API Logs tab at 1440px wide, light theme, with a 422 entry selected: the rail on the left showing several calls with their status codes and durations, and the open payload on the right showing the meta strip and the Response body part.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-api-logs-light.webp" alt="The API Logs tab with a POST call selected, showing the rail of attachments and the open call’s meta row and JSON response body"
+       width="1800" height="922" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-api-logs-dark.webp" alt="The API Logs tab with a POST call selected, showing the rail of attachments and the open call’s meta row and JSON response body"
+       width="1800" height="924" loading="lazy" decoding="async">
+  <figcaption>An <code>attach_api()</code> call in the report — the rail on the left, the meta strip and the response body on the right.</figcaption>
 </figure>
 <p><strong>The curl line is the point.</strong> Pasting it into a terminal is the first thing anyone does with a failed API call, and rebuilding it by hand from a report is the tedious part. It is built from the already-redacted headers and body, and single quotes inside the body are escaped.</p>
 <div class="codeblock">

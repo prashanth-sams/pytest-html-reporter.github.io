@@ -111,12 +111,12 @@ still measure the right thing after the folder has been copied into a fresh CI w
 plugin takes your project's home directory as the base. Nothing is created for you above it — a
 path you pass is created if it does not exist.</div>
 
-<figure class="imgslot" data-shot="first-report-dashboard.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/first-report-dashboard.png</b>
-  <span>The report as it opens after a first run — the Dashboard tab at 1440px wide, light theme,
-  showing the pass/fail summary tiles, the donut and the suite table, on a small suite of a dozen
-  tests with one failure.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-dashboard-light.webp" alt="The Dashboard tab as the report opens: summary card, doughnut, Trends line, per-suite bars and Highlights"
+       width="1800" height="926" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-dashboard-dark.webp" alt="The Dashboard tab as the report opens: summary card, doughnut, Trends line, per-suite bars and Highlights"
+       width="1800" height="926" loading="lazy" decoding="async">
+  <figcaption>What opens after a run — the Dashboard, with the pass/fail counters, the doughnut and the suite breakdown.</figcaption>
 </figure>
 
 <h2 id="whats-in-the-file">What is in that file</h2>
@@ -180,11 +180,10 @@ columns you will notice immediately. Everything <code>pytest</code> captures whi
 opened from the <code>Logs</code> column. And a failing browser test is photographed at the very
 end of the test, before the fixture that quits the browser has run.</p>
 
-<figure class="imgslot" data-shot="report-side-nav.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/report-side-nav.png</b>
-  <span>The report's side nav column on its own, cropped to about 300px wide, light theme, showing
-  every tab from Dashboard down to Test Coverage and the light/dark switch at the foot of it.</span>
+<figure class="shot shot--narrow">
+  <img src="../assets/img/shots/report-side-nav.webp" alt="The report’s side nav column: Dashboard, Analytics, Test Suites, Test Metrics, Test Steps, Archives, Screenshots, API Logs and Test Coverage, with the dark-mode switch at the foot"
+       width="357" height="1744" loading="lazy" decoding="async">
+  <figcaption>The rail down the left — every tab, and the light/dark switch at the foot of it.</figcaption>
 </figure>
 
 <p>The full walk through each of those tabs, with what every column and chart means, is the
@@ -465,11 +464,12 @@ rather than of one run, so the ini file is usually the better place for it: set
 <code>archive_days</code> once and every invocation, however it is started, keeps the same
 window.</div>
 
-<figure class="imgslot" data-shot="archives-section.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/archives-section.png</b>
-  <span>The Archives tab at 1440px wide, light theme, after about a week of daily runs — seven
-  retained builds listed with their dates and pass/fail counts.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-archives-light.webp" alt="The Archives tab: a build card with its total, date, stacked bar and counters, and the list of retained builds down the right"
+       width="1800" height="924" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-archives-dark.webp" alt="The Archives tab: a build card with its total, date, stacked bar and counters, and the list of retained builds down the right"
+       width="1800" height="923" loading="lazy" decoding="async">
+  <figcaption>Archives — the builds still on disk, newest first.</figcaption>
 </figure>
 
 <p>How far back the <code>Analytics</code> tab can read is whatever these three have kept, which

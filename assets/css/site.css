@@ -977,11 +977,30 @@ kbd {
   border: 1px solid var(--border); border-radius: var(--r-md);
   overflow: hidden; background: var(--bg-elev); box-shadow: var(--shadow-sm);
 }
-.shot img { width: 100%; display: block; }
+.shot img { width: 100%; height: auto; display: block; }
 .shot figcaption {
   padding: 10px 14px; font-size: .81rem; color: var(--text-muted);
   border-top: 1px solid var(--border); background: var(--bg-alt);
 }
+
+/* The report itself renders light or dark, and the captures come in pairs. A
+   light screenshot on a dark page reads as a hole punched in it, so the figure
+   carries both and shows whichever matches the theme the reader is on. The
+   media query comes first and is scoped away from an explicit light choice, so
+   the toggle still wins in both directions when JS has set data-theme. */
+.shot--themed .shot__dark { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .shot--themed .shot__light { display: none; }
+  :root:not([data-theme="light"]) .shot--themed .shot__dark  { display: block; }
+}
+:root[data-theme="light"] .shot--themed .shot__light { display: block; }
+:root[data-theme="light"] .shot--themed .shot__dark  { display: none; }
+:root[data-theme="dark"]  .shot--themed .shot__light { display: none; }
+:root[data-theme="dark"]  .shot--themed .shot__dark  { display: block; }
+
+/* A crop that is far taller than it is wide — the side nav on its own — is
+   absurd stretched across the prose column. */
+.shot--narrow { max-width: 320px; margin-inline: auto; }
 
 .imgslot {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;

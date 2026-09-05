@@ -137,10 +137,12 @@ document.documentElement.classList.add('js');})();
   <pre><code data-lang="shell">$ pytest tests/functional/test_steps.py --html-report=./report</code></pre>
 </div>
 
-<figure class="imgslot" data-shot="steps-tab-tree.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/steps-tab-tree.png</b>
-  <span>The Test Steps tab at 1440px wide, light theme, after running the bundled demo. The rail on the left expanded on one suite with a passing test selected; the pane on the right showing the Set up, Test body and Tear down blocks, the named steps indented under Test body, and the duration bar and millisecond figure on each row.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-test-steps-light.webp" alt="The Test Steps tab: the suite rail on the left and one test open on the right with its Set up, Test body and Tear down blocks and per-step durations"
+       width="1800" height="926" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-test-steps-dark.webp" alt="The Test Steps tab: the suite rail on the left and one test open on the right with its Set up, Test body and Tear down blocks and per-step durations"
+       width="1800" height="922" loading="lazy" decoding="async">
+  <figcaption>The Test Steps tab — the rail on the left, and the phases of the selected test with a duration on every step.</figcaption>
 </figure>
 
 <h3 id="getting-there-from-a-row">Getting there from a row</h3>
@@ -305,10 +307,12 @@ def cart():
   </li>
 </ul>
 
-<figure class="imgslot" data-shot="steps-failure.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/steps-failure.png</b>
-  <span>The Test Steps pane for one failed browser test, light theme, cropped to the Test body block. Two outer steps marked failed with no message, the innermost failed step carrying its exception text underneath, and the automatically captured screenshot thumbnail sitting on that same step.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/steps-failure-light.webp" alt="The Test body block of a failed test: two passing steps, a failed step carrying its assertion message, and the screenshot captured on that step"
+       width="1800" height="535" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/steps-failure-dark.webp" alt="The Test body block of a failed test: two passing steps, a failed step carrying its assertion message, and the screenshot captured on that step"
+       width="1800" height="535" loading="lazy" decoding="async">
+  <figcaption>The failure sits on the step that produced it — message underneath, screenshot beside it.</figcaption>
 </figure>
 
 <h3 id="threads">Threads and concurrency</h3>
@@ -501,10 +505,12 @@ def _holds(basket, count):
 
 <p>The rail lists a BDD test under its scenario name rather than a step count, and the search box matches the feature and the scenario as well as the step lines — so typing a feature name finds every test in it.</p>
 
-<figure class="imgslot" data-shot="steps-gherkin.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/steps-gherkin.png</b>
-  <span>The Test Steps tab at 1440px wide, light theme, with the &ldquo;A declined card names the step that failed&rdquo; scenario selected. The feature / scenario / feature-file strip visible above the tree, and the Given, When, And, Then rows each carrying a coloured Gherkin badge, their parsed parameters and their timings, with the And row failed.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/steps-gherkin-light.webp" alt="A pytest-bdd scenario in Test Steps: the feature strip naming the feature file above Given, When and Then rows with coloured Gherkin badges and timings"
+       width="1800" height="636" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/steps-gherkin-dark.webp" alt="A pytest-bdd scenario in Test Steps: the feature strip naming the feature file above Given, When and Then rows with coloured Gherkin badges and timings"
+       width="1800" height="636" loading="lazy" decoding="async">
+  <figcaption>A Gherkin scenario — the feature, the scenario and the feature file above the tree, and a badge on every step.</figcaption>
 </figure>
 
 <h2 id="markers">Markers, and where they were written</h2>
@@ -706,10 +712,12 @@ report_link_pattern =
 
 <div class="note"><span class="note__title">Note</span>Markers are badges on this tab rather than a column on <strong>Test Metrics</strong>, and marker text is in this tab's search index — so marker-based filtering works here. Typing <code>regression</code> into the rail's search narrows it to every test carrying that marker, at whatever scope it was written.</div>
 
-<figure class="imgslot" data-shot="steps-facts-row.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/steps-facts-row.png</b>
-  <span>Close crop of the facts block at the top of one test's Test Steps pane, light theme: the Description line, then the labelled rows of badges for markers (pytest's own in one colour and the user's in another), parameters and fixtures.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/steps-facts-row-light.webp" alt="The head of a Test Steps pane: the test name, its file, the feature strip and a row of marker badges"
+       width="1800" height="249" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/steps-facts-row-dark.webp" alt="The head of a Test Steps pane: the test name, its file, the feature strip and a row of marker badges"
+       width="1800" height="249" loading="lazy" decoding="async">
+  <figcaption>The facts block above the tree — what the test is, where it was written, and the markers it carries.</figcaption>
 </figure>
 
 <h2 id="keeping-the-file-down">Keeping the file down</h2>

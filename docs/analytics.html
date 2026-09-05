@@ -276,10 +276,12 @@ made of, because a number with no note is a number people argue about.</p>
   </table>
 </div>
 
-<figure class="imgslot" data-shot="analytics-headline-tiles.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/analytics-headline-tiles.png</b>
-  <span>The six tiles across the top of the Analytics tab at 1440px, light theme, cropped to the tile row plus the scope line above it. The report must come from a folder with 10+ archived builds and a genuine mix of outcomes, so that: the stability score is somewhere in the 60s or 70s (an amber "fair" grade, not a green 100), the pass rate carries a non-zero drift note such as "-1.8 pts since the last build", flaky tests and always failing are both non-zero, builds analysed names a real oldest label, and time in tests shows a median. Every note line under every tile must be legible.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/analytics-headline-tiles-light.webp" alt="The six Analytics tiles: stability score 99, pass rate 98.2% down 1.8 points, 9 flaky tests, 19 always failing, 21 builds analysed and 1m 20s in tests"
+       width="1800" height="251" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/analytics-headline-tiles-dark.webp" alt="The six Analytics tiles: stability score 99, pass rate 98.2% down 1.8 points, 9 flaky tests, 19 always failing, 21 builds analysed and 1m 20s in tests"
+       width="1800" height="251" loading="lazy" decoding="async">
+  <figcaption>The six figures across the top, and the scope line saying how much history they were read from.</figcaption>
 </figure>
 
 <h3 id="the-stability-score">The stability score</h3>
@@ -325,10 +327,12 @@ moved since the last build.</p>
 whether it is one page object nine tests go through or nine unrelated waits, and those are different
 mornings.</p>
 
-<figure class="imgslot" data-shot="analytics-fault-groups.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/analytics-fault-groups.png</b>
-  <span>A close crop of the "Why this run failed" panel at 1440px, light theme, from a red run with at least a dozen failures of four or five different exception types and one earlier build to compare against. The headline must be legible ("12 failures, 9 are TimeoutException"), each group must show its name, count, share bar and movement chip — with at least one reading "new", one "+2" and one "level" — the test names must be visible under two of the groups, and at least one group must end in an "and N more" line.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/analytics-fault-groups-light.webp" alt="The "Why this run failed" panel with AssertionError, RuntimeError and Exception groups, each with a share bar, a movement chip and the tests under it"
+       width="1800" height="378" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/analytics-fault-groups-dark.webp" alt="The "Why this run failed" panel with AssertionError, RuntimeError and Exception groups, each with a share bar, a movement chip and the tests under it"
+       width="1800" height="378" loading="lazy" decoding="async">
+  <figcaption>The run’s 28 failures, grouped by exception type — with the tests named under each group and an "and N more" link where the list is long.</figcaption>
 </figure>
 
 <h3 id="what-goes-into-the-grouping">What goes into the grouping</h3>
@@ -476,10 +480,12 @@ their mean pass rate, how many are failing now, how many are flaky and where the
 across builds at all. Builds archived by an earlier version carry no key and are read as unclaimed
 rather than as anything invented, so the table fills in as the archive turns over.</div>
 
-<figure class="imgslot" data-shot="analytics-owner-table.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/analytics-owner-table.png</b>
-  <span>A close crop of the "Who owns what" panel at 1440px, light theme, from a suite where at least four teams carry tests and some tests carry none. The headline line above the table must be legible, at least three named owner rows must show their test count, share, mean pass rate, failing and flaky counts and time, and the "Unowned" row must be visible at the bottom of the list.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/analytics-owner-table-light.webp" alt="The "Who owns what" table: payments-team, search-team and platform-team rows with their test counts, pass rates, failing and flaky counts and time, above an Unowned row"
+       width="1800" height="324" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/analytics-owner-table-dark.webp" alt="The "Who owns what" table: payments-team, search-team and platform-team rows with their test counts, pass rates, failing and flaky counts and time, above an Unowned row"
+       width="1800" height="324" loading="lazy" decoding="async">
+  <figcaption>Who owns what — one row per owner, and everything nobody claimed collected into <em>Unowned</em> at the foot.</figcaption>
 </figure>
 
 <h2 id="how-much-it-matters">How much it matters</h2>
@@ -547,10 +553,12 @@ build, and beside it are the flip count, the retry count and the current streak.
 alternates is a race or an ordering dependency; a strip that is solid green with a retry count is
 something that only fails under load.</p>
 
-<figure class="imgslot" data-shot="analytics-stability-table.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/analytics-stability-table.png</b>
-  <span>The per-test stability table at 1440px, light theme, in its default order and untouched — so the first rows are "Always failing" and the ones under them "Flaky". Twelve or so rows in frame, from a folder with 10+ archived builds. Every column must be readable, in the order the table draws them: suite and test, the verdict pill in its tone, the History strip of coloured blocks, pass rate, builds, flips, retries, current streak and duration. At least one row must show a mixed strip, one a solid red strip, and one a "--" pass rate for a test that has only ever been skipped.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/analytics-stability-table-light.webp" alt="The per-test stability table: test names with their verdict pill, History strip, pass rate, builds, flips, retries, current streak and duration"
+       width="1800" height="842" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/analytics-stability-table-dark.webp" alt="The per-test stability table: test names with their verdict pill, History strip, pass rate, builds, flips, retries, current streak and duration"
+       width="1800" height="842" loading="lazy" decoding="async">
+  <figcaption>The per-test stability table in its default order — always-failing tests first, each with the History strip of its last builds.</figcaption>
 </figure>
 
 <h2 id="standing-failures">Standing failures</h2>
@@ -625,10 +633,12 @@ immediately before it, and is three different sentences rather than one phrase w
 <em>no earlier build to compare</em>, <em>level with the last build</em> when the rounded difference
 is zero, or <em>+2.3 pts since the last build</em>.</p>
 
-<figure class="imgslot" data-shot="analytics-drift-charts.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/analytics-drift-charts.png</b>
-  <span>The four-chart grid on the Analytics tab at 1440px, light theme, all in one frame: "Pass rate across builds", "What moved, build to build", "Where the time goes" and "Test base growth". Generated from at least 15 archived builds with varying results, so the pass-rate line has visible movement and a narrow y axis rather than a flat line at 100, the flow chart has stacked bars in all four colours at several steps, the histogram has weight in more than two bands, and the growth line steps up at least once. Axis labels must be legible.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/analytics-drift-charts-light.webp" alt="Four charts: pass rate across builds, what moved build to build, where the time goes, and test base growth"
+       width="1800" height="667" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/analytics-drift-charts-dark.webp" alt="Four charts: pass rate across builds, what moved build to build, where the time goes, and test base growth"
+       width="1800" height="667" loading="lazy" decoding="async">
+  <figcaption>The four trend charts — pass rate, what moved between builds, the duration histogram and how the test base grew.</figcaption>
 </figure>
 
 <div class="note"><span class="note__title">Note</span>Every numeric series is written into the page

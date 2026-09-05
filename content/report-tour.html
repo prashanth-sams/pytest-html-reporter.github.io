@@ -24,10 +24,12 @@ with the machine offline.</p>
 server, out of an email attachment, from <code>file://</code> on a locked-down laptop, and out of
 an archive years after the CDN that used to serve those library versions stopped answering.</p>
 
-<figure class="imgslot" data-shot="report-dashboard.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/report-dashboard.png</b>
-  <span>The Dashboard tab at 1600&times;900, light theme, from a run with a real mix of outcomes (around 240 tests: ~200 pass, 18 fail, 12 skip, 4 xpass, 3 xfail, 3 error, 5 rerun) and at least six archived builds so Trends draws a real line. All four cards in frame at once: the summary card with its title, environment badge, the Environment and Test Coverage chips, Time taken, the total count, the doughnut with its centre percentage and the seven counters; Trends; the stacked Test Suite chart; and Highlights showing both MOST FAILED SUITE and a non-zero SINCE LAST BUILD delta. This is the single most important image on the site.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-dashboard-light.webp" alt="The Dashboard tab of a generated report: summary card, doughnut, Trends line, per-suite bars and Highlights"
+       width="1800" height="926" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-dashboard-dark.webp" alt="The Dashboard tab of a generated report: summary card, doughnut, Trends line, per-suite bars and Highlights"
+       width="1800" height="926" loading="lazy" decoding="async">
+  <figcaption>The Dashboard of a 1,589-test run — the summary card and its doughnut, Trends across the retained builds, the per-suite bars and Highlights.</figcaption>
 </figure>
 
 <h3 id="the-one-thing-that-lives-beside-it">The one thing that lives beside it</h3>
@@ -206,10 +208,12 @@ more</em> line. <code>Unclassified</code> is pinned to the bottom however large 
 list headed "Unclassified: 40" has answered nothing. The heading note is a sentence — <em>12
 failures, 9 are TimeoutException</em> — since the count on its own is already on the Dashboard.</p>
 
-<figure class="imgslot" data-shot="report-analytics-fault-groups.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/report-analytics-fault-groups.png</b>
-  <span>A close crop of the "Why this run failed" panel at 1440px, light theme, from a project with 10 or more archived builds. The headline note must be legible ("12 failures, 9 are TimeoutException"), with three or four exception groups showing their bars and shares, at least one carrying a "new" movement chip, the test names visible under two of them, and at least one "and N more" line present. Include the six stat tiles above it if they fit without shrinking the panel text.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/analytics-fault-groups-light.webp" alt="The "Why this run failed" panel, with three exception groups, their share bars, movement chips and the tests under each"
+       width="1800" height="378" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/analytics-fault-groups-dark.webp" alt="The "Why this run failed" panel, with three exception groups, their share bars, movement chips and the tests under each"
+       width="1800" height="378" loading="lazy" decoding="async">
+  <figcaption>"Why this run failed" groups the run’s failures by exception type and names the tests under each.</figcaption>
 </figure>
 
 <h3 id="and-n-more-dialogs">The "and N more" dialogs</h3>
@@ -262,10 +266,12 @@ Steps</em>. Clicking it — or pressing Enter or Space on it, since it is focusa
 Steps with that suite isolated: every other group in the rail shut, that suite's own first failure
 opened in the reading pane, and its heading flashed so the eye knows where it landed.</p>
 
-<figure class="imgslot" data-shot="report-test-suites.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/report-test-suites.png</b>
-  <span>The whole Test Suites tab at 1440px, light theme: the summary chips across the top, the toolbar with its "Show 25" length menu, the five export button icons and the "Search suites" box, and eight to twelve suite rows. The rows must show the split filename/directory treatment and dimmed zero pills, with at least two suites carrying non-zero Fail counts so the default Fail-descending sort is visibly doing something.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-test-suites-light.webp" alt="The Test Suites tab: summary chips, the toolbar with its export icons and search box, and ten suite rows sorted by failures"
+       width="1800" height="926" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-test-suites-dark.webp" alt="The Test Suites tab: summary chips, the toolbar with its export icons and search box, and ten suite rows sorted by failures"
+       width="1800" height="926" loading="lazy" decoding="async">
+  <figcaption>Test Suites, sorted Fail-descending by default — one row per file, with dimmed zeros where an outcome never happened.</figcaption>
 </figure>
 
 <h2 id="test-metrics">Test Metrics</h2>
@@ -288,10 +294,12 @@ of named steps and crosses to Test Steps with that test open. <strong>Screens</s
 live thumbnails that open the lightbox. A column with nothing in it shows an em dash instead of a
 zero-count button.</p>
 
-<figure class="imgslot" data-shot="report-test-metrics.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/report-test-metrics.png</b>
-  <span>The whole Test Metrics tab at 1600px, light theme, scrolled to the top so the status chip row, the page-length menu, the five export icons and the "Search tests" box are all in frame above the table. Show ten to twelve rows including at least three with counts in Logs, Data <em>and</em> Steps plus live thumbnails in Screens, and at least one long error message ending in its fade with the ellipsis button beside it.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-test-metrics-light.webp" alt="The Test Metrics tab: status chips, toolbar, and a table of tests with status, duration, rerun count, error message and Logs, Data, Steps and Screens columns"
+       width="1800" height="924" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-test-metrics-dark.webp" alt="The Test Metrics tab: status chips, toolbar, and a table of tests with status, duration, rerun count, error message and Logs, Data, Steps and Screens columns"
+       width="1800" height="924" loading="lazy" decoding="async">
+  <figcaption>Test Metrics — every test case in the run, with its error message truncated behind an ellipsis button and a live thumbnail in Screens.</figcaption>
 </figure>
 
 <h3 id="the-status-filter-chips">The status filter chips</h3>
@@ -493,10 +501,12 @@ was open, a duration bar and its time. The bar is scaled against the slowest ste
 test</strong>, never of the run — the question here is always which part of <em>this</em> test was
 slow. A step that threw shows its error inline in a <code>&lt;pre&gt;</code>.</p>
 
-<figure class="imgslot" data-shot="report-test-steps.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/report-test-steps.png</b>
-  <span>The whole Test Steps tab at 1600px, light theme, from a run that uses named steps. Rail on the left with three or four suite groups, one open and the rest collapsed; the toolbar showing all four filter pills with counts, Expand all / Collapse all and the search box; and the reading pane on the right showing a failing test — status badge, facts row with marker and fixture badges, and all three phase blocks with the failure's step tree open in the body, including at least two levels of nesting and one inline error &lt;pre&gt;.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-test-steps-light.webp" alt="The Test Steps tab: the suite rail on the left, filter pills above, and a failing scenario open on the right with its Given/When/Then tree, error and screenshot"
+       width="1800" height="926" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-test-steps-dark.webp" alt="The Test Steps tab: the suite rail on the left, filter pills above, and a failing scenario open on the right with its Given/When/Then tree, error and screenshot"
+       width="1800" height="922" loading="lazy" decoding="async">
+  <figcaption>Test Steps — the rail on the left, and on the right the phases of one test with its Gherkin steps, the failure’s message and the screenshot taken on the step that failed.</figcaption>
 </figure>
 
 <p>What opens by default is not the first row in collection order — that is almost always a test
@@ -530,10 +540,12 @@ build you are already on fires no navigation at all. The click is intercepted, t
 the build scrolled into view once the relayout has settled. That is what makes
 <code>#list-item-7</code> work as a link from anywhere.</p>
 
-<figure class="imgslot" data-shot="report-archives.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/report-archives.png</b>
-  <span>The Archives tab at 1600px, light theme, from a report with 8 or more retained builds. The fixed rail down the right must show ticks and crosses with build numbers and dates and one row highlighted by the scrollspy; the main column must show two or three complete build cards, each with its total test count, its date, its stacked horizontal bar and all seven counters.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-archives-light.webp" alt="The Archives tab: a build card with its total, date, stacked bar and seven counters, and the build rail down the right"
+       width="1800" height="924" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-archives-dark.webp" alt="The Archives tab: a build card with its total, date, stacked bar and seven counters, and the build rail down the right"
+       width="1800" height="923" loading="lazy" decoding="async">
+  <figcaption>Archives — one card per retained build, with the rail on the right jumping between them.</figcaption>
 </figure>
 
 <p>What survives is set by <code>--archive-count</code>, <code>--archive-days</code> and
@@ -562,10 +574,12 @@ label on it.</p>
 <p>Summary chips above the toolbar count what is actually on screen — screenshots shown, distinct
 suites, failures — so the numbers can never disagree with the cards beneath them.</p>
 
-<figure class="imgslot" data-shot="report-screenshots-gallery.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/report-screenshots-gallery.png</b>
-  <span>The Screenshots gallery at 1440px, light theme, showing 9 to 12 cards in the grid with the summary chips and the status filter pills (with their counts) legible above. Use a run that attached at least three different statuses so the pill row is a genuine choice and the card badges differ in colour, and make sure two or three cards show a real error note under the test and suite line.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-screenshots-light.webp" alt="The Screenshots gallery: four cards, each with a FAIL badge, the capture, the test and suite name and the error underneath"
+       width="1800" height="926" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-screenshots-dark.webp" alt="The Screenshots gallery: four cards, each with a FAIL badge, the capture, the test and suite name and the error underneath"
+       width="1800" height="926" loading="lazy" decoding="async">
+  <figcaption>The Screenshots gallery — one card per capture, badged with the outcome and carrying the error that produced it.</figcaption>
 </figure>
 
 <h3 id="the-lightbox">The lightbox</h3>
@@ -612,10 +626,12 @@ one button that does nothing. <strong>Copy</strong> puts the open part on the cl
 same textarea fallback the other panels use; <strong>Download</strong> saves it as a file named
 after the test and title, with the extension chosen from the format.</p>
 
-<figure class="imgslot" data-shot="report-api-logs.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/report-api-logs.png</b>
-  <span>The whole API Logs tab at 1600px, light theme. Kind pills with counts and the search box above; the rail showing six or more entries with mixed status chips (at least one 2xx and one 5xx); and the viewer on the right open on a failing call, with the meta row (Method, URL, Status, Time, Size, Content-Type) readable, all five part tabs visible, and a formatted JSON response body in the panel. If a second shot is possible, take the same frame with the cURL tab selected so an Authorization header shows as redacted.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-api-logs-light.webp" alt="The API Logs tab: kind pills, a rail of attachments with status codes and durations, and one call open showing its meta row and formatted response body"
+       width="1800" height="922" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-api-logs-dark.webp" alt="The API Logs tab: kind pills, a rail of attachments with status codes and durations, and one call open showing its meta row and formatted response body"
+       width="1800" height="924" loading="lazy" decoding="async">
+  <figcaption>API Logs — the rail on the left, and one call open on the right with its meta row and the five parts of the exchange.</figcaption>
 </figure>
 
 <p>Arriving from the <strong>Data</strong> button on a Test Metrics row narrows the rail to that one
@@ -665,10 +681,12 @@ its branches are covered" — and the whole Branches column is hidden when the r
 branches at all. Missing lines are written the way coverage.py writes them
 (<code>12-15, 88, 91-140</code>).</p>
 
-<figure class="imgslot" data-shot="report-coverage.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/report-coverage.png</b>
-  <span>The Test Coverage tab at 1600px, light theme, from a run measuring around 80&ndash;85% with <code>--cov-branch</code> on. The ring with its percentage, every stat tile including Branches and Partial, the meta row showing source, delta and target, the trend chart with six or more points, and the top rows of the per-file table sorted least-covered first with their coverage bars — including one file showing an em dash in Branches and a Missing lines cell carrying real ranges.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-coverage-light.webp" alt="The Test Coverage tab: the percentage ring, statement counts, the coverage trend across builds and the per-file table sorted least-covered first"
+       width="1800" height="1202" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-coverage-dark.webp" alt="The Test Coverage tab: the percentage ring, statement counts, the coverage trend across builds and the per-file table sorted least-covered first"
+       width="1800" height="1355" loading="lazy" decoding="async">
+  <figcaption>Test Coverage — the ring, the counts, the trend across builds and the per-file table, least covered first.</figcaption>
 </figure>
 
 <div class="note"><span class="note__title">Note</span>The annotated source is linked, never

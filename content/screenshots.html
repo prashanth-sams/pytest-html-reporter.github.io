@@ -63,10 +63,12 @@ def pytest_runtest_makereport(item, call):
 
 <p>The recipe in the first tab has not stopped working, and it has not started producing two pictures either. A test that took its own picture is <strong>not photographed again on the way out</strong>, so a suite that already calls <a href="python-api.html"><code>attach</code></a> from a hook of its own keeps exactly the images it always had.</p>
 
-<figure class="imgslot" data-shot="screens-column-thumbnail.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/screens-column-thumbnail.png</b>
-  <span>A single FAIL row of the Test Metrics table, cropped to about 900px wide, light theme, showing the error message and the Screens column beside it with one thumbnail on the row. Generate with <code>pytest tests/functional/test_playwright.py --html-report=./report</code>.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/metrics-screens-column-light.webp" alt="Three rows of the Test Metrics table, the failing one carrying an error message and a screenshot thumbnail in the Screens column"
+       width="1800" height="276" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/metrics-screens-column-dark.webp" alt="Three rows of the Test Metrics table, the failing one carrying an error message and a screenshot thumbnail in the Screens column"
+       width="1800" height="276" loading="lazy" decoding="async">
+  <figcaption>A failing row in Test Metrics — the error on the left, and the picture the test was looking at in the Screens column.</figcaption>
 </figure>
 
 <h2 id="how-a-browser-is-recognised">How a browser is recognised</h2>
@@ -351,10 +353,12 @@ def _reads(heading, expected):
 
 <p>The Given/When/Then arrive in the report as steps on their own, badged as Gherkin — see <a href="steps-and-bdd.html">steps and BDD</a> for that half of the tab.</p>
 
-<figure class="imgslot" data-shot="test-steps-gherkin-screenshot.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/test-steps-gherkin-screenshot.png</b>
-  <span>The Test Steps tab, 1440px wide, light theme, with the failing scenario open: the Given/When/Then tree, the feature and scenario named above it, and the screenshot thumbnail sitting on the failed <code>Then</code> step beside its assertion message. Generate with <code>pytest tests/functional/test_gherkin_screenshot.py --html-report=./report</code>.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-test-steps-light.webp" alt="The Test Steps tab with a pytest-bdd scenario open: the feature and scenario named above the Given/When/Then tree, the failed Then step and the screenshot beneath it"
+       width="1800" height="926" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-test-steps-dark.webp" alt="The Test Steps tab with a pytest-bdd scenario open: the feature and scenario named above the Given/When/Then tree, the failed Then step and the screenshot beneath it"
+       width="1800" height="922" loading="lazy" decoding="async">
+  <figcaption>A pytest-bdd scenario in Test Steps — the screenshot lands on the step that failed, not at the end of the test.</figcaption>
 </figure>
 
 <h2 id="where-the-picture-appears">Where the picture appears</h2>

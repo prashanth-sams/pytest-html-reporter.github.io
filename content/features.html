@@ -39,10 +39,12 @@ $ pytest tests/</code></pre>
   </li>
 </ul>
 
-<figure class="imgslot" data-shot="dashboard-overview.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/dashboard-overview.png</b>
-  <span>The whole Dashboard at 1440px wide, light theme, with the side nav visible: the summary card and its status pills, the donut, the Trends chart and the Highlights card. Use a run with a handful of failures so the pills are not all zero.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-dashboard-light.webp" alt="The Dashboard tab of a generated report: summary card, doughnut, Trends line, per-suite bars and Highlights"
+       width="1800" height="926" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-dashboard-dark.webp" alt="The Dashboard tab of a generated report: summary card, doughnut, Trends line, per-suite bars and Highlights"
+       width="1800" height="926" loading="lazy" decoding="async">
+  <figcaption>The whole Dashboard in one frame — summary, Trends, the per-suite bars and Highlights.</figcaption>
 </figure>
 
 <h3 id="themes">Light and dark themes</h3>
@@ -400,10 +402,12 @@ rate, how many times it has flipped, its retries, how long its current streak ha
 duration. It opens worst-behaved first, so the list to work through is already the list on
 screen.</p>
 
-<figure class="imgslot" data-shot="analytics-overview.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/analytics-overview.png</b>
-  <span>The top of the Analytics tab at 1440px, light theme: the six figures across the top (stability score, pass rate, flaky, always failing, builds analysed, time in tests) and the "Why this run failed" card below them with two or three exception groups and an "and N more" link. Run the suite at least five times first so the figures are not all placeholders.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/analytics-overview-light.webp" alt="The top of the Analytics tab: six stat tiles above the "Why this run failed" panel with its exception groups"
+       width="1800" height="628" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/analytics-overview-dark.webp" alt="The top of the Analytics tab: six stat tiles above the "Why this run failed" panel with its exception groups"
+       width="1800" height="628" loading="lazy" decoding="async">
+  <figcaption>The top of Analytics — six figures for the suite, and the run’s failures grouped by exception underneath.</figcaption>
 </figure>
 
 <div class="note"><span class="note__title">Note</span>Skips are excluded from the arithmetic
@@ -504,10 +508,12 @@ login(&quot;amy&quot;)        # the tab shows: Log in as amy, with user=amy kept
   </li>
 </ul>
 
-<figure class="imgslot" data-shot="test-steps-tree.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/test-steps-tree.png</b>
-  <span>The Test Steps tab drilled down suite → test → steps, light theme, showing the per-step duration bars, one nested step, a failed step carrying its message, and a paperclip on a step that has an attachment. Generate it with <code>pytest tests/functional/test_steps.py --html-report=./report</code>.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-test-steps-light.webp" alt="The Test Steps tab with a failing scenario open, showing its phases, per-step durations, the error and the screenshot on the failed step"
+       width="1800" height="926" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-test-steps-dark.webp" alt="The Test Steps tab with a failing scenario open, showing its phases, per-step durations, the error and the screenshot on the failed step"
+       width="1800" height="922" loading="lazy" decoding="async">
+  <figcaption>Test Steps, drilled into one test — the phases, the named steps with their durations, and the screenshot on the step that failed.</figcaption>
 </figure>
 
 <h3 id="gherkin-scenarios">Gherkin scenarios, with nothing to do</h3>
@@ -846,10 +852,12 @@ this run. Framing it into the page would break the one property the whole report
 one file you can mail — and it would break silently, showing an empty frame wherever the folder did
 not travel with it.</p>
 
-<figure class="imgslot" data-shot="coverage-tab.png">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
-  <b>Screenshot: assets/img/shots/coverage-tab.png</b>
-  <span>The Test Coverage tab at 1440px, light theme, after a run with <code>--cov</code> and <code>--cov-branch</code>: the percentage ring, the counts beside it, the trend line across several builds, and the top of the per-file table with its Branches column and missing lines, least covered first.</span>
+<figure class="shot shot--themed">
+  <img class="shot__light" src="../assets/img/shots/report-coverage-light.webp" alt="The Test Coverage tab: percentage ring, statement counts, coverage trend and the per-file table with missing line ranges"
+       width="1800" height="1202" loading="lazy" decoding="async">
+  <img class="shot__dark" src="../assets/img/shots/report-coverage-dark.webp" alt="The Test Coverage tab: percentage ring, statement counts, coverage trend and the per-file table with missing line ranges"
+       width="1800" height="1355" loading="lazy" decoding="async">
+  <figcaption>The Coverage tab after a run with <code>--cov</code> — the ring, the trend and the per-file table with its missing lines.</figcaption>
 </figure>
 
 <h2 id="history-and-archives">History and archives</h2>
