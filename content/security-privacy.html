@@ -67,6 +67,11 @@ page.</div>
         <td><strong>Yes.</strong> Printed verbatim, exactly as given.</td>
       </tr>
       <tr>
+        <td class="t-nowrap">The <a href="configuration.html#profiles">profile</a> the run used</td>
+        <td>Environment panel, <code>Profile</code></td>
+        <td><strong>Its name.</strong> The settings behind it are not listed anywhere in the page &mdash; they reach it only where that setting was always visible, such as a <code>build_info</code> row or the environment badge, whether it came from a flag, a profile or a <code>PYTEST_HTML_REPORTER_*</code> variable.</td>
+      </tr>
+      <tr>
         <td class="t-nowrap">Captured stdout, stderr and logging</td>
         <td><code>Logs</code> column</td>
         <td><strong>Yes.</strong> Nothing filters what a test prints.</td>
@@ -118,6 +123,7 @@ twice.</p>
     </button>
   </div>
   <pre><code data-lang="output">Environment       staging                       # only when --environment is set
+Profile           ci                            # only when a named profile was selected
 team              payments                      # one row per --build-info entry
 CI                GitHub Actions #482           # detected, unless build_info said ci=
 Pipeline          https://github.com/acme/payments-api/actions/runs/1234/attempts/2
@@ -129,7 +135,7 @@ Platform          Ubuntu 22.04.4 LTS &middot; Linux 6.8.0-1017-azure (x86_64)
 Python            3.12.7 (CPython, 64-bit)
 Interpreter       /home/runner/work/payments-api/.venv/bin/python
 pytest            8.3.4
-Plugins           cov-6.0.0, html-reporter-0.4.2, xdist-3.6.1
+Plugins           cov-6.0.0, html-reporter-0.4.3, xdist-3.6.1
 Workers           8                             # only under -n
 Arguments         tests/ --html-report=report/index.html -q
 Root              /home/runner/work/payments-api/payments-api

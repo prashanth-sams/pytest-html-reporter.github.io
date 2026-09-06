@@ -328,6 +328,11 @@ where the project's own snippet puts it.</p>
 exceptions are <code>--build-info</code> and <code>--report-link</code>, whose entries are
 <em>added to</em> the ini file's rather than replacing them.</p>
 
+<p>When one ini block is not enough — because the suite is run one way on a laptop and another way on
+CI — write each shape down under a name instead. From 0.4.3 a
+<a href="configuration.html#profiles">named profile</a> holds a whole set of these keys, and
+<code>pytest --report-profile=ci</code> picks one.</p>
+
 <div class="note note--tip"><span class="note__title">Tip</span>The full ini block — every key in
 one place, with the value each one takes — is on the
 <a href="configuration.html">configuration</a> page, and the flags are listed side by side on the

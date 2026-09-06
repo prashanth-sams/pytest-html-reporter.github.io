@@ -1,8 +1,8 @@
-<!--META {"title": "Configuration", "eyebrow": "Reference", "description": "Every command-line flag and every ini key pytest-html-reporter reads, with types, effective defaults, and the rule for what wins when the two disagree.", "lede": "Every setting has two homes: the command line and an ini file. This page lists all 25 flags and all 24 ini keys, says which one wins, names the values that fail the run rather than falling back, and ends with three configurations you can copy."} -->
+<!--META {"title": "Configuration", "eyebrow": "Reference", "description": "Every command-line flag, every ini key and every named profile pytest-html-reporter reads, with types, effective defaults, and the rule for what wins when the layers disagree.", "lede": "Every setting has three homes: the command line, an ini file, and \u2014 since 0.4.3 \u2014 a named profile that holds a whole shape of a run under one word. This page lists all 29 flags and all 27 ini keys, says which of the six layers wins, names the values that fail the run rather than falling back, and ends with three configurations you can copy."} -->
 
 <h2 id="where-configuration-lives">Where configuration lives</h2>
 
-<p>The plugin adds 26 command-line options to <code>pytest</code>, under the option group <em>report generator</em>, and registers 25 ini keys. The ini keys are read wherever pytest reads ini options:</p>
+<p>The plugin adds 29 command-line options to <code>pytest</code>, under the option group <em>report generator</em>, and registers 27 ini keys. The ini keys are read wherever pytest reads ini options:</p>
 
 <ul>
   <li><code>[pytest]</code> in <code>pytest.ini</code></li>
@@ -11,7 +11,7 @@
   <li><code>[tool.pytest.ini_options]</code> in <code>pyproject.toml</code></li>
 </ul>
 
-<p>There is no third file and no configuration of its own — the plugin has nothing pytest does not already read. The four blocks below are the same configuration written four ways.</p>
+<p>There is no third file: everything below lives in a file pytest already opens. Since 0.4.3 the plugin also reads sections of its own in those same files — <code>[tool.pytest-html-reporter]</code> and a table per <a href="#profiles">named profile</a> — which is a layer above these keys and below the command line. The four blocks below are the same configuration written four ways.</p>
 
 <div class="codetabs">
   <div class="codetabs__bar" role="tablist" aria-label="One configuration in four formats">
@@ -158,6 +158,10 @@ html_report = ./report</code></pre>
   </li>
   <li>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Between them sit two more layers</b>A <code>PYTEST_HTML_REPORTER_*</code> variable, then the <a href="#profiles">selected profile</a> and the table it shares, then the plain ini key — six layers in all, listed in full under <a href="#profile-precedence">what wins</a>. A run that names no profile and sets no variable behaves exactly as this page always described.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
     <span><b>Two settings add instead</b><code>--build-info</code> and <code>--report-link</code> are the exception. The command-line entries come first and the ini lines are appended, so both sources appear in the report. Nothing is replaced.</span>
   </li>
   <li>
@@ -269,14 +273,443 @@ html_report = ./reports/%Y%m%d/report_%H%M.html</code></pre>
   <span>The Environment panel on the Dashboard tab, light theme, ~700px wide, cropped to the panel. It must show the Environment row reading <code>staging</code>, at least three build_info rows (branch, team, commit) and the <em>Captured output</em> row reading something like <code>all tests: stdout, stderr and logging, logging from WARNING</code> — this panel is how a reader checks what the run actually resolved.</span>
 </figure>
 
+<h2 id="profiles">Named configuration profiles</h2>
+
+<div class="note note--new"><span class="note__title">New in 0.4.3</span>A profile is a set of these settings written down under a name &mdash; <code>local</code>, <code>ci</code>, <code>nightly</code> &mdash; and chosen in one word with <code>--report-profile=ci</code>. It is a layer above the plain ini keys and below the command line, and a run that names no profile resolves byte for byte the way it did before.</div>
+
+<p>A suite is run in more than one shape. On a laptop you want the browser to open, every log kept and a handful of builds in the archive; on CI you want no browser, logs only where something failed, a JUnit xml beside the report and a month of history. That was two long command lines living in two places &mdash; a Makefile target and a workflow file &mdash; which drift the moment one of them is edited, and the drift is invisible until somebody reads a report missing the thing they went looking for.</p>
+
+<p>A profile is those two shapes written down once, under a name:</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="The same two profiles in either file">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">pyproject.toml</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pytest.ini</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">The run</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">toml</span>
+        <span class="codeblock__cap">A table per profile, under [tool.pytest-html-reporter.profiles]</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="toml">[tool.pytest-html-reporter.profiles.local]
+open = &quot;auto&quot;
+logs = &quot;all&quot;
+screenshots = &quot;failed&quot;
+archive_count = 10
+
+[tool.pytest-html-reporter.profiles.ci]
+open = &quot;none&quot;
+logs = &quot;failed&quot;
+screenshots = &quot;failed&quot;
+junit = &quot;report/junit.xml&quot;
+archive_days = 30</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <span class="codeblock__cap">A section per profile — tox.ini and setup.cfg take the same ones</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="ini">[pytest-html-reporter.profiles.local]
+open = auto
+logs = all
+screenshots = failed
+archive_count = 10
+
+[pytest-html-reporter.profiles.ci]
+open = none
+logs = failed
+screenshots = failed
+junit = report/junit.xml
+archive_days = 30</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">One word instead of ten flags</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/ --report-profile=ci</code></pre>
+    </div>
+  </div>
+</div>
+
+<p>Both files are read: the one pytest chose as this run's configuration file first, then <code>pyproject.toml</code> in the rootdir. A repository that keeps a <code>pytest.ini</code> therefore does not have to grow a <code>pyproject.toml</code> to say <code>ci</code> in a single word. When both define the same name, the ini file's definition is the one used, <em>whole</em> rather than merged &mdash; half a profile from each file would be a shape nobody composed, and which half came from where would depend on which file pytest happened to pick.</p>
+
+<p>The underscore spelling of the distribution name works in either file, since <code>pytest_html_reporter</code> is what half of everybody types first. In a <code>setup.cfg</code>, where pytest's own section is <code>[tool:pytest]</code>, the sections may be written <code>[tool:pytest-html-reporter.profiles.ci]</code> to match.</p>
+
+<h3 id="choosing-a-profile">Choosing one</h3>
+
+<p>Four routes, highest first. The first two name a profile for one run; the last two pin the one a bare <code>pytest</code> uses, so the shape the repository agreed on is what happens by default.</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Four ways to select a profile">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">Command line</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">Environment</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pytest.ini</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pyproject.toml</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">This run, whatever the files pin</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --report-profile=ci
+$ pytest --report-profile=none          # this run uses no profile at all</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">This job, this machine, this shell</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="shell">$ PYTEST_HTML_REPORTER_PROFILE=ci pytest</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <span class="codeblock__cap">The profile a bare pytest uses</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="ini">[pytest]
+report_profile = ci</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">toml</span>
+        <span class="codeblock__cap">The same, in the tool table</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="toml">[tool.pytest-html-reporter]
+profile = &quot;ci&quot;</code></pre>
+    </div>
+  </div>
+</div>
+
+<p><code>--report-profile=none</code> is how a single run opts back out of a pinned default &mdash; which is why no profile can be called <code>none</code>. The name is matched case-insensitively, so <code>--report-profile=CI</code> finds <code>ci</code>, and the report shows the name as it was written down rather than as it was typed.</p>
+
+<div class="note"><span class="note__title">Note</span>A name that is not defined fails the run at configure time, lists the profiles that <em>are</em> defined and offers the nearest one &mdash; rather than running the suite for forty minutes under settings nobody chose.</div>
+
+<h3 id="profile-shared-table">Settings every profile shares</h3>
+
+<p>What is true of every shape of a run &mdash; the title, whether the Coverage tab is built &mdash; goes in the tool table itself, and a profile then says only what it changes. That table also applies to a run naming no profile at all, so it is a layer rather than something that only sometimes exists.</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="The shared table in either file">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">pyproject.toml</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">pytest.ini</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">toml</span>
+        <span class="codeblock__cap">Everything true of every shape of the run</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="toml">[tool.pytest-html-reporter]
+title = &quot;PAYMENTS&quot;
+coverage = &quot;auto&quot;
+links = { Coverage = &quot;htmlcov/index.html&quot; }
+
+[tool.pytest-html-reporter.profiles.ci]
+open = &quot;none&quot;
+logs = &quot;failed&quot;</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">ini</span>
+        <span class="codeblock__cap">The same table as a section</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="ini">[pytest-html-reporter]
+title = PAYMENTS
+coverage = auto
+links =
+    Coverage=htmlcov/index.html
+
+[pytest-html-reporter.profiles.ci]
+open = none
+logs = failed</code></pre>
+    </div>
+  </div>
+</div>
+
+<h3 id="profile-environment">Overriding from the environment</h3>
+
+<p>Every setting has a <code>PYTEST_HTML_REPORTER_</code> variable, under both its short name and its ini spelling &mdash; <code>PYTEST_HTML_REPORTER_LOGS</code> and <code>PYTEST_HTML_REPORTER_REPORT_LOGS</code> reach the same option &mdash; and it sits <strong>above</strong> the profile.</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">shell</span>
+    <span class="codeblock__cap">One job saying otherwise, without editing a committed file</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="shell">$ PYTEST_HTML_REPORTER_LOGS=all pytest --report-profile=ci
+$ PYTEST_HTML_REPORTER_JUNIT=out/junit.xml pytest
+$ PYTEST_HTML_REPORTER_BUILD_INFO=&quot;commit=$GITHUB_SHA&quot; pytest
+$ PYTEST_HTML_REPORTER_PROFILE=ci pytest</code></pre>
+</div>
+
+<p>That order is what an override is for: the profile is what the repository committed, and the variable is one job, one machine or one debugging session saying otherwise without editing a file everybody else reads. A variable set to nothing is not an answer &mdash; <code>PYTEST_HTML_REPORTER_JUNIT=</code> in a matrix leg that left its value blank means &quot;I am not saying&quot;, not &quot;write no xml&quot;. A list takes one entry per line.</p>
+
+<h3 id="profile-precedence">What wins, all six layers</h3>
+
+<p>Highest first. Everything a profile settles is written onto the very option the flag writes onto, which is why nothing else in the plugin had to learn that profiles exist &mdash; and why an <code>xdist</code> worker, handed a copy of those same options, is shaped by the same profile the controller was.</p>
+
+<ol>
+  <li>a flag on the command line &mdash; including one reached through <code>addopts</code>;</li>
+  <li>a <code>PYTEST_HTML_REPORTER_*</code> environment variable;</li>
+  <li>the selected profile;</li>
+  <li>the <code>[tool.pytest-html-reporter]</code> table every profile shares;</li>
+  <li>the plain ini key in <code>[pytest]</code>;</li>
+  <li>the option's own default.</li>
+</ol>
+
+<p>A profile is a set of overrides rather than a replacement configuration: everything it is silent about goes on being answered exactly as it was, which is what makes adopting one cheap. <code>build_info</code>, <code>links</code> and <code>link_patterns</code> are the exception and <strong>add up</strong> rather than replace, the way <code>--build-info</code> has always added to the ini key, so a profile wanting one more row does not restate the rows that were already there.</p>
+
+<p>A label named by more than one layer is one row, and it is the highest layer's answer &mdash; at every layer of the list above, not only against the ini key:</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="One label, three layers">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">pyproject.toml</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">The run</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">toml</span>
+        <span class="codeblock__cap">The repository's rows, and the profile's own</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="toml">[tool.pytest-html-reporter]
+build_info = { branch = &quot;main&quot;, team = &quot;payments&quot; }
+
+[tool.pytest-html-reporter.profiles.ci]
+build_info = { branch = &quot;release&quot; }</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">And one job overriding the label again</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="shell">$ PYTEST_HTML_REPORTER_BUILD_INFO=&quot;branch=hotfix&quot; pytest --report-profile=ci</code></pre>
+    </div>
+  </div>
+</div>
+
+<p>That shows <code>branch = hotfix</code> and <code>team = payments</code>: the label three layers argued over takes the highest answer, and the row nobody argued over is kept. The row also stays where the layer that introduced it put it, so overriding a value does not reorder the panel. Before 0.4.3 the obvious way to write a profile &mdash; copy a block of ini keys under a name and leave the originals where they are &mdash; rendered every one of those rows twice, and a <code>report_link_pattern</code> in the ini file quietly took back a marker the command line had just claimed.</p>
+
+<h3 id="profile-keys">The settings a profile can carry</h3>
+
+<p>All 27 &mdash; every option in the group except <code>--report-profile</code> and <code>--report-show-config</code>, which choose the profile rather than being chosen by it. The ini spelling of each works as well as the short one, so a block of ini keys can be moved under a name without being rewritten.</p>
+
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>In a profile</th><th>On the command line</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>path</code></td><td class="t-nowrap"><code>--html-report</code></td><td><code>html_report</code> and <code>report</code> also name it</td></tr>
+      <tr><td class="t-nowrap"><code>title</code></td><td class="t-nowrap"><code>--title</code></td><td>text &mdash; the one setting with no ini key of its own</td></tr>
+      <tr><td class="t-nowrap"><code>open</code></td><td class="t-nowrap"><code>--report-open</code></td><td><code>auto</code> | <code>always</code> | <code>none</code></td></tr>
+      <tr><td class="t-nowrap"><code>logs</code></td><td class="t-nowrap"><code>--report-logs</code></td><td><code>all</code> | <code>failed</code> | <code>none</code></td></tr>
+      <tr><td class="t-nowrap"><code>log_limit</code></td><td class="t-nowrap"><code>--report-log-limit</code></td><td>integer, <code>0</code> is no limit</td></tr>
+      <tr><td class="t-nowrap"><code>attachments</code></td><td class="t-nowrap"><code>--report-attachments</code></td><td><code>all</code> | <code>failed</code> | <code>none</code></td></tr>
+      <tr><td class="t-nowrap"><code>attachment_limit</code></td><td class="t-nowrap"><code>--report-attachment-limit</code></td><td>integer, <code>0</code> is no limit</td></tr>
+      <tr><td class="t-nowrap"><code>screenshots</code></td><td class="t-nowrap"><code>--report-screenshots</code></td><td><code>failed</code> | <code>all</code> | <code>none</code></td></tr>
+      <tr><td class="t-nowrap"><code>steps</code></td><td class="t-nowrap"><code>--report-steps</code></td><td><code>all</code> | <code>failed</code> | <code>none</code></td></tr>
+      <tr><td class="t-nowrap"><code>step_limit</code></td><td class="t-nowrap"><code>--report-step-limit</code></td><td>integer, <code>0</code> keeps every one</td></tr>
+      <tr><td class="t-nowrap"><code>coverage</code></td><td class="t-nowrap"><code>--report-coverage</code></td><td><code>auto</code> | <code>none</code></td></tr>
+      <tr><td class="t-nowrap"><code>coverage_file</code></td><td class="t-nowrap"><code>--report-coverage-file</code></td><td>path</td></tr>
+      <tr><td class="t-nowrap"><code>coverage_limit</code></td><td class="t-nowrap"><code>--report-coverage-limit</code></td><td>integer, <code>0</code> lists every file</td></tr>
+      <tr><td class="t-nowrap"><code>environment</code></td><td class="t-nowrap"><code>--environment</code></td><td>text</td></tr>
+      <tr><td class="t-nowrap"><code>build_info</code></td><td class="t-nowrap"><code>--build-info</code></td><td>a list, or a table of <code>key = &quot;value&quot;</code> &mdash; <strong>added to</strong></td></tr>
+      <tr><td class="t-nowrap"><code>links</code></td><td class="t-nowrap"><code>--report-link</code></td><td>a list, or a table of <code>Label = &quot;url&quot;</code> &mdash; <strong>added to</strong></td></tr>
+      <tr><td class="t-nowrap"><code>link_patterns</code></td><td class="t-nowrap"><code>--report-link-pattern</code></td><td>a list, or a table of <code>marker = &quot;url&quot;</code> &mdash; <strong>added to</strong></td></tr>
+      <tr><td class="t-nowrap"><code>archive_count</code></td><td class="t-nowrap"><code>--archive-count</code></td><td>integer</td></tr>
+      <tr><td class="t-nowrap"><code>archive_days</code></td><td class="t-nowrap"><code>--archive-days</code></td><td>number of days</td></tr>
+      <tr><td class="t-nowrap"><code>archive_since</code></td><td class="t-nowrap"><code>--archive-since</code></td><td>date or datetime</td></tr>
+      <tr><td class="t-nowrap"><code>junit</code></td><td class="t-nowrap"><code>--report-junit</code></td><td>path</td></tr>
+      <tr><td class="t-nowrap"><code>junit_xpass</code></td><td class="t-nowrap"><code>--report-junit-xpass</code></td><td><code>pass</code> | <code>fail</code> | <code>skip</code></td></tr>
+      <tr><td class="t-nowrap"><code>packages</code></td><td class="t-nowrap"><code>--report-packages</code></td><td><code>true</code> / <code>false</code></td></tr>
+      <tr><td class="t-nowrap"><code>shard</code></td><td class="t-nowrap"><code>--report-shard</code></td><td>id, e.g. <code>1/4</code></td></tr>
+      <tr><td class="t-nowrap"><code>shard_merge</code></td><td class="t-nowrap"><code>--report-shard-merge</code></td><td><code>true</code> / <code>false</code></td></tr>
+      <tr><td class="t-nowrap"><code>shard_run</code></td><td class="t-nowrap"><code>--report-shard-run</code></td><td>token</td></tr>
+      <tr><td class="t-nowrap"><code>shard_reset</code></td><td class="t-nowrap"><code>--report-shard-reset</code></td><td><code>true</code> / <code>false</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="profile-errors">A wrong value fails the run, not the report</h3>
+
+<p>A profile bypasses argparse entirely, so every check the command line would have made is made when the profile is applied &mdash; at configure time, before a test is collected, with one line naming the file:</p>
+
+<div class="codeblock">
+  <div class="codeblock__head">
+    <span class="codeblock__lang">output</span>
+    <span class="codeblock__cap">Three ways to be told at configure time instead of after the suite</span>
+    <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+  </div>
+  <pre><code data-lang="output">ERROR: profile &#039;ci&#039; in pyproject.toml: logs takes all, failed, none, not &#039;fail&#039;
+ERROR: profile &#039;ci&#039; in pyproject.toml: unknown setting &#039;screenshot&#039;. Did you mean &#039;screenshots&#039;?
+ERROR: --report-profile=cli: no such profile. Defined: ci, local. Did you mean &#039;ci&#039;?</code></pre>
+</div>
+
+<p>Without that check, <code>logs = &quot;fail&quot;</code> would land on the option, fail the helper's own test for a value it knows and fall through to <code>all</code>: a run that kept every log because six letters were typed instead of seven, and a report nobody can tell was misconfigured. An unknown key fails the same way and offers the nearest name; an unknown profile lists the ones that are defined.</p>
+
+<h3 id="seeing-what-resolved">Seeing what a run resolved</h3>
+
+<p>Six layers is more precedence than anybody holds in their head, and getting it wrong is silent: the run is green and the report is simply not the one that was configured. Two commands print the answer in provenance rather than in values &mdash; which layer decided each setting, and which layers it overrode.</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="Before the run, or during it">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">The command</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">What it prints</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">During a run</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">Resolves the files and prints the table, running nothing</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest-html-reporter config --profile=ci</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">output</span>
+        <span class="codeblock__cap">Provenance, not just values</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="output">Profile: ci
+Files read: pytest.ini, pyproject.toml
+Profiles defined: ci, local
+
+Setting      Value             Source
+-------------------------------------
+path         report/ci         profile &#039;ci&#039; in pyproject.toml
+build_info   branch=hotfix     the environment
+                               over profile &#039;ci&#039; in pyproject.toml
+                               over [tool.pytest-html-reporter] in pyproject.toml
+build_info   team=payments     [tool.pytest-html-reporter] in pyproject.toml
+logs         all               the environment
+                               over profile &#039;ci&#039; in pyproject.toml
+screenshots  failed            [tool.pytest-html-reporter] in pyproject.toml
+open         none              profile &#039;ci&#039; in pyproject.toml
+junit        report/junit.xml  profile &#039;ci&#039; in pyproject.toml</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">The same table in the pytest header, which is what gets pasted into an issue</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest --report-profile=ci --report-show-config</code></pre>
+    </div>
+  </div>
+</div>
+
+<p><code>--profile</code> is optional; without it the command resolves the profile a bare <code>pytest</code> would use, including one pinned as the default. <code>--all</code> also lists the settings nobody named, at their defaults, and <code>--json</code> prints the same thing as a document for a CI step to assert on. Every value shown is what gets written onto <code>config.option</code>, which is the copy an xdist worker is handed &mdash; so what the table says is what the workers ran with. See <a href="cli-reference.html#config-command">the CLI reference</a> for both.</p>
+
+<div class="note note--tip"><span class="note__title">Tip</span>The report says which profile drew it. The <code>Environment</code> panel carries a <code>Profile</code> row naming it, so a report found on a CI server months later answers &quot;where did the logs go&quot; with &quot;this was built with <code>ci</code>, which keeps them only on failures&quot; &mdash; which is the same fact. See <a href="report-tour.html#the-environment-dialog">the Environment dialog</a>.</div>
+
+
 <h2 id="ini-keys">Every ini key</h2>
 
-<p>All 26, with the value you get when the key is absent. Each one mirrors the flag of the same name with underscores for dashes; the long-form explanation of what each does lives in <a href="cli-reference.html">the CLI reference</a>.</p>
+<p>All 27, with the value you get when the key is absent. Each one mirrors the flag of the same name with underscores for dashes; the long-form explanation of what each does lives in <a href="cli-reference.html">the CLI reference</a>.</p>
 
 <div class="tablewrap">
   <table>
     <thead><tr><th>Key</th><th>Type</th><th>Effective default</th><th>What it does</th></tr></thead>
     <tbody>
+      <tr><td class="t-nowrap"><code>report_profile</code></td><td>string</td><td>empty — no profile</td><td>The <a href="#profiles">named profile</a> a bare <code>pytest</code> uses, e.g. <code>ci</code>. New in 0.4.3, and mirrors <code>--report-profile</code>; everything the profile sets overrides the plain keys in this same file.</td></tr>
       <tr><td class="t-nowrap"><code>html_report</code></td><td>path</td><td><code>.</code> &rarr; <code>./pytest_html_report.html</code></td><td>Where the build is written. A value containing <code>.html</code> names the file; anything else names a folder and the file is <code>pytest_html_report.html</code>. Date placeholders expanded.</td></tr>
       <tr><td class="t-nowrap"><code>archive_count</code></td><td>integer as text</td><td>empty — every build kept</td><td>Builds kept in Archives. Empty and <code>0</code> are different answers: empty keeps everything, <code>0</code> deletes <code>archive/</code> and drops the Archives section entirely, and <code>N</code> keeps <code>N-1</code> files plus the build being written.</td></tr>
       <tr><td class="t-nowrap"><code>archive_days</code></td><td>number</td><td>no age limit</td><td>Keep only builds run in the last N days; fractions allowed, <code>0.5</code> is twelve hours.</td></tr>
@@ -354,12 +787,14 @@ one row per leg when they do not, which is the case the row exists for.</p>
 
 <h2 id="cli-flags">Every command-line flag</h2>
 
-<p>All 27, with the ini key each one overrides. <a href="cli-reference.html">The CLI reference</a> has the long-form entry for each, including the standalone <code>pytest-html-reporter merge</code>, <code>junit</code> and <code>inspect</code> commands, which are a separate surface.</p>
+<p>All 29, with the ini key each one overrides. <a href="cli-reference.html">The CLI reference</a> has the long-form entry for each, including the standalone <code>pytest-html-reporter merge</code>, <code>junit</code> and <code>inspect</code> commands, which are a separate surface.</p>
 
 <div class="tablewrap">
   <table>
     <thead><tr><th>Flag</th><th>Value</th><th>Default</th><th>Ini key</th></tr></thead>
     <tbody>
+      <tr><td class="t-nowrap"><code>--report-profile</code></td><td>name, or <code>none</code></td><td>the pinned default, else no profile</td><td class="t-nowrap"><code>report_profile</code></td></tr>
+      <tr><td class="t-nowrap"><code>--report-show-config</code></td><td>flag</td><td>off</td><td class="t-nowrap">none — it prints, it does not set</td></tr>
       <tr><td class="t-nowrap"><code>--html-report</code></td><td>folder or <code>.html</code> path</td><td><code>./pytest_html_report.html</code></td><td class="t-nowrap"><code>html_report</code></td></tr>
       <tr><td class="t-nowrap"><code>--title</code></td><td>string</td><td><code>PYTEST REPORT</code></td><td class="t-nowrap">none — use <code>addopts</code></td></tr>
       <tr><td class="t-nowrap"><code>--environment</code></td><td>string</td><td>unset</td><td class="t-nowrap"><code>environment</code></td></tr>
@@ -480,6 +915,8 @@ html_report = ./report</code></pre>
 <p><code>-n</code> and <code>--dist</code> change nothing about the configuration above. Every worker sends its records back to the controller, which writes one report, one build in Archives and one row per test, in collection order. The report path and the shard settings are resolved once and handed to the workers so all of them agree. See <a href="ci-integrations.html">CI integrations</a> for the sharded case, where separate <em>machines</em> each write a bundle and one job merges them.</p>
 
 <h2 id="recipes">Three configurations worth copying</h2>
+
+<p>The first two are the same suite in two shapes, which is exactly what a <a href="#profiles">named profile</a> is for: written as <code>local</code> and <code>ci</code> in one file, they stop drifting apart and become one word on the command line. They are given here as plain ini files because that is what a profile is a set of — moving a block of these keys under a name needs nothing rewritten.</p>
 
 <h3 id="recipe-ci">A CI build</h3>
 

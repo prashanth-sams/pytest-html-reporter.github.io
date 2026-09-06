@@ -227,6 +227,10 @@ named the way its own users name it, the <strong>interpreter</strong> that actua
 have already named through <code>--build-info</code> is overruled. See
 <a href="ci-integrations.html#environment-detection">CI integrations</a>.</div>
 
+<p>A run built with a <a href="#named-profiles">named profile</a> gets one more row, <code>Profile</code>,
+saying which one &mdash; so the panel answers &quot;where did the logs go&quot; as well as &quot;where did
+this run happen&quot;. New in 0.4.3.</p>
+
 <p>One row is opt-in: <a href="configuration.html#report-packages"><code>--report-packages</code></a> adds
 a <code>Packages</code> row listing every installed distribution and its version, the way
 <code>pip freeze</code> reads. It is off by default because it is a few hundred entries nobody reads until
@@ -303,9 +307,17 @@ why.</div>
 
 <h3 id="status-filter-chips">Status filter chips</h3>
 
-<p>The Dashboard's PASS / FAIL / SKIP / XPASS / XFAIL / ERROR count pills are clickable, and drive
-a column search on the Test Metrics table. One click gets you "show me only the failures", which
-is the most common thing anybody does with a report like this.</p>
+<p>The PASS / FAIL / SKIP / XPASS / XFAIL / ERROR count pills over the Test Metrics table are
+clickable, and drive a column search on the table under them. One click gets you "show me only the
+failures", which is the most common thing anybody does with a report like this.</p>
+
+<p>From 0.4.3 the seven figures under the Dashboard's ring are the other end of the same filter.
+Each is a button that opens Test Metrics with the table already filtered to what it counted —
+<em>Rerun</em> to every test that ran more than once, since rerun is a count rather than an
+outcome — and a counter standing at zero is disabled rather than offering rows that are not there.
+The filter is in the address as <code>#test-metrics?status=FAIL</code>, so "the failures in last
+night's build" is a link somebody can be sent, and a <strong>Clear filter</strong> control stands
+beside the chips for the reader who arrived on one.</p>
 
 <h3 id="truncation-that-says-so">Truncation that says so</h3>
 
@@ -911,6 +923,100 @@ couple of months. How far back Analytics reads is whatever these three have kept
 rather than of one run, so the ini file is usually the better place for it: set
 <code>archive_count</code>, <code>archive_days</code> or <code>archive_since</code> once and every
 invocation, however it is started, keeps the same window.</div>
+
+<h2 id="named-profiles">One name for a whole shape of a run</h2>
+
+<div class="note note--new"><span class="note__title">New in 0.4.3</span>A suite is run in more than one
+shape, and each shape used to be a command line. A <strong>profile</strong> is a shape written down under
+a name &mdash; <code>local</code>, <code>ci</code> &mdash; and selected in one word.</div>
+
+<p>On a laptop you want the browser to open, every log kept and a handful of builds archived. On CI you
+want no browser, logs only where something failed, a JUnit xml beside the report and a month of history.
+Kept as two long invocations &mdash; one in a Makefile target, one in a workflow file &mdash; they drift
+the moment either is edited, and the drift stays invisible until somebody reads a report missing the thing
+they went looking for.</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="A profile, and the run that uses it">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">pyproject.toml</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">The run</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">toml</span>
+        <span class="codeblock__cap">Two shapes, written down once</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="toml">[tool.pytest-html-reporter.profiles.local]
+open = &quot;auto&quot;
+logs = &quot;all&quot;
+archive_count = 10
+
+[tool.pytest-html-reporter.profiles.ci]
+open = &quot;none&quot;
+logs = &quot;failed&quot;
+junit = &quot;report/junit.xml&quot;
+archive_days = 30</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">One word on either machine</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/ --report-profile=ci</code></pre>
+    </div>
+  </div>
+</div>
+
+<p>Both files are read, so a repository that keeps a <code>pytest.ini</code> does not have to grow a
+<code>pyproject.toml</code> to say <code>ci</code> in a single word. A profile can be pinned as the
+default, so a bare <code>pytest</code> is already the shape the repository agreed on; a
+<code>PYTEST_HTML_REPORTER_*</code> variable overrides one setting for one job without editing a file
+everybody else reads; and a flag typed on the command line still beats all of it.</p>
+
+<ul class="featlist">
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>A typo fails the run, not the report</b><code>logs = "fail"</code> is a typo rather than a
+    setting. It stops the run at configure time with one line naming the file, before a test is collected
+    &mdash; instead of falling through to <code>all</code> and keeping every log because six letters were
+    typed instead of seven.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>The report says which shape it is</b>The <code>Environment</code> panel carries a
+    <code>Profile</code> row, so a report found on a CI server months later answers &quot;where did the
+    logs go&quot; itself.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>And you can ask before you run</b><code>pytest-html-reporter config</code> prints every
+    setting a run here would resolve, which layer decided it and which layers it overrode &mdash; running
+    nothing. <code>--report-show-config</code> prints the same table in the pytest header of a real run.</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Nothing else changed</b>A profile is written onto the very options the flags parse into, so
+    an <code>xdist</code> worker is shaped by the same profile the controller is, and a suite that names
+    no profile runs byte for byte the report it ran yesterday.</span>
+  </li>
+</ul>
+
+<p>See <a href="configuration.html#profiles">Configuration</a> for where profiles are written, what the
+27 settings are called, and the six layers in order.</p>
+
 
 <h2 id="running-at-scale">Running at scale</h2>
 

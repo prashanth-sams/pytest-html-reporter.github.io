@@ -1,4 +1,4 @@
-<!--META {"title": "Changelog", "eyebrow": "Project", "description": "Every released version of pytest-html-reporter, newest first, with what changed and what changes under you when you upgrade.", "lede": "Twenty-eight releases, read from the project's own CHANGELOG.txt. The plugin shipped fifteen small releases between July 2020 and February 2022, went quiet for four and a half years, then shipped thirteen releases in eight days to reach 0.4.2."} -->
+<!--META {"title": "Changelog", "eyebrow": "Project", "description": "Every released version of pytest-html-reporter, newest first, with what changed and what changes under you when you upgrade.", "lede": "Twenty-nine releases, read from the project's own CHANGELOG.txt. The plugin shipped fifteen small releases between July 2020 and February 2022, went quiet for four and a half years, then shipped fourteen releases in nine days to reach 0.4.3."} -->
 
 <h2 id="published-releases">Where releases are published</h2>
 
@@ -10,13 +10,15 @@ inside the package, so a rendered report has no JavaScript or CDN dependency at 
 
 <div class="note note--new">
   <span class="note__title">Current release</span>
-  <strong>0.4.2</strong>, 5 September 2026 &mdash; the version <code>setup.py</code> declares. It turns
-  the <code>Rerun</code> count into a button opening the trail of every attempt the test made, and fills the
-  <code>Environment</code> panel in on its own: the CI system detected from its own variables with a
-  <code>Pipeline</code> link back to the build, the branch and commit under test, the operating system named
-  the way its own users name it, the interpreter that actually ran and, on a parallel run, how many
-  <code>xdist</code> workers reported results. The new <code>--report-packages</code> adds a full
-  <code>pip freeze</code> inventory for the runs that want one.
+  <strong>0.4.3</strong>, 6 September 2026 &mdash; the version on PyPI. It gives a suite's two shapes one
+  name each: <a href="configuration.html#profiles">named profiles</a> hold <code>local</code> and
+  <code>ci</code> in <code>pyproject.toml</code> or a <code>pytest.ini</code>, selected with
+  <code>--report-profile=ci</code>, overridable per job through <code>PYTEST_HTML_REPORTER_*</code>
+  variables, and printed back with provenance by
+  <a href="cli-reference.html#config-command"><code>pytest-html-reporter config</code></a>. On the page,
+  the Dashboard's seven counters became the way into the rows they count &mdash; Test Metrics filtered, and
+  the filter in the address as <code>#test-metrics?status=FAIL</code>. Durations stopped rounding fast tests
+  to nothing, and the footer now names the version that wrote the file.
 </div>
 
 <p>Upgrades within the 0.3.x line change behaviour as well as adding features, so pin the version if
@@ -33,7 +35,7 @@ upgrade</a> below before moving off 0.2.x.</p>
       <span class="copybtn__label">Copy</span>
     </button>
   </div>
-  <pre><code data-lang="shell">$ pip install pytest-html-reporter==0.4.2
+  <pre><code data-lang="shell">$ pip install pytest-html-reporter==0.4.3
 $ pip install --upgrade pytest-html-reporter</code></pre>
 </div>
 
@@ -45,13 +47,108 @@ released and undocumented or never used, so they are absent here rather than rec
 
 <h2 id="release-timeline">Release timeline</h2>
 
-<p>The 2026 line, newest first. Thirteen releases between 29 August and 5 September 2026, several
+<p>The 2026 line, newest first. Fourteen releases between 29 August and 6 September 2026, several
 landing on the same day, each of them larger than anything in the plugin's first era.</p>
 
 <div class="tl">
 
   <div class="tl__item is-latest">
-    <div class="tl__head"><span class="tl__ver">0.4.2</span><span class="tl__date">5 Sep 2026</span><span class="pill pill--brand">latest</span></div>
+    <div class="tl__head"><span class="tl__ver">0.4.3</span><span class="tl__date">6 Sep 2026</span><span class="pill pill--brand">latest</span></div>
+    <ul>
+      <li><strong>A suite's two shapes are now two names.</strong> On a laptop you want the browser to
+        open, every log kept and a handful of builds archived; on CI you want no browser, logs only where
+        something failed, a JUnit xml beside the report and a month of history. That was two long
+        invocations living in a Makefile target and a workflow file, drifting the moment one of them was
+        edited, and the drift stayed invisible until somebody read a report missing the thing they went
+        looking for. Both shapes are now written down once, under a name &mdash;
+        <code>[tool.pytest-html-reporter.profiles.ci]</code> in <code>pyproject.toml</code>, or
+        <code>[pytest-html-reporter.profiles.ci]</code> in a <code>pytest.ini</code>, <code>tox.ini</code>
+        or <code>setup.cfg</code> &mdash; and selected with <code>pytest --report-profile=ci</code>. Both
+        files are read, the one pytest chose for this run first, so a repository that keeps a
+        <code>pytest.ini</code> does not have to grow a <code>pyproject.toml</code> to say <code>ci</code>
+        in a single word; when both answer to one name the ini file's definition is used whole rather than
+        merged, since half a profile from each file is a shape nobody composed. See
+        <a href="configuration.html#profiles">Configuration</a>.</li>
+      <li><strong>The profile can be pinned rather than typed.</strong> <code>report_profile = ci</code> in
+        <code>[pytest]</code>, <code>profile = &quot;ci&quot;</code> in the tool table, or
+        <code>PYTEST_HTML_REPORTER_PROFILE</code> &mdash; a bare <code>pytest</code> is then already the
+        shape this repository agreed on, and <code>--report-profile=none</code> is how one run opts back
+        out, which is why no profile can be called <code>none</code>. What is true of every shape of a run
+        &mdash; the title, whether the Coverage tab is built &mdash; goes in the
+        <code>[tool.pytest-html-reporter]</code> table itself, which applies to a run naming no profile too,
+        so it is a layer rather than something that only sometimes exists.</li>
+      <li><strong>Every setting also answers to a <code>PYTEST_HTML_REPORTER_</code> variable</strong>, under
+        both its short name and its ini spelling, and it sits <em>above</em> the profile. That is what an
+        override is for: the profile is what the repository committed, and the variable is one job, one
+        machine or one debugging session saying otherwise without editing a file everybody else reads. A
+        variable set to nothing is not an answer &mdash; a matrix leg that left its value blank means
+        &quot;I am not saying&quot;, not &quot;write nothing&quot;. A flag typed on the command line still
+        wins over all of it, <code>addopts</code> included: that line was written for this repository about
+        every run of it, and a profile quietly overriding it would leave two config files disagreeing with
+        nothing on the page saying so.</li>
+      <li><strong>Everything a profile sets lands on the very option the flag lands on</strong>, so nothing
+        else in the plugin needed to learn that profiles exist. <code>--report-logs</code> and
+        <code>report_logs</code> resolve exactly as they always did and answer the profile, an
+        <code>xdist</code> worker is shaped by the same profile the controller is, and a suite that names
+        none runs byte for byte the report it ran yesterday. <code>build_info</code>, <code>links</code> and
+        <code>link_patterns</code> add up rather than replace, the way <code>--build-info</code> has always
+        added to the ini key &mdash; and a label named by more than one layer is now <em>one</em> row
+        carrying the highest layer's answer, at every layer rather than only against the ini key. The
+        obvious way to write a profile is to copy a block of ini keys under a name and leave the originals
+        where they are, and adding up meant every one of those rows was rendered twice: two
+        <code>Branch</code> rows saying <code>main</code>, with nothing to say which the run had
+        used.</li>
+      <li><strong>A profile that says something the flag would have refused fails the run at configure
+        time</strong>, with one line, before a test is collected. <code>logs = &quot;fail&quot;</code> is a
+        typo rather than a setting, and without the check it would land on the option, fail the helper's own
+        test and fall through to <code>all</code> &mdash; a run that kept every log because six letters were
+        typed instead of seven. An unknown key fails the same way and names the file it is in; an unknown
+        profile lists the ones that are defined and offers the nearest. The report's
+        <code>Environment</code> panel carries a <code>Profile</code> row naming the profile the run was
+        built with, so a report found on a CI server months later can answer &quot;where did the logs
+        go&quot; with &quot;this was built with <code>ci</code>, which keeps them only on
+        failures&quot;.</li>
+      <li><strong>Six layers is more precedence than anybody holds in their head</strong>, and getting it
+        wrong is silent: the run is green and the report is simply not the one that was configured. Two
+        commands print the answer in provenance rather than in values &mdash;
+        <a href="cli-reference.html#config-command"><code>pytest-html-reporter config</code></a>, which
+        resolves the files and runs nothing, and <code>pytest --report-show-config</code>, which prints the
+        same table into the pytest header of a real run, where it lands in the part of the output that gets
+        pasted into an issue. <code>--all</code> also lists the settings nobody named, and <code>--json</code>
+        prints the same document for a CI step to assert on.</li>
+      <li><strong>The Dashboard's seven counters are now the way into the rows they count.</strong> They
+        counted the run and left you to go and find what they counted: read &quot;4 failed&quot;, open Test
+        Metrics, filter the table down by hand. Each is now a button that opens Test Metrics already filtered
+        to that outcome &mdash; <code>Rerun</code> to every test that ran more than once, since rerun is a
+        count in a column rather than a status a row carries. A counter standing at zero is disabled rather
+        than merely styled flat, so it is not a tab stop and cannot be clicked into <em>No matching records
+        found</em>, which is not what the figure it was read off said. See
+        <a href="report-tour.html#the-summary-card">Report tour</a>.</li>
+      <li><strong>The filter is in the URL</strong>, as <code>#test-metrics?status=FAIL</code>, so &quot;the
+        failures in last night's build&quot; is an address rather than a set of instructions. Opening one
+        lands on the filtered table directly, and the chips over the table keep the address in step as they
+        are clicked, so a link copied off a filtered table opens filtered. Toggling chips replaces that
+        address rather than pushing a new one each time: Back goes back to the dashboard you came from rather
+        than walking out through every chip you tried on the way. A filtered table also carries a
+        <strong>Clear filter</strong> control beside the chips &mdash; clicking the chip that is holding has
+        always cleared it, but that is only discoverable once you know it, and a table that arrived already
+        filtered was never clicked into a chip at all.</li>
+      <li><strong>A fast test stopped reading as an untimed one.</strong> Durations were kept to two decimal
+        places of seconds, which is a 10ms floor: every unit test quicker than that reached the page as a flat
+        <code>0.0</code>, a whole suite of them summed to <code>0ms</code> in the <em>time in tests</em> tile,
+        and each phase in Test Steps read <code>0 ms</code> &mdash; which says a test never ran rather than
+        that it was quick. Records now carry six decimal places, and the page prints the unit that fits the
+        figure: the Test Metrics <code>Time</code> column reads <code>0.44 ms</code>, <code>250 ms</code> or
+        <code>1.23 s</code> and sorts on the raw seconds behind the cell, and attachment, step and attempt
+        durations follow the same ladder.</li>
+      <li><strong>The report says which release drew it.</strong> The footer under every page carries the
+        plugin's version beside its name &mdash; a report outlives the run it came from, and the first
+        question asked of an old one is which version wrote it.</li>
+    </ul>
+  </div>
+
+  <div class="tl__item">
+    <div class="tl__head"><span class="tl__ver">0.4.2</span><span class="tl__date">5 Sep 2026</span></div>
     <ul>
       <li><strong>The <code>Rerun</code> count is now a button, and behind it is every attempt the test
         made.</strong> A retried test has always been reported as one row carrying the outcome that stuck
@@ -671,6 +768,16 @@ in a substantially different plugin, so the notes are grouped by what will actua
     <thead><tr><th>Since</th><th>What changes</th><th>How to keep the old behaviour</th></tr></thead>
     <tbody>
       <tr>
+        <td class="t-nowrap"><code>0.4.3</code></td>
+        <td>The Test Metrics <code>Time</code> column carries its unit &mdash; <code>0.44 ms</code>, <code>250 ms</code>, <code>1.23 s</code> &mdash; where it used to hold a bare number of seconds, and the column header lost its <code>(s)</code>. The cell's text is what the CSV, Excel and print exports take, so a step that parsed that column as a float needs the unit stripped. Sorting is unaffected: the raw seconds sit in a <code>data-order</code> behind the cell.</td>
+        <td>&mdash;</td>
+      </tr>
+      <tr>
+        <td class="t-nowrap"><code>0.4.3</code></td>
+        <td>A profile named in an ini file or <code>pyproject.toml</code> and pinned with <code>report_profile</code> or <code>profile</code> shapes a bare <code>pytest</code> run, and a <code>PYTEST_HTML_REPORTER_*</code> variable left in a shell now decides a setting that used to come from the ini key. Both are new layers between the flag and the ini file.</td>
+        <td class="t-nowrap"><code>--report-profile=none</code>, and unset the variable</td>
+      </tr>
+      <tr>
         <td class="t-nowrap"><code>0.4.2</code></td>
         <td>The <code>Rerun</code> cell is a button on any test that was retried, and opens a panel of the attempts behind it. The number in the cell is unchanged, and so is the cell's text, so search and the exports read exactly as before.</td>
         <td>&mdash;</td>
@@ -747,6 +854,12 @@ in a substantially different plugin, so the notes are grouped by what will actua
 <h3 id="content-and-exports">Report content and exports that change shape</h3>
 
 <ul>
+  <li><strong>0.4.3</strong> &mdash; the <code>Time</code> column's text changes, and it is the one column
+    whose text an export is likely to be parsed for: <code>0.25</code> is now <code>250 ms</code>, and a test
+    measured in microseconds says <code>0.44 ms</code> rather than <code>0.0</code>. The column sorts on the
+    raw seconds behind the cell, so the slowest test of the run is still the first row. Nothing else in the
+    table moves: the dashboard's counters and the status chips filter the rows that are already there, and the
+    filter lives in the page's hash rather than in any cell.</li>
   <li><strong>0.4.2</strong> &mdash; nothing in the metrics table's text changes: the attempt trail is parked
     outside the table the way step trees (0.3.8), captured logs (0.3.3) and attachments (0.3.5) already are, so
     it is absent from the table's search index and from its CSV, Excel and print exports, and the
@@ -784,6 +897,10 @@ line &mdash; are built by reading back the <code>output.json</code> each build w
 builds is usually written by more than one version of the plugin.</p>
 
 <ul>
+  <li><strong>0.4.3</strong> &mdash; <code>output.json</code> keeps each duration to six decimal places
+    rather than two. A build archived by an earlier version stored its fast tests as <code>0.0</code>, and it
+    is read back exactly as it was written &mdash; the precision arrives with the builds written from this
+    version on, and no trend line is redrawn retroactively.</li>
   <li><strong>0.4.2</strong> &mdash; the attempt trail is <em>not</em> archived. A build written before this
     version stored the rerun count and not the attempts behind it, so its rows keep the count and offer no
     panel &mdash; an empty one would be worse than none. Shard bundles written by an earlier version merge

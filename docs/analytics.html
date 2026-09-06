@@ -677,15 +677,19 @@ are emitted empty and the chart is not drawn — rather than drawn empty, which 
 failed to load.</p>
 
 <p>The <strong>slowest tests</strong> chart takes the current run's tests, drops any whose duration is
-zero, sorts descending and keeps the top ten. Dropping the zeroes is deliberate: durations are kept
-to two decimals, so a genuinely quick test measures <code>0.0</code>, and ten rows of "slowest test:
-no time at all" reads as a bug rather than as a fast suite.</p>
+zero, sorts descending and keeps the top ten. Dropping the zeroes is deliberate: a test that was never
+timed at all measures nothing, and ten rows of "slowest test: no time at all" reads as a bug rather
+than as a fast suite. From 0.4.3 a test that <em>was</em> timed keeps six decimal places rather than
+two — two places of seconds is a 10ms floor, and every unit test quicker than that used to reach the
+page as a flat <code>0.0</code>.</p>
 
 <p><strong>Build-level duration</strong> is the sum of that build's per-test durations. The
 <em>time in tests</em> tile shows the current build's total, with the <strong>median</strong> across
-every build that recorded one as its note. Durations read as <code>820ms</code> under a second,
-<code>4.5s</code> under a minute, <code>12m 04s</code> beyond it, and <code>--</code> when
-unknown.</p>
+every build that recorded one as its note. Durations read as <code>0.44ms</code> under a hundredth of a
+second, <code>820ms</code> under a second, <code>4.5s</code> under a minute, <code>12m 04s</code>
+beyond it, and <code>--</code> when unknown. The two decimals at the bottom of that ladder are the whole
+of the figure for a suite of unit tests: rounded to a whole millisecond, a run of them summed to
+<code>0ms</code>, which says the run was never timed rather than that it was fast.</p>
 
 <div class="note note--warn"><span class="note__title">Careful</span>Per-test durations are written
 into <code>output.json</code> from the release that shipped Analytics onwards. Builds archived by an

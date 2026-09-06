@@ -94,6 +94,104 @@
 
 <div class="note"><span class="note__title">Note</span>On a <a href="#sharding-across-machines">sharded run</a> every one of these is collected by the leg, on the machine that ran the tests. A merging job that asked its own environment which CI run this was would answer with the merge job, and one running on a laptop would answer with nothing at all. The merged panel says it once when the legs agree and says both when they do not &mdash; two legs naming two pipelines link neither, since a link to the first would be read as the whole build's. Bundles written before 0.4.2 merge unchanged: every new key reads back as &quot;this leg never said&quot;.</div>
 
+<h2 id="the-ci-shape">The CI shape of a run, written down</h2>
+
+<div class="note note--new"><span class="note__title">New in 0.4.3</span>Everything on this page that reads
+as a long command line can be a <a href="configuration.html#profiles">named profile</a> instead &mdash; the
+workflow file then says <code>--report-profile=ci</code>, and what <code>ci</code> means is committed beside
+the tests rather than kept in YAML.</div>
+
+<p>A workflow file is a bad home for a report's settings. It is edited by whoever is fixing the pipeline, it
+is not what anybody runs locally, and the day the two drift apart is the day somebody opens a CI report and
+finds it missing the logs they went there for. A profile puts both shapes in one file, side by side, where
+the difference between them is the thing you can see:</p>
+
+<div class="codetabs">
+  <div class="codetabs__bar" role="tablist" aria-label="The two shapes, and the job that picks one">
+    <button class="codetabs__tab is-active" type="button" role="tab" aria-selected="true">pyproject.toml</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">The workflow</button>
+    <button class="codetabs__tab" type="button" role="tab" aria-selected="false">Locally</button>
+  </div>
+  <div class="codetabs__panel" role="tabpanel">
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">toml</span>
+        <span class="codeblock__cap">Committed beside the tests</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="toml">[tool.pytest-html-reporter]
+title = &quot;PAYMENTS&quot;
+
+[tool.pytest-html-reporter.profiles.local]
+open = &quot;auto&quot;
+logs = &quot;all&quot;
+archive_count = 10
+
+[tool.pytest-html-reporter.profiles.ci]
+open = &quot;none&quot;
+logs = &quot;failed&quot;
+attachments = &quot;failed&quot;
+screenshots = &quot;failed&quot;
+junit = &quot;report/junit.xml&quot;
+archive_days = 30</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">yaml</span>
+        <span class="codeblock__cap">Only what this build knows stays in YAML</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="yaml">- name: Run the suite
+  run: |
+    pytest tests/ -n auto \
+      --report-profile=ci \
+      --build-info branch=&quot;$GITHUB_REF_NAME&quot; \
+      --build-info commit=&quot;$GITHUB_SHA&quot; \
+      --build-info run=&quot;$GITHUB_RUN_ID&quot;</code></pre>
+    </div>
+  </div>
+  <div class="codetabs__panel" role="tabpanel" hidden>
+    <div class="codeblock">
+      <div class="codeblock__head">
+        <span class="codeblock__lang">shell</span>
+        <span class="codeblock__cap">The other shape, same file</span>
+        <button class="copybtn" type="button">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+      <span class="copybtn__label">Copy</span>
+    </button>
+      </div>
+      <pre><code data-lang="shell">$ pytest tests/ --report-profile=local</code></pre>
+    </div>
+  </div>
+</div>
+
+<p>The pieces a workflow legitimately owns &mdash; the branch, the commit, the run id &mdash; stay on the
+command line, because the shell has to expand them and because they are facts about <em>this</em> build
+rather than about the shape of it. They add to what the profile says rather than replacing it, and a label
+named twice is one row carrying the higher layer's answer.</p>
+
+<p>A matrix leg that needs one thing different does not need a profile of its own:
+<code>PYTEST_HTML_REPORTER_LOGS=all</code> in that job's environment overrides the profile for that job
+alone. And when a leg's report comes out wrong, <code>pytest --report-profile=ci --report-show-config</code>
+prints what it resolved and which layer decided each setting, into the pytest header &mdash; which is the
+part of a CI log people paste into issues. See
+<a href="cli-reference.html#config-command"><code>pytest-html-reporter config</code></a> for the same answer
+without running the suite.</p>
+
+<div class="note"><span class="note__title">Note</span>A sharded matrix takes profiles the way any other run does. Every leg is a pytest run, so a leg names the profile like anything else &mdash; and because a profile is written onto the same options the flags parse into, the shard settings a leg resolves are the ones its bundle is filed under. The merge is not a pytest run and reads no profile: <a href="#merging-the-shards">its flags are its own</a>.</div>
+
+
 <h2 id="parallel-runs-with-xdist">Parallel runs with pytest-xdist</h2>
 
 <p>Runs distributed with <code>pytest-xdist</code> are gathered into a single report with no configuration at all — one build in <code>Archives</code>, one set of totals, one row per test, whichever way the tests were distributed.</p>
@@ -305,7 +403,7 @@ $ pytest tests/ --html-report=./report --report-shard=4/4</code></pre>
   <pre><code data-lang="json">{
   &quot;schema&quot;: &quot;pytest-html-reporter/records&quot;,
   &quot;version&quot;: 1,
-  &quot;generator&quot;: &quot;pytest-html-reporter 0.4.2&quot;,
+  &quot;generator&quot;: &quot;pytest-html-reporter 0.4.3&quot;,
   &quot;shard&quot;: { &quot;id&quot;: &quot;1-4&quot;, &quot;label&quot;: &quot;1/4&quot;, &quot;assets&quot;: &quot;pytest_screenshots&quot; },
   &quot;run&quot;: {
     &quot;session_start&quot;: 1788426000.11,
@@ -317,7 +415,7 @@ $ pytest tests/ --html-report=./report --report-shard=4/4</code></pre>
     &quot;platform&quot;: &quot;Linux 6.5.0-1024-azure&quot;,
     &quot;python&quot;: &quot;3.11.9&quot;,
     &quot;pytest&quot;: &quot;8.2.0&quot;,
-    &quot;plugins&quot;: [&quot;cov-5.0.0&quot;, &quot;html-reporter-0.4.2&quot;, &quot;xdist-3.5.0&quot;],
+    &quot;plugins&quot;: [&quot;cov-5.0.0&quot;, &quot;html-reporter-0.4.3&quot;, &quot;xdist-3.5.0&quot;],
     &quot;arguments&quot;: &quot;tests/ -n 4 --html-report=./report --report-shard=1/4&quot;,
     &quot;rootdir&quot;: &quot;/home/runner/work/proj/proj&quot;,
     &quot;environment&quot;: &quot;staging&quot;,
@@ -956,7 +1054,7 @@ $ pytest tests/ --html-report=./report --report-junit=./report/junit.xml --repor
   &lt;testsuite name=&quot;pytest&quot; tests=&quot;3&quot; failures=&quot;1&quot; errors=&quot;1&quot; skipped=&quot;0&quot; time=&quot;724.000&quot;
              timestamp=&quot;2026-09-03T13:00:00&quot; hostname=&quot;merged&quot;&gt;
     &lt;properties&gt;
-      &lt;property name=&quot;pytest-html-reporter&quot; value=&quot;0.4.2&quot; /&gt;
+      &lt;property name=&quot;pytest-html-reporter&quot; value=&quot;0.4.3&quot; /&gt;
       &lt;property name=&quot;shards&quot; value=&quot;4&quot; /&gt;
       &lt;property name=&quot;shard.ids&quot; value=&quot;1-4,2-4,3-4,4-4&quot; /&gt;
       &lt;property name=&quot;shard.hosts&quot; value=&quot;runner-1,runner-2,runner-3,runner-4&quot; /&gt;

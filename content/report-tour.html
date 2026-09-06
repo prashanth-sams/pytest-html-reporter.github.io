@@ -109,6 +109,10 @@ in a new tab, and any scheme that is not <code>http</code>, <code>https</code> o
 whoever opens the report. Relative paths such as <code>./htmlcov/index.html</code> are kept, which
 is the point of the option.</p>
 
+<p>Under every page sits one footer line: the project's name, and — from 0.4.3 — the version of the
+plugin that wrote this file, a step fainter beside it. A report outlives the run it came from, and the
+first question asked of an old one is which release drew it.</p>
+
 <h2 id="dashboard">Dashboard</h2>
 
 <p>The landing tab, laid out to fit one screen at desktop width. Two rows of cards, answering one
@@ -131,6 +135,18 @@ xpass plus xfail. Reruns are counted separately and are not in that total.</p>
 ERROR — in the run's status colours. Hovering a slice gives its name and its share as a percentage,
 and the pass percentage is drawn in the hole. Under the chart sit seven counters: passed, failed,
 skipped, xpassed, xfailed, error and rerun, each in its own status colour.</p>
+
+<p>Since 0.4.3 each of those seven is a <strong>button</strong>, and the figure is the way to what it
+counted. Clicking <em>4 failed</em> opens <a href="#test-metrics">Test Metrics</a> with the table
+already filtered to <code>FAIL</code> — in place of the three steps that used to take: read the
+number, cross to the tab, filter the table by hand. <em>Rerun</em> is the one counter that does not name an outcome, since
+rerun is a count in a column rather than a status a row carries: it filters that column to every test
+that ran more than once.</p>
+
+<p>A counter standing at zero is <em>disabled</em> rather than merely styled flat, so it is not a tab
+stop and cannot be clicked into <em>No matching records found</em> — which is not what the figure it
+was read off said. The count is taken from the rendered counter, so a merged report is covered by the
+same rule as a single run.</p>
 
 <h3 id="trends-and-the-pdf-export">Trends, and the PDF export</h3>
 
@@ -283,13 +299,16 @@ opened in the reading pane, and its heading flashed so the eye knows where it la
 
 <p><em>Every test case with its status, duration and error.</em> The densest tab, and the hub. Ten
 columns: <strong>Suite</strong>, <strong>Test Case</strong>, <strong>Status</strong>,
-<strong>Time (s)</strong>, <strong>Rerun</strong>, <strong>Error Message</strong>,
+<strong>Time</strong>, <strong>Rerun</strong>, <strong>Error Message</strong>,
 <strong>Logs</strong>, <strong>Data</strong>, <strong>Steps</strong> and <strong>Screens</strong>.
 It sorts on Time descending by default.</p>
 
-<p>Status is a coloured pill. Suite and Test Case are both jump cells into Test Steps — the suite
-cell opens the group, the test cell opens that exact test. The error cell holds the first 50
-characters of the message; when the message ran past that, the last 8 characters fade out rather
+<p>Status is a coloured pill. <strong>Time</strong> carries the unit that fits the figure rather than a
+bare number of seconds — <code>0.44 ms</code>, <code>250 ms</code>, <code>1.23 s</code> — and sorts on
+the raw seconds behind the cell, so the slowest test of the run is still the first row and a test
+measured in microseconds no longer reads as <code>0.0</code>. Suite and Test Case are both jump cells
+into Test Steps — the suite cell opens the group, the test cell opens that exact test. The error cell
+holds the first 50 characters of the message; when the message ran past that, the last 8 characters fade out rather
 than ending in an ellipsis. A test with nothing to say gets no buttons at all.</p>
 
 <p>The last four columns are counts that are also doors. <strong>Logs</strong> shows the number of
@@ -366,6 +385,16 @@ the xPASS rows. The chip set itself is captured while no filter is on and then h
 filtering to failures leaves every other outcome with no rows to count, and the numbers you filter
 <em>from</em> have to stay put. Focus is handed back to the chip you clicked after the table
 redraws, so the row does not lose your place.</p>
+
+<p>From 0.4.3 the filter is also in the address, as <code>#test-metrics?status=FAIL</code>, so &quot;the
+failures in last night's build&quot; is a link rather than a set of instructions. Opening one lands on the
+filtered table directly, and the chips keep the address in step as they are clicked. Toggling a chip
+<em>replaces</em> that address rather than pushing a new one each time, so Back returns to the dashboard
+you came from rather than walking out through every chip you tried on the way.</p>
+
+<p>A filtered table also carries a <strong>Clear filter</strong> control beside the chips, shown only
+while something is filtering. Clicking the chip that is holding has always cleared it, but that is only
+discoverable once you know it — and a table opened on a link was never clicked into a chip at all.</p>
 
 <h3 id="search-paging-and-the-five-exports">Search, paging, and the five exports</h3>
 
@@ -499,8 +528,10 @@ pages the table to that row, scrolls it to the centre and flashes it for a coupl
 
 <div class="note note--tip"><span class="note__title">Tip</span>The same mechanism addresses a
 build: <code>#list-item-7</code> opens the report on Archives with build 7 highlighted and scrolled
-into view. Tab hashes, <code>#list-item-N</code> and <code>#test-&hellip;</code> are all read on load
-and on every hash change, so the back button works across all three.</div>
+into view, and from 0.4.3 a tab hash can carry a filter behind a <code>?</code> —
+<code>#test-metrics?status=FAIL</code> is <a href="#the-status-filter-chips">the whole failing table</a>
+rather than one row. Tab hashes, <code>#list-item-N</code> and <code>#test-&hellip;</code> are all read
+on load and on every hash change, so the back button works across all of them.</div>
 
 <h2 id="test-steps">Test Steps</h2>
 
@@ -757,6 +788,10 @@ labelled values, closed by its &times; button, by clicking the backdrop, or by E
   <li>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
     <span><b>Captured output</b>A sentence describing exactly what this run keeps — "all tests: stdout, stderr and logging, logging from WARNING", or "logging only (stdout and stderr are off under -s)".</span>
+  </li>
+  <li>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+    <span><b>Profile</b>Which <a href="configuration.html#profiles">named profile</a> this run was built with, when one was. A report found on a CI server months later can then answer "where did the logs go" with "this was built with <code>ci</code>, which keeps them only on failures" — the same fact, written down at the time. Only when a profile was selected. New in 0.4.3.</span>
   </li>
   <li>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>

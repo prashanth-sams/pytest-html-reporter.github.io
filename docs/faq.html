@@ -756,6 +756,29 @@ archive_count = 60</code></pre>
 <h2 id="ci">CI</h2>
 
 <details class="acc">
+  <summary>How do I stop the local and CI settings drifting apart?</summary>
+  <div class="acc__body">
+    <p>Write both shapes down under a name. From 0.4.3 a
+    <a href="configuration.html#profiles">named profile</a> holds a whole set of these settings in
+    <code>pyproject.toml</code> as <code>[tool.pytest-html-reporter.profiles.ci]</code>, or in a
+    <code>pytest.ini</code>, <code>tox.ini</code> or <code>setup.cfg</code> as
+    <code>[pytest-html-reporter.profiles.ci]</code>, and the run picks one with
+    <code>pytest --report-profile=ci</code>.</p>
+
+    <p>Both files are read, so a repository that has no <code>pyproject.toml</code> does not need to grow
+    one. <code>report_profile = ci</code> in <code>[pytest]</code> pins the profile a bare
+    <code>pytest</code> uses, and <code>--report-profile=none</code> opts one run back out of it. A
+    <code>PYTEST_HTML_REPORTER_LOGS=all</code> in one job's environment overrides that one setting for that
+    job, and a flag on the command line still beats everything.</p>
+
+    <p>A profile that says something a flag would have refused &mdash; <code>logs = "fail"</code> &mdash;
+    fails the run at configure time with one line naming the file, rather than quietly falling through to
+    the default. And <code>pytest-html-reporter config</code> prints what a run here would resolve, setting
+    by setting, with the layer that decided each one.</p>
+  </div>
+</details>
+
+<details class="acc">
   <summary>Can the report say which pipeline, branch and commit it came from?</summary>
   <div class="acc__body">
     <p>From 0.4.2 it does that on its own. The <code>Environment</code> panel gains a <code>CI</code>
