@@ -290,6 +290,8 @@ jobs:
       <tr><td class="t-nowrap"><code>suite-limit</code></td><td>integer string</td><td>no</td><td><code>&#039;20&#039;</code></td><td>Maximum suites listed. The Suites table is only rendered at all when the run has more than one suite.</td></tr>
       <tr><td class="t-nowrap"><code>slowest-limit</code></td><td>integer string</td><td>no</td><td><code>&#039;5&#039;</code></td><td>How many of the slowest tests to list; <code>&#039;0&#039;</code> lists none.</td></tr>
       <tr><td class="t-nowrap"><code>report-url</code></td><td>string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Link to the published report, shown in the summary and the comment as <em>Open the report</em> — for instance your GitHub Pages URL.</td></tr>
+      <tr><td class="t-nowrap"><code>annotations</code></td><td>boolean string</td><td>no</td><td><code>&#039;true&#039;</code></td><td>Annotate failing lines on the pull request diff, so a failure is marked where the change happened rather than only in the summary.</td></tr>
+      <tr><td class="t-nowrap"><code>annotation-limit</code></td><td>integer string</td><td>no</td><td><code>&#039;10&#039;</code></td><td>Maximum annotations of each kind — errors for failures, warnings for flakes. GitHub shows ten of each per step and drops the rest without saying so, which is why the default stops there.</td></tr>
       <tr><td class="t-nowrap"><code>comment</code></td><td>boolean string</td><td>no</td><td><code>&#039;false&#039;</code></td><td>Post the summary as a sticky comment on the pull request, updating the same comment on every run instead of piling new ones up.</td></tr>
       <tr><td class="t-nowrap"><code>comment-mode</code></td><td>enum: always, on-failure</td><td>no</td><td><code>always</code></td><td>When to comment. <code>on-failure</code> compares the report’s <code>status</code> against <code>PASS</code>, so a run that produced no report (<code>UNKNOWN</code>) also comments.</td></tr>
       <tr><td class="t-nowrap"><code>pr-number</code></td><td>integer string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Pull request to comment on. Only needed when the event does not carry one — a <code>workflow_run</code> job, say. Empty uses the event’s own number. Must be digits.</td></tr>
@@ -303,6 +305,19 @@ jobs:
       <tr><td class="t-nowrap"><code>pages-artifact</code></td><td>boolean string</td><td>no</td><td><code>&#039;false&#039;</code></td><td>Also upload the report as a GitHub Pages artifact with <code>actions/upload-pages-artifact@v3</code>, ready for a following job to deploy with <code>actions/deploy-pages</code>.</td></tr>
       <tr><td class="t-nowrap"><code>history</code></td><td>boolean string</td><td>no</td><td><code>&#039;false&#039;</code></td><td>Carry the <code>archive/</code> folder and <code>output.json</code> between runs with <code>actions/cache</code>, so the Trends, Archives and Analytics tabs have more than one build to show.</td></tr>
       <tr><td class="t-nowrap"><code>history-key</code></td><td>string</td><td>no</td><td><code>pytest-html-reporter-history</code></td><td>Cache key prefix used for the build history. The full key appends <code>runner.os</code>, <code>github.ref_name</code>, <code>github.run_id</code> and <code>github.run_attempt</code>.</td></tr>
+    </tbody>
+  </table>
+</div>
+<h3 id="inputs-comparison">Comparison</h3>
+<p>These decide whether the action compares the current run against an earlier one and, if so, where that baseline comes from.</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>Input</th><th>Type</th><th>Required</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="t-nowrap"><code>compare</code></td><td>enum: auto, none</td><td>no</td><td><code>auto</code></td><td>Compare this run with an earlier one and report what changed. On <code>auto</code> the action looks for the report artifact of the last successful run of this workflow on the base branch, then falls back to the build history cache if there is one.</td></tr>
+      <tr><td class="t-nowrap"><code>baseline-json</code></td><td>string</td><td>no</td><td><code>&#039;&#039;</code></td><td>An <code>output.json</code> to compare against, if you would rather fetch one yourself. When set, it is used and nothing is downloaded. Resolved against <code>working-directory</code>.</td></tr>
+      <tr><td class="t-nowrap"><code>baseline-artifact</code></td><td>string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Name of the artifact to take the baseline from. Empty uses <code>artifact-name</code>, which is what this action uploaded on the earlier run.</td></tr>
+      <tr><td class="t-nowrap"><code>baseline-ref</code></td><td>string</td><td>no</td><td><code>&#039;&#039;</code></td><td>Branch whose last successful run is the baseline. Empty uses the pull request’s base branch, or the repository’s default branch.</td></tr>
     </tbody>
   </table>
 </div>
@@ -334,6 +349,7 @@ jobs:
       <tr><td class="t-nowrap"><code>xpassed</code></td><td>integer</td><td>Tests that passed while expected to fail.</td></tr>
       <tr><td class="t-nowrap"><code>xfailed</code></td><td>integer</td><td>Tests that failed as expected.</td></tr>
       <tr><td class="t-nowrap"><code>rerun</code></td><td>integer</td><td>Rerun attempts recorded across the run.</td></tr>
+      <tr><td class="t-nowrap"><code>flaky</code></td><td>integer</td><td>Tests that failed, were retried and then passed. Counted apart from the failures: the run is green and these are why it nearly was not.</td></tr>
       <tr><td class="t-nowrap"><code>suites</code></td><td>integer</td><td>Test suites in the run.</td></tr>
       <tr><td class="t-nowrap"><code>pass-rate</code></td><td>number string</td><td><code>passed / (passed + failed + errors)</code> as a percentage, trimmed of trailing zeros. Empty when nothing decisive ran.</td></tr>
       <tr><td class="t-nowrap"><code>coverage</code></td><td>number string</td><td>Coverage percentage, or empty when the run produced none.</td></tr>
@@ -344,6 +360,12 @@ jobs:
       <tr><td class="t-nowrap"><code>report-dir</code></td><td>path</td><td>Absolute path of the directory holding the report.</td></tr>
       <tr><td class="t-nowrap"><code>json-path</code></td><td>path</td><td>Absolute path of the run’s <code>output.json</code>.</td></tr>
       <tr><td class="t-nowrap"><code>summary</code></td><td>markdown</td><td>The markdown summary, for reuse in a later step. Multi-line, so pass it through <code>env:</code> rather than splicing it into a command.</td></tr>
+      <tr><td class="t-nowrap"><code>baseline-found</code></td><td>boolean string</td><td>Whether an earlier build was found to compare this run against. Every comparison output below is empty when it is false — a comparison that never happened is not a comparison that found nothing.</td></tr>
+      <tr><td class="t-nowrap"><code>new-failures</code></td><td>integer</td><td>Tests failing here that were not failing in the baseline.</td></tr>
+      <tr><td class="t-nowrap"><code>still-failing</code></td><td>integer</td><td>Tests failing in both this run and the baseline.</td></tr>
+      <tr><td class="t-nowrap"><code>pass-rate-delta</code></td><td>number string</td><td>Signed percentage-point change in pass rate from the baseline.</td></tr>
+      <tr><td class="t-nowrap"><code>coverage-delta</code></td><td>number string</td><td>Signed percentage-point change in coverage from the baseline.</td></tr>
+      <tr><td class="t-nowrap"><code>baseline-url</code></td><td>url</td><td>URL of the run the comparison was made against, when one was found.</td></tr>
       <tr><td class="t-nowrap"><code>artifact-id</code></td><td>string</td><td>Id of the uploaded artifact, when one was uploaded.</td></tr>
       <tr><td class="t-nowrap"><code>artifact-url</code></td><td>url</td><td>URL of the uploaded artifact, when one was uploaded. Rendered in the summary as <em>Download the artifact</em>.</td></tr>
     </tbody>
